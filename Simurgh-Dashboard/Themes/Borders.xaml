@@ -1,0 +1,102 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  =========================================================  -->
+    <!--  Raised Panels  -->
+    <!--  =========================================================  -->
+
+    <Style x:Key="PanelRaisedBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BrushSurfaceRaised}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BrushBevelOuterDark}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="14" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+    </Style>
+
+    <Style
+        x:Key="PanelRaisedCompactBorderStyle"
+        BasedOn="{StaticResource PanelRaisedBorderStyle}"
+        TargetType="Border">
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="CornerRadius" Value="5" />
+    </Style>
+
+    <!--  =========================================================  -->
+    <!--  Inset Panels  -->
+    <!--  =========================================================  -->
+
+    <Style x:Key="PanelInsetBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BrushSurfaceSunken}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BrushBevelInnerDark}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+    </Style>
+
+    <!--  =========================================================  -->
+    <!--  Headers  -->
+    <!--  =========================================================  -->
+    <Style x:Key="PanelHeaderBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BrushHeaderBackground}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BrushSeparator}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+    </Style>
+
+    <!--  =========================================================  -->
+    <!--  Separators  -->
+    <!--  =========================================================  -->
+
+    <Style x:Key="DividerSoftStyle" TargetType="Rectangle">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Fill" Value="{StaticResource BrushSeparator}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!--  =========================================================  -->
+    <!--  Footer / Support  -->
+    <!--  =========================================================  -->
+
+    <Style x:Key="WidgetFrameFooterBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BrushSurface}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BrushSeparator}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+    </Style>
+
+    <Style x:Key="WidgetFrameHeaderIconStyle" TargetType="Path">
+        <Setter Property="Stretch" Value="Uniform" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,0,8,0" />
+        <Setter Property="Fill" Value="{StaticResource BrushTextMuted}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <Style x:Key="WidgetFrameHeaderPresenterStyle" TargetType="ContentPresenter">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="RecognizesAccessKey" Value="True" />
+    </Style>
+
+    <Style x:Key="WidgetFrameBadgePresenterStyle" TargetType="ContentPresenter">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="8,0,0,0" />
+    </Style>
+
+    <Style x:Key="WidgetFrameContentPresenterStyle" TargetType="ContentPresenter">
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+    </Style>
+
+    <Style x:Key="WidgetFrameFooterPresenterStyle" TargetType="ContentPresenter">
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,25 @@
+﻿using System.Runtime.InteropServices;
+
+namespace SimurghDashboard.Infrastructures.Native;
+
+[StructLayout(LayoutKind.Explicit)]
+public struct DISPLAYCONFIG_MODE_INFO
+{
+    [FieldOffset(0)]
+    public DISPLAYCONFIG_MODE_INFO_TYPE infoType;
+
+    [FieldOffset(4)]
+    public uint id;
+
+    [FieldOffset(8)]
+    public LUID adapterId;
+
+    [FieldOffset(16)]
+    public DISPLAYCONFIG_TARGET_MODE targetMode;
+
+    [FieldOffset(16)]
+    public DISPLAYCONFIG_SOURCE_MODE sourceMode;
+
+    [FieldOffset(16)]
+    public DISPLAYCONFIG_DESKTOP_IMAGE_INFO desktopImageInfo;
+}

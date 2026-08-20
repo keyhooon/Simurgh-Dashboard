@@ -1,0 +1,119 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:SimurghDashboard.Controls">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Fonts.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Images.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <Style TargetType="{x:Type local:DigitalClockControl}">
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="Padding" Value="40" />
+
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:DigitalClockControl}">
+                    <Grid>
+                        <local:NineSliceBorder
+                            x:Name="PART_Frame"
+                            Grid.RowSpan="2"
+                            IsHitTestVisible="False"
+                            RenderOptions.BitmapScalingMode="Fant"
+                            SliceThickness="60,60,60,60"
+                            Source="{StaticResource ImgPanelRoundedRaised}" />
+                        <Grid
+                            Margin="{TemplateBinding Padding}"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+
+                            <Border
+                                Padding="25,15"
+                                VerticalAlignment="Center"
+                                Background="#CC000000"
+                                BorderBrush="#33FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                                <Grid HorizontalAlignment="Center" ClipToBounds="False">
+                                    <!--  Ghost underlay: 88:88:88  -->
+                                    <TextBlock
+                                        Padding="4"
+                                        FontFamily="{StaticResource FontFamilyDigit}"
+                                        FontSize="56"
+                                        FontStretch="UltraExpanded"
+                                        FontWeight="ExtraBold"
+                                        Foreground="{TemplateBinding PlaceholderBrush}"
+                                        Text="88:88:88"
+                                        TextAlignment="Center"
+                                        TextOptions.TextFormattingMode="Display"
+                                        TextOptions.TextRenderingMode="ClearType" />
+
+                                    <!--  Real time  -->
+                                    <TextBlock
+                                        x:Name="PART_TimeText"
+                                        Padding="4"
+                                        HorizontalAlignment="Center"
+                                        FontFamily="{StaticResource FontFamilyDigit}"
+                                        FontSize="56"
+                                        FontStretch="UltraExpanded"
+                                        FontWeight="ExtraBold"
+                                        Foreground="{TemplateBinding DigitBrush}"
+                                        SnapsToDevicePixels="True"
+                                        Text="{TemplateBinding TimeText}"
+                                        TextAlignment="Center"
+                                        TextOptions.TextFormattingMode="Display"
+                                        TextOptions.TextRenderingMode="ClearType" />
+                                </Grid>
+                            </Border>
+                            <local:WeatherBadgeControl
+                                Width="Auto"
+                                Height="Auto"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Background="Transparent"
+                                ConditionTextVisibility="Collapsed"
+                                FontSize="18"
+                                Foreground="{TemplateBinding DigitBrush}"
+                                HasError="{TemplateBinding HasError}"
+                                HumidityVisibility="Collapsed"
+                                IsLoading="{TemplateBinding IsLoading}"
+                                TemperatureVisibility="Visible"
+                                WeatherService="{TemplateBinding WeatherService}"
+                                WeatherUrl="{TemplateBinding WeatherUrl}"
+                                WindVisibility="Collapsed" />
+                            <TextBlock
+                                x:Name="PART_DateText"
+                                Grid.Row="1"
+                                Margin="0,10,0,0"
+                                HorizontalAlignment="Center"
+                                FlowDirection="RightToLeft"
+                                FontFamily="{StaticResource FontFamilyApp}"
+                                FontSize="36"
+                                FontWeight="ExtraBold"
+                                Foreground="{TemplateBinding DateBrush}"
+                                Language="fa-IR"
+                                NumberSubstitution.CultureSource="Text"
+                                NumberSubstitution.Substitution="NativeNational"
+                                SnapsToDevicePixels="True"
+                                Text="{TemplateBinding DateText}"
+                                TextAlignment="Center"
+                                TextOptions.TextFormattingMode="Display"
+                                TextOptions.TextRenderingMode="ClearType"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

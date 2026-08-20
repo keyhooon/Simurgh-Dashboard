@@ -1,0 +1,95 @@
+﻿<!--  1. SimurghDashboard/Resources/DataTemplates.xaml  -->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:SimurghDashboard.Controls"
+    xmlns:viewmodels="clr-namespace:SimurghDashboard.ViewModels"
+    xmlns:views="clr-namespace:SimurghDashboard.Views">
+
+    <!--
+        Implicit DataTemplates (No x:Key):
+        WPF's presentation engine automatically uses these templates whenever it encounters
+        the specified ViewModel type in the visual tree (e.g., assigned to a ContentControl.Content).
+        This forms the backbone of View-Model decoupling in our MVVM architecture.
+    -->
+
+    <DataTemplate DataType="{x:Type viewmodels:DigitalTimerViewModel}">
+        <!--
+            Direct binding to atomic properties of the ViewModel.
+            Mode=TwoWay is crucial for RequestedAction so the hardware/UI interactions
+            can push state changes back to the ViewModel.
+        -->
+        <controls:DigitalTimerControl
+            Margin="-20"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Configuration="{Binding Configuration}"
+            DigitBrush="{Binding DigitBrush}"
+            HeaderText="{Binding Label}"
+            PlaceholderBrush="{Binding PlaceholderBrush}"
+            RequestedAction="{Binding CurrentAction, Mode=TwoWay}" />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewmodels:DigitalSensorViewModel}">
+        <!--
+            Notice how RawTelemetry pushes real-time string/float data
+            from the Modbus/Serial source directly into the dependency property of the custom control.
+        -->
+        <controls:DigitalSensorControl
+            Margin="-20"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Configuration="{Binding Configuration}"
+            DigitBrush="{Binding DigitBrush}"
+            HeaderText="{Binding Label}"
+            PlaceholderBrush="{Binding PlaceholderBrush}"
+            RawTelemetry="{Binding RawTelemetry}" />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewmodels:RssTickerViewModel}">
+        <controls:RssTicker
+            Height="150"
+            Margin="-20"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            FeedService="{Binding FeedService, Mode=OneWay}"
+            FeedUrls="{Binding FeedUrls}"
+            RefreshInterval="{Binding RefreshInterval}"
+            ScrollSpeed="{Binding ScrollSpeed}" />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewmodels:DigitalClockViewModel}">
+        <controls:DigitalClockControl
+            x:Name="DigitalClockControl"
+            Margin="-10"
+            DateBrush="{Binding DateBrush}"
+            DigitBrush="{Binding DigitBrush}"
+            IsLoading="{Binding IsLoadingWeather}"
+            PlaceholderBrush="{Binding PlaceholderBrush}" />
+    </DataTemplate>
+
+    <!--
+        =============================================================================
+        NEWLY ADDED TEMPLATES: Mapping the Parent ViewModels to their Collection Views
+        =============================================================================
+    -->
+
+    <DataTemplate DataType="{x:Type viewmodels:DigitalTimersListViewModel}">
+        <!--
+            Resolves the TimersPanelViewModel to the DigitalTimersListView.
+            Inside that view, an ItemsControl will generate the individual DigitalTimerControls
+            using the DigitalTimerViewModel DataTemplate defined above.
+            It's a recursive visual tree resolution!
+        -->
+        <views:DigitalTimersListView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewmodels:DigitalSensorsListViewModel}">
+        <!--
+            Resolves the DigitalSensorsListViewModel to the DigitalSensorsListView.
+            Similar to timers, it delegates the rendering of individual sensors.
+        -->
+        <views:DigitalSensorsListView Height="800" />
+    </DataTemplate>
+
+</ResourceDictionary>

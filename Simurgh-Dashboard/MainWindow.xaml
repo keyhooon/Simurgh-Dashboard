@@ -1,0 +1,149 @@
+﻿<Window
+    x:Class="SimurghDashboard.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:behaviors="clr-namespace:SimurghDashboard.Infrastructures.Behaviors"
+    xmlns:controls="clr-namespace:SimurghDashboard.Controls"
+    xmlns:simurghDashboard="clr-namespace:SimurghDashboard"
+    xmlns:viewmodels="clr-namespace:SimurghDashboard.ViewModels"
+    Title="Beveled UI Showcase"
+    Width="1080"
+    Height="1920"
+    Background="#FF88898F"
+    ResizeMode="NoResize"
+    ShowInTaskbar="False"
+    Topmost="True"
+    WindowStartupLocation="Manual"
+    WindowStyle="None">
+
+    <Window.Resources>
+        <ResourceDictionary Source="/SimurghDashboard;component/DataTemplates/DataTemplate.xaml" />
+    </Window.Resources>
+
+    <!--
+        ================================================================================
+        HARDWARE DISPLAY MANAGEMENT
+        ================================================================================
+        The KioskDisplayBehavior interfaces directly with User32.dll and Windows Registry
+        to force the display into Portrait mode and ensure the GPU outputs correctly
+        via HDMI. RevertOnClose (implemented previously) will restore the OS defaults.
+    -->
+    <b:Interaction.Behaviors>
+        <behaviors:KioskDisplayBehavior
+            GpuSyncDelayMs="1500"
+            TargetOrientation="Landscape"
+            TargetTechnology="Hdmi" />
+    </b:Interaction.Behaviors>
+
+    <!--
+        ================================================================================
+        MAIN KIOSK LAYOUT (1080x1920 Portrait)
+        ================================================================================
+        Using a proportional Grid layout (* and .5*) ensures that if the resolution
+        scales (e.g., 4K medical displays: 2160x3840), the golden ratio of the UI
+        remains perfectly intact without hardcoding fixed pixel widths.
+    -->
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <!--  Left gutter / spacing  -->
+            <ColumnDefinition Width=".5*" />
+            <!--  Left main content area (Timers)  -->
+            <ColumnDefinition Width="*" />
+            <!--  Center gutter  -->
+            <ColumnDefinition Width=".5*" />
+            <!--  Right main content area (Sensors)  -->
+            <ColumnDefinition Width="*" />
+            <!--  Right gutter / spacing  -->
+            <ColumnDefinition Width=".5*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <!--  Top Header (Clock/Weather)  -->
+            <RowDefinition Height="Auto" />
+            <!--  Middle Body (Timers and Sensors split)  -->
+            <RowDefinition Height="*" />
+            <!--  Bottom Footer (RSS Ticker)  -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--
+            ============================================================================
+            1. DIGITAL CLOCK WIDGET (Top Center)
+            ============================================================================
+            Spans across the middle columns. ContentControl delegates the actual rendering
+            to the DataTemplate mapped to DigitalClockViewModel in DataTemplates.xaml.
+        -->
+        <controls:WidgetFrame
+            Grid.Row="0"
+            Grid.Column="1"
+            Grid.ColumnSpan="3"
+            MinHeight="150"
+            Margin="-15"
+            FrameVariant="RoundedSunkenLow">
+
+            <ContentControl
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Content="{Binding DigitalClockViewModel}" />
+        </controls:WidgetFrame>
+
+        <!--
+            ============================================================================
+            2. TIMERS PANEL WIDGET (Middle Left)
+            ============================================================================
+            Hosts the surgical countdowns and chronometers. Bound to TimersPanelViewModel.
+            The ItemsControl inside DigitalTimersListView will handle virtualization
+            and layout of the individual timer components.
+        -->
+
+
+        <ContentControl
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="-15"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Content="{Binding DigitalTimersListViewModel}" />
+
+        <!--
+            ============================================================================
+            3. DIGITAL SENSORS WIDGET (Middle Right)
+            ============================================================================
+            Displays multiplexed telemetry data (O2, Temp, Humidity, Pressure).
+            Separating this into its own column prevents the frequent INotifyPropertyChanged
+            events (firing every few milliseconds from Modbus) from invalidating the layout
+            of the Timers column.
+        -->
+
+        <ContentControl
+            Grid.Row="1"
+            Grid.Column="3"
+            Grid.ColumnSpan="2"
+            Margin="-15"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Content="{Binding DigitalSensorsListViewModel}" />
+
+
+        <!--
+            ============================================================================
+            4. RSS TICKER WIDGET (Bottom Full Width)
+            ============================================================================
+            Bound to RssTickerViewModel. Spans all 5 columns to provide maximum horizontal
+            screen real estate for scrolling medical news feeds (IRNA, ISNA, Vebda).
+            Height is fixed to 150 to maintain a consistent footer baseline.
+        -->
+        <controls:WidgetFrame
+            Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="5"
+            Margin="-15"
+            FrameVariant="RoundedSunkenLow">
+
+            <ContentControl Content="{Binding RssTickerViewModel}" />
+        </controls:WidgetFrame>
+
+    </Grid>
+</Window>

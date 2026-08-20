@@ -1,0 +1,199 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:SimurghDashboard.Controls"
+    xmlns:infrastructures="clr-namespace:SimurghDashboard.Infrastructures"
+    xmlns:sensors="clr-namespace:SimurghDashboard.Controls.Sensors">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Fonts.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Images.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!--
+        =====================================================================
+        DIGITAL SENSOR CONTROL - THEME STYLE
+        =====================================================================
+        Defines the visual representation of the DigitalSensorControl.
+        The template renders:
+        - Layer 1: A 9-slice rounded-raised frame background.
+        - Layer 2: Header (module name + sensor icon), a dynamic ItemsControl
+        binding to DisplayItems, and a status footer that reacts
+        to the ModuleState dependency property via triggers.
+        =====================================================================
+    -->
+    <Style TargetType="{x:Type controls:DigitalSensorControl}">
+        <Setter Property="Padding" Value="40" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:DigitalSensorControl}">
+                    <Grid>
+                        <!--  LAYER 1: 9-Slice Background Frame  -->
+                        <controls:NineSliceBorder
+                            x:Name="PART_Frame"
+                            IsHitTestVisible="False"
+                            SliceThickness="60"
+                            Source="{StaticResource ImgPanelRoundedRaised}" />
+
+                        <!--  LAYER 2: Main Content  -->
+                        <Grid Margin="{TemplateBinding Padding}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <!--  Title  -->
+                                <RowDefinition Height="*" />
+                                <!--  Sensor ItemsContainer  -->
+                                <RowDefinition Height="Auto" />
+                                <!--  Footer  -->
+                            </Grid.RowDefinitions>
+
+                            <!--
+                                SECTION A: HEADER
+                                Renders the module name (from Configuration.ModuleName)
+                                accompanied by a generic sensor icon.
+                            -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Margin="0,0,0,15"
+                                HorizontalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Path
+                                    Width="24"
+                                    Height="24"
+                                    Margin="0,0,10,0"
+                                    Data="{StaticResource IconSensor}"
+                                    Fill="{TemplateBinding Foreground}"
+                                    Stretch="Uniform" />
+                                <TextBlock
+                                    FontSize="28"
+                                    FontWeight="SemiBold"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    Text="{Binding HeaderText, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </StackPanel>
+
+                            <!--
+                                SECTION B: DYNAMIC MEASUREMENT LIST
+                                An ItemsControl that renders one row per SensorMeasurementDisplayItem.
+                                Each row displays:
+                                [1] A type-specific icon (mapped via SensorIconConverter).
+                                [2] A 7-segment-style digit overlay (placeholder "88.8" behind the real value).
+                                [3] The physical unit of measurement.
+                            -->
+                            <Border
+                                Grid.Row="1"
+                                Padding="20,15"
+                                Background="#CC000000"
+                                BorderBrush="#33FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                                <ItemsControl ItemsSource="{TemplateBinding DisplayItems}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type controls:SensorMeasurementDisplayItem}">
+                                            <Grid Margin="0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <!--  Type-Specific Icon: SensorType enum -> Geometry via converter  -->
+                                                <Path
+                                                    x:Name="PART_Icon"
+                                                    Grid.Column="0"
+                                                    Width="26"
+                                                    Height="26"
+                                                    HorizontalAlignment="Left"
+                                                    Data="{Binding Config.Type, Converter={infrastructures:SensorIconConverter}}"
+                                                    Fill="{Binding RelativeSource={RelativeSource AncestorType=controls:DigitalSensorControl}, Path=DigitBrush}"
+                                                    Stretch="Uniform" />
+
+                                                <!--  Digits: two overlaid TextBlocks (placeholder + live value)  -->
+                                                <Grid Grid.Column="1" HorizontalAlignment="Right">
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource FontFamilyDigit}"
+                                                        FontSize="48"
+                                                        FontWeight="ExtraBold"
+                                                        Foreground="{Binding RelativeSource={RelativeSource AncestorType=controls:DigitalSensorControl}, Path=PlaceholderBrush}"
+                                                        Text="88.8" />
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource FontFamilyDigit}"
+                                                        FontSize="48"
+                                                        FontWeight="ExtraBold"
+                                                        Foreground="{Binding RelativeSource={RelativeSource AncestorType=controls:DigitalSensorControl}, Path=DigitBrush}"
+                                                        Text="{Binding FormattedValue}" />
+                                                </Grid>
+
+                                                <!--  Unit of Measurement  -->
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    Margin="10,0,0,8"
+                                                    VerticalAlignment="Bottom"
+                                                    FontFamily="{StaticResource FontFamilyApp}"
+                                                    FontSize="20"
+                                                    FontWeight="Bold"
+                                                    Foreground="#707070"
+                                                    Text="{Binding Config.Unit}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+
+                            <!--
+                                SECTION C: FOOTER STATUS
+                                Displays a small status indicator ellipse and state text.
+                                The ControlTemplate.Triggers (below) swap colors/text
+                                based on the ModuleState value.
+                            -->
+                            <StackPanel
+                                Grid.Row="2"
+                                Margin="0,15,0,0"
+                                HorizontalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Ellipse
+                                    x:Name="PART_StatusIndicator"
+                                    Width="10"
+                                    Height="10"
+                                    Margin="0,0,8,0"
+                                    Fill="#4CAF50" />
+                                <TextBlock
+                                    x:Name="PART_StateText"
+                                    FontSize="14"
+                                    FontWeight="Medium"
+                                    Foreground="#4CAF50"
+                                    Text="MODULE ONLINE" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+
+                    <!--
+                        STATE-DRIVEN VISUAL TRIGGERS
+                        Reacts to the read-only State dependency property exposed by the control.
+                        Each ModuleState value swaps the footer text, its color, and the indicator fill.
+                    -->
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="State" Value="{x:Static sensors:ModuleState.Offline}">
+                            <Setter TargetName="PART_StateText" Property="Text" Value="MODULE OFFLINE" />
+                            <Setter TargetName="PART_StateText" Property="Foreground" Value="#F44336" />
+                            <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#F44336" />
+                        </Trigger>
+                        <Trigger Property="State" Value="{x:Static sensors:ModuleState.Warning}">
+                            <Setter TargetName="PART_StateText" Property="Text" Value="MODULE WARNING" />
+                            <Setter TargetName="PART_StateText" Property="Foreground" Value="#FFC107" />
+                            <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#FFC107" />
+                        </Trigger>
+                        <Trigger Property="State" Value="{x:Static sensors:ModuleState.Error}">
+                            <Setter TargetName="PART_StateText" Property="Text" Value="MODULE ERROR" />
+                            <Setter TargetName="PART_StateText" Property="Foreground" Value="#E91E63" />
+                            <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#E91E63" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

@@ -1,0 +1,177 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:SimurghDashboard.Controls">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Fonts.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Images.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+    <Style TargetType="{x:Type local:RssTicker}">
+        <Setter Property="Padding" Value="40,10" />
+        <Setter Property="FlowDirection" Value="RightToLeft" />
+        <Setter Property="FontFamily" Value="{StaticResource FontFamilyApp}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="Transparent" />
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:RssTicker}">
+                    <Grid>
+                        <!--  NineSliceBorder for the background panel  -->
+                        <local:NineSliceBorder
+                            x:Name="PART_Frame"
+                            IsHitTestVisible="False"
+                            RenderOptions.BitmapScalingMode="Fant"
+                            SliceThickness="60,60,60,60"
+                            Source="{StaticResource ImgPanelRoundedRaised}" />
+
+                        <Border
+                            Margin="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+
+                            <!--  Main Layout Grid: Fixed Source (Right) and Dynamic Marquee (Left)  -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <!--  Fixed area for the current active source name  -->
+                                    <ColumnDefinition Width="Auto" />
+                                    <!--  Dynamic area for the scrolling marquee  -->
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!--  Fixed Source Indicator Panel  -->
+                                <!--  Assumes 'CurrentSource' is a DependencyProperty updated via Geometry Tracking in C#  -->
+                                <Border
+                                    Grid.Column="0"
+                                    Margin="15,15,15,0"
+                                    Padding="15,5"
+                                    VerticalAlignment="Top"
+                                    CornerRadius="8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,8,0"
+                                            Data="{StaticResource IconBroadcast}"
+                                            Fill="#FFB74D"
+                                            Stretch="Uniform" />
+                                        <TextBlock
+                                            FontFamily="{StaticResource FontFamilyApp}"
+                                            FontSize="16"
+                                            FontWeight="Bold"
+                                            Foreground="#FFB74D"
+                                            Text="{Binding CurrentSource, RelativeSource={RelativeSource TemplatedParent}, FallbackValue='اخبار سیمرغ'}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!--  Marquee Canvas (Scrolling Content)  -->
+                                <!--  ClipToBounds="True" ensures the text disappears cleanly at the edges  -->
+                                <Canvas
+                                    x:Name="PART_Canvas"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Height="30"
+                                    VerticalAlignment="Center"
+                                    ClipToBounds="True">
+                                    <ItemsControl x:Name="PART_ItemsHost">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <!--  Horizontal layout for continuous scrolling  -->
+                                                <StackPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <!--  Margins adjusted for RightToLeft continuous flow  -->
+                                                <StackPanel
+                                                    Margin="50,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Orientation="Horizontal">
+
+                                                    <!--  Publish Date  -->
+                                                    <TextBlock
+                                                        Margin="0,0,10,0"
+                                                        VerticalAlignment="Center"
+                                                        FontFamily="{StaticResource FontFamilyApp}"
+                                                        FontSize="14"
+                                                        Foreground="#FFB74D"
+                                                        Text="{Binding PublishDate, StringFormat='HH:mm'}" />
+
+                                                    <!--  Title & Description  -->
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontFamily="{StaticResource FontFamilyApp}"
+                                                        FontSize="18"
+                                                        FontWeight="ExtraBold"
+                                                        Foreground="White">
+                                                        <Run Text="{Binding Title}" />
+                                                        <Run Foreground="AliceBlue" Text=" - " />
+                                                        <!--  Trimming description or adjusting font weight for hierarchy  -->
+                                                        <Run
+                                                            FontWeight="Normal"
+                                                            Foreground="White"
+                                                            Text="{Binding Description}" />
+                                                    </TextBlock>
+
+                                                    <!--  Separator  -->
+                                                    <Path
+                                                        Width="6"
+                                                        Height="6"
+                                                        Margin="30,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        Data="{StaticResource IconCircle}"
+                                                        Fill="#555"
+                                                        Stretch="Uniform" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Canvas>
+
+                                <!--  Loading Indicator Overlays entire grid  -->
+                                <Border
+                                    Grid.ColumnSpan="2"
+                                    Background="#88000000"
+                                    Visibility="{Binding IsLoading, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <StackPanel
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <!--  Replace with actual loading spinner icon if available  -->
+                                        <TextBlock
+                                            FontFamily="{TemplateBinding FontFamily}"
+                                            FontSize="16"
+                                            Foreground="LightGray"
+                                            Text="Loading news feeds..." />
+                                    </StackPanel>
+                                </Border>
+
+                                <!--  Error Indicator Overlays entire grid  -->
+                                <Border
+                                    Grid.ColumnSpan="2"
+                                    Background="#88420000"
+                                    Visibility="{Binding HasError, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{TemplateBinding FontFamily}"
+                                        FontSize="16"
+                                        Foreground="#FF5252"
+                                        Text="Failed to connect to news servers." />
+                                </Border>
+
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

@@ -1,0 +1,187 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  =================================================================  -->
+    <!--  FONT FAMILIES  -->
+    <!--  =================================================================  -->
+
+    <!--  Persian UI Family  -->
+    <FontFamily x:Key="FontFamilyApp">pack://application:,,,/Fonts/#Vazirmatn</FontFamily>
+
+    <!--  Numeric / Digital Family  -->
+    <FontFamily x:Key="FontFamilyDigit">pack://application:,,,/Fonts/#DSEG7 Classic</FontFamily>
+
+
+    <FontFamily x:Key="WeatherIconsFont">pack://application:,,,/Fonts/#Weather Icons</FontFamily>
+
+    <!--  =================================================================  -->
+    <!--  TYPOGRAPHY ALIASES  -->
+    <!--  =================================================================  -->
+
+    <!--  App UI Typography  -->
+    <Style x:Key="TypographyAppBase" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource FontFamilyApp}" />
+        <Setter Property="FlowDirection" Value="RightToLeft" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+    </Style>
+
+    <Style
+        x:Key="TypographyAppDisplay"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style
+        x:Key="TypographyAppTitle"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style
+        x:Key="TypographyAppBody"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Regular" />
+    </Style>
+
+    <Style
+        x:Key="TypographyAppCaption"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Light" />
+        <Setter Property="Opacity" Value="0.75" />
+    </Style>
+
+    <Style
+        x:Key="TypographyAppLabel"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+
+    <Style
+        x:Key="TypographyAppStrong"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <!--  Digital Typography  -->
+    <Style x:Key="TypographyDigitBase" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource FontFamilyDigit}" />
+        <Setter Property="FlowDirection" Value="LeftToRight" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+    </Style>
+
+    <Style
+        x:Key="TypographyDigitSmall"
+        BasedOn="{StaticResource TypographyDigitBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+
+    <Style
+        x:Key="TypographyDigitBody"
+        BasedOn="{StaticResource TypographyDigitBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+
+    <Style
+        x:Key="TypographyDigitLarge"
+        BasedOn="{StaticResource TypographyDigitBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="48" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style
+        x:Key="TypographyDigitHuge"
+        BasedOn="{StaticResource TypographyDigitBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="72" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <!--  =================================================================  -->
+    <!--  FONT WEIGHT HELPERS  -->
+    <!--  =================================================================  -->
+
+    <Style
+        x:Key="TextVazirThin"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="Thin" />
+    </Style>
+
+    <Style
+        x:Key="TextVazirExtraLight"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="ExtraLight" />
+    </Style>
+
+    <Style
+        x:Key="TextVazirLight"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="Light" />
+    </Style>
+
+    <Style
+        x:Key="TextVazirRegular"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+
+    <Style
+        x:Key="TextVazirMedium"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+
+    <Style
+        x:Key="TextVazirSemiBold"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style
+        x:Key="TextVazirBold"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style
+        x:Key="TextVazirExtraBold"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="ExtraBold" />
+    </Style>
+
+    <Style
+        x:Key="TextVazirBlack"
+        BasedOn="{StaticResource TypographyAppBase}"
+        TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="Black" />
+    </Style>
+
+</ResourceDictionary>

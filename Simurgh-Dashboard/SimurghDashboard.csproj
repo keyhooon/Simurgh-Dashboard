@@ -1,0 +1,124 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <RootNamespace>SimurghDashboard</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Fonts\dseg7-classic-latin-300-italic.ttf" />
+    <None Remove="Fonts\dseg7-classic-latin-300-normal.ttf" />
+    <None Remove="Fonts\dseg7-classic-latin-400-italic.ttf" />
+    <None Remove="Fonts\dseg7-classic-latin-400-normal.ttf" />
+    <None Remove="Fonts\dseg7-classic-latin-700-italic.ttf" />
+    <None Remove="Fonts\dseg7-classic-latin-700-normal.ttf" />
+    <None Remove="Fonts\Vazirmatn-Black.ttf" />
+    <None Remove="Fonts\Vazirmatn-Bold.ttf" />
+    <None Remove="Fonts\Vazirmatn-ExtraBold.ttf" />
+    <None Remove="Fonts\Vazirmatn-ExtraLight.ttf" />
+    <None Remove="Fonts\Vazirmatn-Light.ttf" />
+    <None Remove="Fonts\Vazirmatn-Medium.ttf" />
+    <None Remove="Fonts\Vazirmatn-Regular.ttf" />
+    <None Remove="Fonts\Vazirmatn-SemiBold.ttf" />
+    <None Remove="Fonts\Vazirmatn-Thin.ttf" />
+    <None Remove="Fonts\weathericons-regular-webfont.ttf" />
+    <None Remove="Images\Button_Pill_Raised.png" />
+    <None Remove="Images\Button_Pill_Sunken.png" />
+    <None Remove="Images\Frame_Nested_Inset.png" />
+    <None Remove="Images\Panel_Circle_Raised.png" />
+    <None Remove="Images\Panel_Circle_Sunken.png" />
+    <None Remove="Images\Panel_Rounded_Raised.png" />
+    <None Remove="Images\Panel_Rounded_Raised_Low.png" />
+    <None Remove="Images\Panel_Rounded_Sunken.png" />
+    <None Remove="Images\Panel_Rounded_Sunken_Low.png" />
+    <None Remove="Images\Panel_Square_Sunken.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Fonts\dseg7-classic-latin-300-italic.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\dseg7-classic-latin-300-normal.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\dseg7-classic-latin-400-italic.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\dseg7-classic-latin-400-normal.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\dseg7-classic-latin-700-italic.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\dseg7-classic-latin-700-normal.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Vazirmatn-Black.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Vazirmatn-Bold.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Vazirmatn-ExtraBold.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Vazirmatn-ExtraLight.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Vazirmatn-Light.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Vazirmatn-Medium.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Vazirmatn-Regular.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Vazirmatn-SemiBold.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\Vazirmatn-Thin.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Fonts\weathericons-regular-webfont.ttf" />
+    <Resource Include="Images\Panel_Rounded_Raised_Low.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\Panel_Rounded_Sunken_Low.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\Panel_Rounded_Raised.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\Panel_Rounded_Sunken.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\Panel_Square_Sunken.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <Generator></Generator>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

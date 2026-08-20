@@ -1,0 +1,163 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  =========================================================  -->
+    <!--  Base Surface Colors  -->
+    <!--  =========================================================  -->
+
+    <!--  Global background  -->
+    <Color x:Key="ColorBackground">#0B0D10</Color>
+
+    <!--  Main panel surface  -->
+    <Color x:Key="ColorSurface">#1A1D22</Color>
+
+    <!--  Deep inset area  -->
+    <Color x:Key="ColorSurfaceInset">#13161A</Color>
+
+    <!--  Inner cavity  -->
+    <Color x:Key="ColorSurfaceCavity">#0E1013</Color>
+
+    <!--  =========================================================  -->
+    <!--  Bevel Ramp Colors  -->
+    <!--  =========================================================  -->
+
+    <!--  Outer shell  -->
+    <Color x:Key="ColorBevelOuterShadow">#050607</Color>
+    <Color x:Key="ColorBevelOuterDark">#101317</Color>
+    <Color x:Key="ColorBevelOuterMid">#1E232A</Color>
+    <Color x:Key="ColorBevelOuterLight">#39414C</Color>
+
+    <!--  Inner shell  -->
+    <Color x:Key="ColorBevelInnerShadow">#0B0D10</Color>
+    <Color x:Key="ColorBevelInnerDark">#151920</Color>
+    <Color x:Key="ColorBevelInnerMid">#232932</Color>
+    <Color x:Key="ColorBevelInnerLight">#4A5563</Color>
+
+    <!--  Specular highlights  -->
+    <Color x:Key="ColorSpecularSoft">#22FFFFFF</Color>
+    <Color x:Key="ColorSpecularSharp">#55FFFFFF</Color>
+
+    <!--  =========================================================  -->
+    <!--  Structural Colors  -->
+    <!--  =========================================================  -->
+
+    <Color x:Key="ColorHeaderBackground">#20252C</Color>
+    <Color x:Key="ColorSeparator">#2B3139</Color>
+
+    <!--  =========================================================  -->
+    <!--  Typography Colors  -->
+    <!--  =========================================================  -->
+
+    <Color x:Key="ColorTextPrimary">#E4EAF1</Color>
+    <Color x:Key="ColorTextMuted">#A7B0BB</Color>
+    <Color x:Key="ColorTextDisabled">#6E7680</Color>
+
+    <!--  =========================================================  -->
+    <!--  Semantic Colors  -->
+    <!--  =========================================================  -->
+
+    <Color x:Key="ColorAccent">#7BA6B8</Color>
+    <Color x:Key="ColorSuccess">#78B07F</Color>
+    <Color x:Key="ColorWarning">#C4A56B</Color>
+    <Color x:Key="ColorDanger">#B86F6F</Color>
+
+    <!--  =========================================================  -->
+    <!--  Solid Brushes  -->
+    <!--  =========================================================  -->
+
+    <SolidColorBrush x:Key="BrushBackground" Color="{StaticResource ColorBackground}" />
+
+    <SolidColorBrush x:Key="BrushSurface" Color="{StaticResource ColorSurface}" />
+    <SolidColorBrush x:Key="BrushSurfaceInset" Color="{StaticResource ColorSurfaceInset}" />
+    <SolidColorBrush x:Key="BrushSurfaceCavity" Color="{StaticResource ColorSurfaceCavity}" />
+
+    <SolidColorBrush x:Key="BrushHeaderBackground" Color="{StaticResource ColorHeaderBackground}" />
+    <SolidColorBrush x:Key="BrushSeparator" Color="{StaticResource ColorSeparator}" />
+
+    <SolidColorBrush x:Key="BrushTextPrimary" Color="{StaticResource ColorTextPrimary}" />
+    <SolidColorBrush x:Key="BrushTextMuted" Color="{StaticResource ColorTextMuted}" />
+    <SolidColorBrush x:Key="BrushTextDisabled" Color="{StaticResource ColorTextDisabled}" />
+
+    <SolidColorBrush x:Key="BrushAccent" Color="{StaticResource ColorAccent}" />
+    <SolidColorBrush x:Key="BrushSuccess" Color="{StaticResource ColorSuccess}" />
+    <SolidColorBrush x:Key="BrushWarning" Color="{StaticResource ColorWarning}" />
+    <SolidColorBrush x:Key="BrushDanger" Color="{StaticResource ColorDanger}" />
+
+    <!--  =========================================================  -->
+    <!--  Bevel Gradient Brushes  -->
+    <!--  =========================================================  -->
+
+    <!--  =====================================================  -->
+    <!--  Deep Outer Curve  -->
+    <!--  Simulates physical shell depth  -->
+    <!--  =====================================================  -->
+
+    <LinearGradientBrush x:Key="BrushBevelOuterCurve" StartPoint="0,0" EndPoint="0,1">
+
+        <GradientStop Offset="0.00" Color="{StaticResource ColorBevelOuterLight}" />
+        <GradientStop Offset="0.04" Color="{StaticResource ColorBevelOuterMid}" />
+        <GradientStop Offset="0.18" Color="{StaticResource ColorBevelOuterDark}" />
+        <GradientStop Offset="1.00" Color="{StaticResource ColorBevelOuterShadow}" />
+    </LinearGradientBrush>
+
+    <!--  =====================================================  -->
+    <!--  Inner Curved Transition  -->
+    <!--  =====================================================  -->
+
+    <LinearGradientBrush x:Key="BrushBevelInnerCurve" StartPoint="0,0" EndPoint="0,1">
+
+        <GradientStop Offset="0.00" Color="{StaticResource ColorBevelInnerLight}" />
+        <GradientStop Offset="0.06" Color="{StaticResource ColorBevelInnerMid}" />
+        <GradientStop Offset="0.25" Color="{StaticResource ColorBevelInnerDark}" />
+        <GradientStop Offset="1.00" Color="{StaticResource ColorBevelInnerShadow}" />
+    </LinearGradientBrush>
+
+    <!--  =====================================================  -->
+    <!--  Surface Gradient  -->
+    <!--  Main metallic panel body  -->
+    <!--  =====================================================  -->
+
+    <LinearGradientBrush x:Key="BrushSurfaceGradient" StartPoint="0,0" EndPoint="0,1">
+
+        <GradientStop Offset="0.00" Color="#2A2F36" />
+        <GradientStop Offset="0.08" Color="#232830" />
+        <GradientStop Offset="0.35" Color="#1C2026" />
+        <GradientStop Offset="1.00" Color="#171B20" />
+    </LinearGradientBrush>
+
+    <!--  =====================================================  -->
+    <!--  Sunken Surface Gradient  -->
+    <!--  =====================================================  -->
+
+    <LinearGradientBrush x:Key="BrushSurfaceInsetGradient" StartPoint="0,0" EndPoint="0,1">
+
+        <GradientStop Offset="0.00" Color="#111418" />
+        <GradientStop Offset="0.15" Color="#171A1F" />
+        <GradientStop Offset="1.00" Color="#1D2126" />
+    </LinearGradientBrush>
+
+    <!--  =====================================================  -->
+    <!--  Specular Highlight  -->
+    <!--  Tight light reflection  -->
+    <!--  =====================================================  -->
+
+    <LinearGradientBrush x:Key="BrushSpecularHighlight" StartPoint="0,0" EndPoint="1,1">
+
+        <GradientStop Offset="0.00" Color="{StaticResource ColorSpecularSharp}" />
+        <GradientStop Offset="0.03" Color="{StaticResource ColorSpecularSoft}" />
+        <GradientStop Offset="0.18" Color="#00FFFFFF" />
+        <GradientStop Offset="1.00" Color="Transparent" />
+    </LinearGradientBrush>
+
+    <!--  =====================================================  -->
+    <!--  Ambient Occlusion  -->
+    <!--  Inner edge darkening  -->
+    <!--  =====================================================  -->
+
+    <LinearGradientBrush x:Key="BrushAmbientOcclusion" StartPoint="0,0" EndPoint="0,1">
+
+        <GradientStop Offset="0.00" Color="#66000000" />
+        <GradientStop Offset="0.08" Color="#22000000" />
+        <GradientStop Offset="1.00" Color="#00000000" />
+    </LinearGradientBrush>
+
+</ResourceDictionary>
