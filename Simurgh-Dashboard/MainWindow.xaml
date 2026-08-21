@@ -8,14 +8,12 @@
     xmlns:simurghDashboard="clr-namespace:SimurghDashboard"
     xmlns:viewmodels="clr-namespace:SimurghDashboard.ViewModels"
     Title="Beveled UI Showcase"
-    Width="1080"
-    Height="1920"
     Background="#FF88898F"
     ResizeMode="NoResize"
     ShowInTaskbar="False"
-    Topmost="True"
+    Topmost="True" 
     WindowStartupLocation="Manual"
-    WindowStyle="None">
+    WindowStyle="SingleBorderWindow" WindowState="Maximized">
 
     <Window.Resources>
         <ResourceDictionary Source="/SimurghDashboard;component/DataTemplates/DataTemplate.xaml" />
@@ -29,12 +27,12 @@
         to force the display into Portrait mode and ensure the GPU outputs correctly
         via HDMI. RevertOnClose (implemented previously) will restore the OS defaults.
     -->
-    <b:Interaction.Behaviors>
+    <!--<b:Interaction.Behaviors>
         <behaviors:KioskDisplayBehavior
             GpuSyncDelayMs="1500"
             TargetOrientation="Landscape"
             TargetTechnology="Hdmi" />
-    </b:Interaction.Behaviors>
+    </b:Interaction.Behaviors>-->
 
     <!--
         ================================================================================

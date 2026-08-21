@@ -12,6 +12,7 @@ using System.Net.Http.Headers;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
+using SimurghDashboard.Services.Ticker;
 
 namespace SimurghDashboard
 {
