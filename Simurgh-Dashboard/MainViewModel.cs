@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SimurghDashboard.Controls.Sensors;
-using SimurghDashboard.Models;
 using SimurghDashboard.ViewModels;
 using System.Buffers;
 using System.Collections.Immutable;
@@ -19,7 +18,7 @@ public partial class MainViewModel(
     DigitalClockViewModel clock,
     DigitalTimersListViewModel timers,
     DigitalSensorsListViewModel sensors,
-    RssTickerViewModel rssTicker)
+    TickerViewModel tickerViewModel)
     : ObservableObject
 {
     // ========================================================================
@@ -48,7 +47,7 @@ public partial class MainViewModel(
     /// Manages the bottom marquee ticker for medical news and OR announcements.
     /// </summary>
     [ObservableProperty]
-    private RssTickerViewModel _rssTickerViewModel = rssTicker;
+    private TickerViewModel _tickerViewModel = tickerViewModel;
 
     // ========================================================================
     // Global Dashboard State & Metadata

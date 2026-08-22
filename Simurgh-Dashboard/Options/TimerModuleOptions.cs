@@ -1,8 +1,8 @@
 ﻿// DigitalTimersOptions.cs
 // Mutable POCO for Microsoft.Extensions.Configuration deserialization
 
-using SimurghDashboard.Models;
 using System.ComponentModel.DataAnnotations;
+using SimurghDashboard.Controls.Timers;
 
 namespace SimurghDashboard.Options;
 

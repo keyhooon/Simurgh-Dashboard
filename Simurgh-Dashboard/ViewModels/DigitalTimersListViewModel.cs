@@ -2,8 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimurghDashboard.Controls.Timers;
-using SimurghDashboard.Mappers;
-using SimurghDashboard.Models;
 using SimurghDashboard.Options;
 using System.Collections.Immutable;
 

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SimurghDashboard.Services;
+namespace SimurghDashboard.Services.Weather.Dtos;
 
 public record Astronomy(
     [property: JsonPropertyName("sunrise")] string Sunrise,

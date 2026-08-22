@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 using SimurghDashboard.Controls;
 using SimurghDashboard.Controls.Sensors;
-using SimurghDashboard.Extensions;
 using SimurghDashboard.Options;
 
 namespace SimurghDashboard.ViewModels;

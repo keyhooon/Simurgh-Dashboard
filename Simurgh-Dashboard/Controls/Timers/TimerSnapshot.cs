@@ -1,6 +1,4 @@
-﻿using SimurghDashboard.Models;
-
-namespace SimurghDashboard.Controls.Timers
+﻿namespace SimurghDashboard.Controls.Timers
 {
     public sealed record TimerSnapshot
     {

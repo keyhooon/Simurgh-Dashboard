@@ -4,7 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:SimurghDashboard.Controls"
     xmlns:viewmodels="clr-namespace:SimurghDashboard.ViewModels"
-    xmlns:views="clr-namespace:SimurghDashboard.Views">
+    xmlns:views="clr-namespace:SimurghDashboard.Views" 
+    xmlns:ticker="clr-namespace:SimurghDashboard.Services.Ticker"
+    xmlns:models="clr-namespace:SimurghDashboard.Services.Ticker.Models">
 
     <!--
         Implicit DataTemplates (No x:Key):
@@ -13,12 +15,81 @@
         This forms the backbone of View-Model decoupling in our MVVM architecture.
     -->
 
+    <!-- ============================================================
+         Ticker Item Model Templates (resolved by type for MarqueeItemsControl)
+         ============================================================ -->
+
+    <DataTemplate DataType="{x:Type models:RssItemModel}">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock
+                Margin="0,0,15,0"
+                VerticalAlignment="Center"
+                FontFamily="/SimurghDashboard;component/Fonts/#DSEG7 Classic"
+                FontSize="14"
+                Foreground="#FFB74D"
+                Text="{Binding PublishDate, StringFormat='HH:mm'}" />
+
+            <TextBlock
+                VerticalAlignment="Center"
+                FontFamily="/SimurghDashboard;component/Fonts/#Vazirmatn"
+                FontSize="18"
+                FontWeight="ExtraBold"
+                Foreground="White">
+                <Run Text="{Binding Title}" />
+                <Run Foreground="AliceBlue" Text=" - " />
+                <Run
+                    FontWeight="Normal"
+                    Foreground="White"
+                    Text="{Binding Description}" />
+            </TextBlock>
+
+            <Path
+                Width="6"
+                Height="6"
+                Margin="30,0,0,0"
+                VerticalAlignment="Center"
+                Data="M0,0 A3,3 0 1,1 0,6 A3,3 0 1,1 0,0 Z"
+                Fill="#555"
+                Stretch="Uniform" />
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type models:NotificationItemModel}">
+        <StackPanel Orientation="Horizontal">
+            <Border
+                Margin="0,0,10,0"
+                Padding="8,2"
+                VerticalAlignment="Center"
+                Background="#FFB74D"
+                CornerRadius="4">
+                <TextBlock
+                    FontSize="12"
+                    FontWeight="Bold"
+                    Foreground="#1A1A1A"
+                    Text="{Binding Source}" />
+            </Border>
+
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="18"
+                FontWeight="Bold"
+                Foreground="White"
+                Text="{Binding Message}" />
+
+            <Path
+                Width="6"
+                Height="6"
+                Margin="30,0,0,0"
+                VerticalAlignment="Center"
+                Data="M0,0 A3,3 0 1,1 0,6 A3,3 0 1,1 0,0 Z"
+                Fill="#555"
+                Stretch="Uniform" />
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ============================================================ -->
+
     <DataTemplate DataType="{x:Type viewmodels:DigitalTimerViewModel}">
-        <!--
-            Direct binding to atomic properties of the ViewModel.
-            Mode=TwoWay is crucial for RequestedAction so the hardware/UI interactions
-            can push state changes back to the ViewModel.
-        -->
         <controls:DigitalTimerControl
             Margin="-20"
             HorizontalAlignment="Stretch"
@@ -31,10 +102,6 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewmodels:DigitalSensorViewModel}">
-        <!--
-            Notice how RawTelemetry pushes real-time string/float data
-            from the Modbus/Serial source directly into the dependency property of the custom control.
-        -->
         <controls:DigitalSensorControl
             Margin="-20"
             HorizontalAlignment="Stretch"
@@ -46,15 +113,13 @@
             RawTelemetry="{Binding RawTelemetry}" />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type viewmodels:RssTickerViewModel}">
-        <controls:RssTicker
+    <DataTemplate DataType="{x:Type viewmodels:TickerViewModel}">
+        <controls:MarqueeItemsControl
             Height="150"
             Margin="-20"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
-            FeedService="{Binding FeedService, Mode=OneWay}"
-            FeedUrls="{Binding FeedUrls}"
-            RefreshInterval="{Binding RefreshInterval}"
+            ItemsSource="{Binding DisplayItems}"
             ScrollSpeed="{Binding ScrollSpeed}" />
     </DataTemplate>
 
@@ -62,10 +127,16 @@
         <controls:DigitalClockControl
             x:Name="DigitalClockControl"
             Margin="-10"
+            ConditionIcon="{Binding ConditionIcon}"
+            ConditionText="{Binding ConditionText}"
             DateBrush="{Binding DateBrush}"
             DigitBrush="{Binding DigitBrush}"
+            HasError="{Binding HasError}"
+            Humidity="{Binding Humidity}"
             IsLoading="{Binding IsLoadingWeather}"
-            PlaceholderBrush="{Binding PlaceholderBrush}" />
+            PlaceholderBrush="{Binding PlaceholderBrush}"
+            Temperature="{Binding Temperature}"
+            Wind="{Binding Wind}" />
     </DataTemplate>
 
     <!--
@@ -75,20 +146,10 @@
     -->
 
     <DataTemplate DataType="{x:Type viewmodels:DigitalTimersListViewModel}">
-        <!--
-            Resolves the TimersPanelViewModel to the DigitalTimersListView.
-            Inside that view, an ItemsControl will generate the individual DigitalTimerControls
-            using the DigitalTimerViewModel DataTemplate defined above.
-            It's a recursive visual tree resolution!
-        -->
         <views:DigitalTimersListView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewmodels:DigitalSensorsListViewModel}">
-        <!--
-            Resolves the DigitalSensorsListViewModel to the DigitalSensorsListView.
-            Similar to timers, it delegates the rendering of individual sensors.
-        -->
         <views:DigitalSensorsListView Height="800" />
     </DataTemplate>
 

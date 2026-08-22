@@ -11,7 +11,6 @@
     Background="#FF88898F"
     ResizeMode="NoResize"
     ShowInTaskbar="False"
-    Topmost="True" 
     WindowStartupLocation="Manual"
     WindowStyle="SingleBorderWindow" WindowState="Maximized">
 
@@ -86,44 +85,6 @@
                 Content="{Binding DigitalClockViewModel}" />
         </controls:WidgetFrame>
 
-        <!--
-            ============================================================================
-            2. TIMERS PANEL WIDGET (Middle Left)
-            ============================================================================
-            Hosts the surgical countdowns and chronometers. Bound to TimersPanelViewModel.
-            The ItemsControl inside DigitalTimersListView will handle virtualization
-            and layout of the individual timer components.
-        -->
-
-
-        <ContentControl
-            Grid.Row="1"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            Margin="-15"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            Content="{Binding DigitalTimersListViewModel}" />
-
-        <!--
-            ============================================================================
-            3. DIGITAL SENSORS WIDGET (Middle Right)
-            ============================================================================
-            Displays multiplexed telemetry data (O2, Temp, Humidity, Pressure).
-            Separating this into its own column prevents the frequent INotifyPropertyChanged
-            events (firing every few milliseconds from Modbus) from invalidating the layout
-            of the Timers column.
-        -->
-
-        <ContentControl
-            Grid.Row="1"
-            Grid.Column="3"
-            Grid.ColumnSpan="2"
-            Margin="-15"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            Content="{Binding DigitalSensorsListViewModel}" />
-
 
         <!--
             ============================================================================
@@ -140,7 +101,7 @@
             Margin="-15"
             FrameVariant="RoundedSunkenLow">
 
-            <ContentControl Content="{Binding RssTickerViewModel}" />
+            <ContentControl Content="{Binding TickerViewModel}" />
         </controls:WidgetFrame>
 
     </Grid>

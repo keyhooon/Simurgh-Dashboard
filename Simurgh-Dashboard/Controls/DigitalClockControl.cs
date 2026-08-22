@@ -1,9 +1,10 @@
-﻿using SimurghDashboard.Services;
+using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using SimurghDashboard.ViewModels;
 
 namespace SimurghDashboard.Controls
 {
@@ -22,7 +23,7 @@ namespace SimurghDashboard.Controls
         {
             _timer = new DispatcherTimer(DispatcherPriority.Render)
             {
-                Interval = TimeSpan.FromSeconds(1)
+                Interval = TimeSpan.FromMicroseconds(100)
             };
 
             _timer.Tick += OnTimerTick;
@@ -45,6 +46,7 @@ namespace SimurghDashboard.Controls
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
+
             if (_timer.IsEnabled)
                 _timer.Stop();
         }
@@ -81,15 +83,12 @@ namespace SimurghDashboard.Controls
 
         private string ResolveTimeFormat()
         {
-            // fixed English format
+            // Fixed English format
             return ShowSeconds ? "HH:mm:ss" : "HH:mm";
         }
 
         private static string ToLatinDigits(string input)
         {
-            // Invariant formatting usually already yields Latin digits,
-            // but this guarantees it.
-            var fa = new CultureInfo("fa-IR");
             return string.Create(input.Length, input, (span, src) =>
             {
                 for (var i = 0; i < src.Length; i++)
@@ -97,38 +96,41 @@ namespace SimurghDashboard.Controls
                     var c = src[i];
                     span[i] = c switch
                     {
-                        '۰' => '0',
-                        '۱' => '1',
-                        '۲' => '2',
-                        '۳' => '3',
-                        '۴' => '4',
-                        '۵' => '5',
-                        '۶' => '6',
-                        '۷' => '7',
-                        '۸' => '8',
-                        '۹' => '9',
+                        '\u06F0' => '0',
+                        '\u06F1' => '1',
+                        '\u06F2' => '2',
+                        '\u06F3' => '3',
+                        '\u06F4' => '4',
+                        '\u06F5' => '5',
+                        '\u06F6' => '6',
+                        '\u06F7' => '7',
+                        '\u06F8' => '8',
+                        '\u06F9' => '9',
                         _ => c
                     };
                 }
             });
         }
 
-
         private static string FormatJalaliDate(DateTime dateTime)
         {
-            var culture = new CultureInfo("fa-IR");
-            culture.DateTimeFormat.Calendar = new PersianCalendar();
+            var culture = new CultureInfo("fa-IR")
+            {
+                DateTimeFormat =
+                {
+                    Calendar = new PersianCalendar()
+                }
+            };
 
-            var pattern = "dddd d MMMM yyyy "; // e.g. "dddd d MMMM yyyy"
+            var pattern = "dddd d MMMM yyyy ";
             return dateTime.ToString(pattern, culture);
         }
 
+        // -----------------------------
+        // Dependency Properties
+        // -----------------------------
 
-    // -----------------------------
-    // Dependency Properties
-    // -----------------------------
-
-    public DateTime Time
+        public DateTime Time
         {
             get => (DateTime)GetValue(TimeProperty);
             private set => SetValue(TimePropertyKey, value);
@@ -198,6 +200,7 @@ namespace SimurghDashboard.Controls
                 typeof(Brush),
                 typeof(DigitalClockControl),
                 new PropertyMetadata(new SolidColorBrush(Color.FromArgb(0xFF, 0x7D, 0x00, 0x00))));
+
         public Brush PlaceholderBrush
         {
             get => (Brush)GetValue(PlaceholderBrushProperty);
@@ -224,31 +227,67 @@ namespace SimurghDashboard.Controls
                 typeof(DigitalClockControl),
                 new PropertyMetadata(new SolidColorBrush(Color.FromArgb(0xFF, 0x7D, 0x00, 0x00))));
 
-        public string WeatherUrl
-        {
-            get => (string)GetValue(WeatherUrlProperty);
-            set => SetValue(WeatherUrlProperty, value);
-        }
+        // Weather pass-through properties (set by ViewModel via DataTemplate binding)
 
-        public static readonly DependencyProperty WeatherUrlProperty =
+        public string Temperature
+        {
+            get => (string)GetValue(TemperatureProperty);
+            set => SetValue(TemperatureProperty, value);
+        }
+        public static readonly DependencyProperty TemperatureProperty =
             DependencyProperty.Register(
-                nameof(WeatherUrl),
+                nameof(Temperature),
                 typeof(string),
                 typeof(DigitalClockControl),
-                new PropertyMetadata("https://wttr.in/Tehran?format=j1"));
+                new PropertyMetadata("--"));
 
-        public IWeatherService WeatherService
+        public string ConditionText
         {
-            get => (IWeatherService)GetValue(WeatherServiceProperty);
-            set => SetValue(WeatherServiceProperty, value);
+            get => (string)GetValue(ConditionTextProperty);
+            set => SetValue(ConditionTextProperty, value);
         }
-        public static readonly DependencyProperty WeatherServiceProperty =
+        public static readonly DependencyProperty ConditionTextProperty =
             DependencyProperty.Register(
-                nameof(WeatherService),
-                typeof(IWeatherService),
+                nameof(ConditionText),
+                typeof(string),
                 typeof(DigitalClockControl),
-                new PropertyMetadata(null));
+                new PropertyMetadata("Unknown"));
 
+        public string ConditionIcon
+        {
+            get => (string)GetValue(ConditionIconProperty);
+            set => SetValue(ConditionIconProperty, value);
+        }
+        public static readonly DependencyProperty ConditionIconProperty =
+            DependencyProperty.Register(
+                nameof(ConditionIcon),
+                typeof(string),
+                typeof(DigitalClockControl),
+                new PropertyMetadata("\u2601"));
+
+        public string Humidity
+        {
+            get => (string)GetValue(HumidityProperty);
+            set => SetValue(HumidityProperty, value);
+        }
+        public static readonly DependencyProperty HumidityProperty =
+            DependencyProperty.Register(
+                nameof(Humidity),
+                typeof(string),
+                typeof(DigitalClockControl),
+                new PropertyMetadata("--%"));
+
+        public string Wind
+        {
+            get => (string)GetValue(WindProperty);
+            set => SetValue(WindProperty, value);
+        }
+        public static readonly DependencyProperty WindProperty =
+            DependencyProperty.Register(
+                nameof(Wind),
+                typeof(string),
+                typeof(DigitalClockControl),
+                new PropertyMetadata("-- km/h"));
 
         public bool IsLoading
         {
@@ -274,6 +313,4 @@ namespace SimurghDashboard.Controls
                 typeof(DigitalClockControl),
                 new PropertyMetadata(false));
     }
-
-
 }

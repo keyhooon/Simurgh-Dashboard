@@ -1,6 +1,4 @@
-﻿using SimurghDashboard.Models;
-
-namespace SimurghDashboard.Controls.Timers;
+﻿namespace SimurghDashboard.Controls.Timers;
 
 /// <summary>
 /// Represents the pure, immutable data payload for a timer's configuration.

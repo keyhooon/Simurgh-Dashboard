@@ -2,10 +2,8 @@
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using SimurghDashboard.Controls.Timers;
-using SimurghDashboard.Models;
 using SimurghDashboard.Options;
 using System.Windows.Media;
-using SimurghDashboard.Mappers;
 
 namespace SimurghDashboard.ViewModels;
 

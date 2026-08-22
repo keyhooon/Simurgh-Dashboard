@@ -1,7 +1,6 @@
 ﻿using SimurghDashboard.Controls.Timers;
-using SimurghDashboard.Options;
 
-namespace SimurghDashboard.Mappers;
+namespace SimurghDashboard.Options;
 
 /// <summary>
 /// Extension methods for projecting options into pure domain configuration models.

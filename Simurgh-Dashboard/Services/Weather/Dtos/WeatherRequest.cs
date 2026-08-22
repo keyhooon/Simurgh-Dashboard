@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SimurghDashboard.Services;
+namespace SimurghDashboard.Services.Weather.Dtos;
 
 public record WeatherRequest(
     [property: JsonPropertyName("query")] string Query,

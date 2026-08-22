@@ -1,0 +1,119 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+                    xmlns:models1="clr-namespace:SimurghDashboard.Services.Ticker.Models">
+
+    <!-- ========================================== -->
+    <!-- 1. FROZEN RESOURCES (Zero CPU/Memory Overhead) -->
+    <!-- ========================================== -->
+
+    <SolidColorBrush x:Key="Ticker.Foreground" Color="#EFEFEF" po:Freeze="True" />
+    <SolidColorBrush x:Key="Ticker.MutedForeground" Color="#AAAAAA" po:Freeze="True" />
+    <SolidColorBrush x:Key="Ticker.BadgeBackground" Color="#007ACC" po:Freeze="True" />
+    <SolidColorBrush x:Key="Ticker.SeparatorFill" Color="#666666" po:Freeze="True" />
+
+    <!-- Notification Brushes -->
+    <SolidColorBrush x:Key="Notif.Bg.Info" Color="#1E1E1E" po:Freeze="True" />
+    <SolidColorBrush x:Key="Notif.Border.Info" Color="#007ACC" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="Notif.Bg.Warning" Color="#2D1D05" po:Freeze="True" />
+    <SolidColorBrush x:Key="Notif.Border.Warning" Color="#F39C12" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="Notif.Bg.Critical" Color="#330A0A" po:Freeze="True" />
+    <SolidColorBrush x:Key="Notif.Border.Critical" Color="#E51400" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="Notif.Bg.Success" Color="#0A2211" po:Freeze="True" />
+    <SolidColorBrush x:Key="Notif.Border.Success" Color="#27AE60" po:Freeze="True" />
+
+    <!-- ========================================== -->
+    <!-- 2. SEPARATOR TEMPLATE -->
+    <!-- ========================================== -->
+
+    <DataTemplate x:Key="MarqueeSeparatorTemplate">
+        <!-- Simple geometry, no layout recalculations needed -->
+        <Ellipse Width="6" Height="6" 
+                 Fill="{StaticResource Ticker.SeparatorFill}" 
+                 Margin="0,0,0,0"
+                 IsHitTestVisible="False" />
+    </DataTemplate>
+
+    <!-- ========================================== -->
+    <!-- 3. RSS ITEM TEMPLATE -->
+    <!-- ========================================== -->
+
+    <DataTemplate DataType="{x:Type models1:RssItemModel}">
+        <!-- Flat layout: StackPanel is highly optimized for horizontal stacking -->
+        <StackPanel Orientation="Horizontal" IsHitTestVisible="False">
+
+            <!-- Source Badge -->
+            <Border Background="{StaticResource Ticker.BadgeBackground}" 
+                    CornerRadius="4" 
+                    Padding="8,2" 
+                    Margin="0,0,10,0">
+                <TextBlock Text="{Binding Source, Mode=OneTime}" 
+                           Foreground="White" 
+                           FontWeight="SemiBold" 
+                           FontSize="14" 
+                           VerticalAlignment="Center" />
+            </Border>
+
+            <!-- Title Text -->
+            <TextBlock Text="{Binding Title, Mode=OneTime}" 
+                       Foreground="{StaticResource Ticker.Foreground}" 
+                       FontSize="16" 
+                       VerticalAlignment="Center" 
+                       TextOptions.TextFormattingMode="Display" />
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ========================================== -->
+    <!-- 4. NOTIFICATION ITEM TEMPLATE -->
+    <!-- ========================================== -->
+
+    <DataTemplate DataType="{x:Type models1:NotificationItemModel}">
+        <Border x:Name="RootBorder"
+                Background="{StaticResource Notif.Bg.Info}"
+                BorderBrush="{StaticResource Notif.Border.Info}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12,6"
+                IsHitTestVisible="False">
+
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="IconText" 
+                           Text="ℹ️" 
+                           Margin="0,0,8,0" 
+                           VerticalAlignment="Center" 
+                           FontSize="14"/>
+
+                <TextBlock Text="{Binding Message, Mode=OneTime}" 
+                           Foreground="{StaticResource Ticker.Foreground}" 
+                           FontSize="16" 
+                           VerticalAlignment="Center"
+                           TextOptions.TextFormattingMode="Display"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Triggers evaluate very fast on spawn and don't re-evaluate during scrolling -->
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Severity, Mode=OneTime}" Value="Warning">
+                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Notif.Bg.Warning}" />
+                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource Notif.Border.Warning}" />
+                <Setter TargetName="IconText" Property="Text" Value="⚠️" />
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding Severity, Mode=OneTime}" Value="Critical">
+                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Notif.Bg.Critical}" />
+                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource Notif.Border.Critical}" />
+                <Setter TargetName="IconText" Property="Text" Value="🔴" />
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding Severity, Mode=OneTime}" Value="Success">
+                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Notif.Bg.Success}" />
+                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource Notif.Border.Success}" />
+                <Setter TargetName="IconText" Property="Text" Value="✅" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+</ResourceDictionary>

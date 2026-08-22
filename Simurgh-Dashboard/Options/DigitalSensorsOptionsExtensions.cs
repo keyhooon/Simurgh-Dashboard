@@ -1,10 +1,8 @@
 ﻿// Extensions/SensorModuleOptionsExtensions.cs
 
-using System.Collections.Immutable;
 using SimurghDashboard.Controls.Sensors;
-using SimurghDashboard.Options;
 
-namespace SimurghDashboard.Extensions;
+namespace SimurghDashboard.Options;
 
 public static class SensorModuleOptionsExtensions
 {

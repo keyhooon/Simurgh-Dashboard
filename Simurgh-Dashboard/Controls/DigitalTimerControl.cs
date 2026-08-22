@@ -1,6 +1,5 @@
 ﻿using SimurghDashboard.Controls.Timers;
 using SimurghDashboard.Infrastructures;
-using SimurghDashboard.Models;
 using System;
 using System.Globalization;
 using System.Threading;

@@ -1,4 +1,4 @@
-﻿namespace SimurghDashboard.Models;
+﻿namespace SimurghDashboard.Controls.Timers;
 
 /// <summary>
 /// Defines the operational mode of the timer engine.

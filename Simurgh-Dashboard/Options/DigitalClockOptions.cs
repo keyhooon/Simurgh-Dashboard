@@ -11,11 +11,6 @@ public sealed class DigitalClockOptions
 {
     public const string SectionName = "DigitalClock";
 
-    // --- Weather ---
-
-    [Required(AllowEmptyStrings = false)]
-    [Url]
-    public string WeatherUrl { get; set; } = "https://wttr.in/Tehran?format=j1";
 
     // --- Display toggles ---
 

@@ -1,4 +1,4 @@
-﻿namespace SimurghDashboard.Models;
+﻿namespace SimurghDashboard.Controls.Timers;
 
 /// <summary>
 /// Defines the specific actions that can be requested from the ViewModel 

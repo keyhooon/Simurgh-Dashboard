@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SimurghDashboard.Services;
+namespace SimurghDashboard.Services.Weather.Dtos;
 
 public record CurrentCondition(
     [property: JsonPropertyName("temp_C")] string TempC,

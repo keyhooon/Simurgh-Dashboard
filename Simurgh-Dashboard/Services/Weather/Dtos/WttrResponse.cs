@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SimurghDashboard.Services;
+namespace SimurghDashboard.Services.Weather.Dtos;
 
 public record WttrResponse(
     [property: JsonPropertyName("current_condition")] List<CurrentCondition> CurrentCondition,

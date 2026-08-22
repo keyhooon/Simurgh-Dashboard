@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SimurghDashboard.Services;
+namespace SimurghDashboard.Services.Weather.Dtos;
 
 public record WeatherForecast(
     [property: JsonPropertyName("date")] string Date,

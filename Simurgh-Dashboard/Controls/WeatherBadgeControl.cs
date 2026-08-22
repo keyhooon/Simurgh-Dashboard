@@ -1,20 +1,15 @@
-﻿using SimurghDashboard.Services;
 using System;
-using System.Globalization;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Threading;
 
 namespace SimurghDashboard.Controls;
 
+/// <summary>
+/// Display-only weather badge control. All data is driven by the ViewModel through bindings.
+/// No fetching logic — the ViewModel handles weather service calls and updates properties.
+/// </summary>
 public class WeatherBadgeControl : Control
 {
-    private readonly DispatcherTimer _refreshTimer;
-    private CancellationTokenSource? _cts;
-
     static WeatherBadgeControl()
     {
         DefaultStyleKeyProperty.OverrideMetadata(
@@ -22,55 +17,7 @@ public class WeatherBadgeControl : Control
             new FrameworkPropertyMetadata(typeof(WeatherBadgeControl)));
     }
 
-    public WeatherBadgeControl()
-    {
-        Loaded += OnLoaded;
-        Unloaded += OnUnloaded;
-
-        // تنظیم تایمر برای آپدیت خودکار
-        _refreshTimer = new DispatcherTimer();
-        _refreshTimer.Tick += async (s, e) => await RefreshAsync();
-    }
-
     #region Dependency Properties
-
-    // اضافه شدن سرویس برای تزریق وابستگی (DI)
-    public IWeatherService WeatherService
-    {
-        get => (IWeatherService)GetValue(WeatherServiceProperty);
-        set => SetValue(WeatherServiceProperty, value);
-    }
-    public static readonly DependencyProperty WeatherServiceProperty =
-        DependencyProperty.Register(
-            nameof(WeatherService),
-            typeof(IWeatherService),
-            typeof(WeatherBadgeControl),
-            new PropertyMetadata(null, OnConfigChanged));
-
-    // بازه زمانی آپدیت خودکار
-    public TimeSpan RefreshInterval
-    {
-        get => (TimeSpan)GetValue(RefreshIntervalProperty);
-        set => SetValue(RefreshIntervalProperty, value);
-    }
-    public static readonly DependencyProperty RefreshIntervalProperty =
-        DependencyProperty.Register(
-            nameof(RefreshInterval),
-            typeof(TimeSpan),
-            typeof(WeatherBadgeControl),
-            new PropertyMetadata(TimeSpan.FromMinutes(30), OnIntervalChanged));
-
-    public string WeatherUrl
-    {
-        get => (string)GetValue(WeatherUrlProperty);
-        set => SetValue(WeatherUrlProperty, value);
-    }
-    public static readonly DependencyProperty WeatherUrlProperty =
-        DependencyProperty.Register(
-            nameof(WeatherUrl),
-            typeof(string),
-            typeof(WeatherBadgeControl),
-            new PropertyMetadata("https://wttr.in/Tehran?format=j1", OnConfigChanged));
 
     public string Temperature
     {
@@ -106,7 +53,7 @@ public class WeatherBadgeControl : Control
             nameof(ConditionIcon),
             typeof(string),
             typeof(WeatherBadgeControl),
-            new PropertyMetadata("☁"));
+            new PropertyMetadata("\u2601"));
 
     public string Humidity
     {
@@ -154,7 +101,7 @@ public class WeatherBadgeControl : Control
             nameof(ConditionTextVisibility),
             typeof(Visibility),
             typeof(WeatherBadgeControl),
-            new PropertyMetadata(Visibility.Collapsed));
+            new PropertyMetadata(Visibility.Visible));
 
     public Visibility HumidityVisibility
     {
@@ -166,7 +113,7 @@ public class WeatherBadgeControl : Control
             nameof(HumidityVisibility),
             typeof(Visibility),
             typeof(WeatherBadgeControl),
-            new PropertyMetadata(Visibility.Collapsed));
+            new PropertyMetadata(Visibility.Visible));
 
     public Visibility WindVisibility
     {
@@ -178,7 +125,7 @@ public class WeatherBadgeControl : Control
             nameof(WindVisibility),
             typeof(Visibility),
             typeof(WeatherBadgeControl),
-            new PropertyMetadata(Visibility.Collapsed));
+            new PropertyMetadata(Visibility.Visible));
 
     public bool IsLoading
     {
@@ -205,117 +152,4 @@ public class WeatherBadgeControl : Control
             new PropertyMetadata(false));
 
     #endregion
-
-    private static void OnConfigChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is WeatherBadgeControl { IsLoaded: true } control)
-        {
-            _ = control.RefreshAsync();
-        }
-    }
-
-    private static void OnIntervalChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is WeatherBadgeControl control)
-        {
-            control._refreshTimer.Interval = (TimeSpan)e.NewValue;
-        }
-    }
-
-    private async void OnLoaded(object sender, RoutedEventArgs e)
-    {
-        _refreshTimer.Interval = RefreshInterval;
-        _refreshTimer.Start();
-        await RefreshAsync();
-    }
-
-    private void OnUnloaded(object sender, RoutedEventArgs e)
-    {
-        // توقف تایمر و لغو درخواست وب هنگام بسته شدن کنترل برای جلوگیری از Memory Leak
-        _refreshTimer.Stop();
-        CancelCurrentOperation();
-    }
-
-    public async Task RefreshAsync()
-    {
-        // سرویس باید از طریق DI (از پنجره اصلی) تزریق شده باشد
-        if (WeatherService == null || string.IsNullOrWhiteSpace(WeatherUrl))
-            return;
-
-        CancelCurrentOperation();
-        _cts = new CancellationTokenSource();
-
-        IsLoading = true;
-        HasError = false;
-
-        try
-        {
-            var response = await WeatherService.GetWeatherAsync(WeatherUrl, _cts.Token);
-            var current = response?.CurrentCondition?.FirstOrDefault();
-
-            if (current is null)
-            {
-                HasError = true;
-                return;
-            }
-
-            var description = current.WeatherDesc?.FirstOrDefault()?.Value ?? "Unknown";
-
-            Temperature = $"{current.TempC}°";
-            ConditionText = description;
-            ConditionIcon = MapIcon(description);
-            Humidity = $"{current.Humidity}%";
-            Wind = $"{current.WindspeedKmph} km/h";
-        }
-        catch (OperationCanceledException)
-        {
-            // درخواست لغو شده است (هنگام بستن فرم رخ می‌دهد)، نیازی به مدیریت نیست
-        }
-        catch
-        {
-            HasError = true;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    private void CancelCurrentOperation()
-    {
-        if (_cts != null && !_cts.IsCancellationRequested)
-        {
-            _cts.Cancel();
-            _cts.Dispose();
-            _cts = null;
-        }
-    }
-
-    private static string MapIcon(string condition)
-    {
-        var normalized = condition.Trim().ToLower(CultureInfo.InvariantCulture);
-
-        if (normalized.Contains("sun") || normalized.Contains("clear"))
-            return "\uf00d"; // wi-day-sunny
-
-        if (normalized.Contains("partly"))
-            return "\uf002"; // wi-day-cloudy
-
-        if (normalized.Contains("cloud") || normalized.Contains("overcast"))
-            return "\uf013"; // wi-cloudy
-
-        if (normalized.Contains("rain") || normalized.Contains("drizzle") || normalized.Contains("shower"))
-            return "\uf019"; // wi-rain
-
-        if (normalized.Contains("thunder") || normalized.Contains("storm"))
-            return "\uf01e"; // wi-thunderstorm
-
-        if (normalized.Contains("snow") || normalized.Contains("sleet") || normalized.Contains("ice"))
-            return "\uf01b"; // wi-snow
-
-        if (normalized.Contains("mist") || normalized.Contains("fog") || normalized.Contains("haze"))
-            return "\uf014"; // wi-fog
-
-        return "\uf03e"; // wi-na (حالت نامشخص)
-    }
 }

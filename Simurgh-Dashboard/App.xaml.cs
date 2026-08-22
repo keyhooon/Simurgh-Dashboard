@@ -1,122 +1,125 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
 using SimurghDashboard.Infrastructures;
 using SimurghDashboard.Options;
 using SimurghDashboard.Services;
-using SimurghDashboard.ViewModels;
-using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Windows;
-using System.Windows.Threading;
-using Microsoft.Extensions.Configuration;
 using SimurghDashboard.Services.Ticker;
+using SimurghDashboard.Services.Ticker.Contracts;
+using SimurghDashboard.Services.Ticker.Repositories;
+using SimurghDashboard.Services.Weather;
+using SimurghDashboard.ViewModels;
 
 namespace SimurghDashboard
 {
     /// <summary>
     /// Core application class responsible for bootstrapping the Simurgh-Dashboard kiosk.
-    /// Handles Dependency Injection (DI) setup, global exception management, and startup lifecycle.
+    /// Manages the Microsoft.Extensions.Hosting lifecycle, DI pipeline, and global fault tolerance.
     /// </summary>
     public partial class App : Application
     {
-        // NLog logger for the App class itself — created before DI is ready so startup
-        // failures (e.g. ValidateOnStart) are still recorded to disk.
+        // Static NLog logger initialized before DI/IHost pipeline for early boot diagnostics.
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-
-        public static IServiceProvider ServiceProvider { get; private set; }
+        // Host instance encapsulating DI, configuration, logging, and all registered IHostedService workers.
+        private IHost? _host;
 
         /// <summary>
-        /// Overrides the standard startup process to inject our custom Bootstrapping logic
-        /// before rendering the UI or interacting with hardware interfaces.
+        /// Global service provider access point for legacy components or dynamic resolution.
         /// </summary>
-        protected override void OnStartup(StartupEventArgs e)
+        public static IServiceProvider ServiceProvider { get; private set; } = null!;
+
+        /// <summary>
+        /// Boots the generic host, starts hosted background workers (Weather, Ticker, etc.),
+        /// and initializes the main kiosk shell.
+        /// </summary>
+        protected override async void OnStartup(StartupEventArgs e)
         {
-            // 1. Establish the global exception handler before anything else runs.
-            //    In a surgical/medical environment, unhandled UI-thread exceptions must be
-            //    logged and suppressed rather than crashing to the Windows desktop.
+            // Establish global UI dispatcher protection immediately.
             this.DispatcherUnhandledException += App_DispatcherUnhandledException;
 
-            _logger.Info("Simurgh Dashboard starting up…");
+            _logger.Info("Simurgh Dashboard starting up (IHost bootstrapping)...");
 
             try
             {
-                // 2. Initialize the IoC (Inversion of Control) container.
-                var serviceCollection = new ServiceCollection();
-                ConfigureServices(serviceCollection);
+                // Build the generic host using HostApplicationBuilder (.NET 8/9 optimized pipeline).
+                var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
+                {
+                    Args = e.Args,
+                    ContentRootPath = AppContext.BaseDirectory
+                });
 
-                // 3. Build the provider — also triggers ValidateOnStart() checks for all
-                //    registered IOptions<T> so misconfigured appsettings fail loud and early.
-                ServiceProvider = serviceCollection.BuildServiceProvider(
-                    new ServiceProviderOptions { ValidateOnBuild = true });
+                // Explicitly load configuration files with change monitoring.
+                builder.Configuration
+                    .SetBasePath(AppContext.BaseDirectory)
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
 
-                _logger.Info("DI container built and all options validated successfully.");
+                // Configure logging pipeline to route through NLog.
+                builder.Logging.ClearProviders();
+                builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+                builder.Logging.AddNLog();
+
+                // Register services, options, viewmodels, and workers.
+                ConfigureServices(builder.Services, builder.Configuration);
+
+                // Build the host container; triggers ValidateOnStart checks across all options.
+                _host = builder.Build();
+                ServiceProvider = _host.Services;
+
+                _logger.Info("IHost successfully built. Starting hosted background services...");
+
+                // StartAsync automatically resolves and executes ExecuteAsync on all IHostedService/BackgroundService instances.
+                await _host.StartAsync();
+
+                _logger.Info("All hosted services started. Rendering MainWindow...");
+
+                // Resolve and display the kiosk shell on the UI thread.
+                var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+                mainWindow.Show();
             }
             catch (Exception ex)
             {
-                // Catches fatal startup failures: missing config sections, DataAnnotation
-                // violations from ValidateOnStart, missing required services, etc.
-                _logger.Fatal(ex, "Fatal error during application startup — process will exit.");
+                _logger.Fatal(ex, "Fatal error during application host startup — process will terminate.");
 
                 MessageBox.Show(
-                    $"Application failed to start:\n\n{ex.Message}",
-                    "Simurgh Dashboard — Startup Error",
+                    $"Application failed to initialize host pipeline:\n\n{ex.Message}",
+                    "Simurgh Dashboard — Boot Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
 
-                // Shut down NLog before Process.Exit so nothing is lost.
                 LogManager.Shutdown();
                 Environment.Exit(1);
                 return;
             }
 
             base.OnStartup(e);
-            // 4. Resolve and show the MainWindow via DI to ensure injected dependencies are satisfied.
-            var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
-            mainWindow.Show();
-
         }
 
         /// <summary>
-        /// Registers all ViewModels, Services, and Infrastructure clients into the DI container.
+        /// Registers options, HTTP handlers, workers, views, and viewmodels into the DI container.
         /// </summary>
-        private void ConfigureServices(IServiceCollection services)
+        private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
-            // Register IConfiguration so it's resolvable by any constructor
-            services.AddSingleton<IConfiguration>(configuration);
-
-            // =================================================================================
-            // LOGGING
-            // Wire Microsoft.Extensions.Logging -> NLog so every ILogger<T> injection is
-            // routed through NLog.config targets (file rotation, console, etc.).
-            // =================================================================================
-            services.AddLogging(logging =>
-            {
-                logging.ClearProviders();
-                // Trace floor here; actual filtering is delegated to NLog.config rules.
-                logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
-                logging.AddNLog();
-            });
-
-            // =================================================================================
-            // WINDOWS & VIEWS
-            // MainWindow is a Singleton — single-screen kiosk never recreates the shell.
-            // =================================================================================
+            // -------------------------------------------------------------------------
+            // WINDOWS & UI SHELL
+            // -------------------------------------------------------------------------
             services.AddSingleton<MainWindow>();
 
-            // =================================================================================
-            // OPTIONS / CONFIGURATION
-            // BindConfiguration() reads the named JSON section; ValidateDataAnnotations()
-            // enforces [Required] / [Range] attributes; ValidateOnStart() fails at boot rather
-            // than on first IOptions<T>.Value access (fail-fast for kiosk deployments).
-            // =================================================================================
+            // -------------------------------------------------------------------------
+            // STRONGLY-TYPED OPTIONS WITH FAIL-FAST VALIDATION
+            // -------------------------------------------------------------------------
             services
                 .AddOptions<DigitalSensorsOptions>()
                 .BindConfiguration(DigitalSensorsOptions.SectionName)
@@ -130,121 +133,63 @@ namespace SimurghDashboard
                 .ValidateOnStart();
 
             services
-                .AddOptions<RssTickerOptions>()
-                .BindConfiguration(RssTickerOptions.SectionName)
-                .ValidateDataAnnotations()
-                .ValidateOnStart();
-
-            services
                 .AddOptions<DigitalClockOptions>()
                 .BindConfiguration(DigitalClockOptions.SectionName)
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
-            // =================================================================================
-            // HTTP CLIENTS — shared handler factory pattern
-            // Both clients share the same SocketsHttpHandler config and resilience policy,
-            // so a local helper avoids duplication.
-            // =================================================================================
-            static SocketsHttpHandler BuildPooledHandler() => new()
-            {
-                // Re-resolve DNS every 5 minutes — prevents stale hospital load-balancer entries.
-                PooledConnectionLifetime = TimeSpan.FromMinutes(5),
-                MaxConnectionsPerServer = 10,
-                // Accept compressed responses to reduce bandwidth on slow ward networks.
-                AutomaticDecompression = System.Net.DecompressionMethods.All
-            };
+            // -------------------------------------------------------------------------
+            // BACKGROUND WORKERS & DOMAIN MODULES (Weather, Ticker, Notifications)
+            // -------------------------------------------------------------------------
+            services.AddRssTickerWorker(configuration);
+            services.AddLocalNotificationService();
+            services.AddWeatherServices(configuration);
 
-            services
-                .AddHttpClient<IWeatherService, WttrClient>(client =>
-                {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd("SimurghDashboard-SurgicalKiosk/1.0");
-                    client.DefaultRequestHeaders.Accept.Add(
-                        new MediaTypeWithQualityHeaderValue("text/plain"));
-                    // Keep-Alive — reduces TCP handshake overhead on repeated polling.
-                    client.DefaultRequestHeaders.ConnectionClose = false;
-                })
-                .ConfigurePrimaryHttpMessageHandler(BuildPooledHandler)
-                .AddStandardResilienceHandler(options =>
-                {
-                    // Retry: 3 attempts with exponential back-off + jitter to avoid retry storms.
-                    options.Retry.MaxRetryAttempts = 3;
-                    options.Retry.UseJitter = true;
-
-                    // Circuit breaker: open after ≥50% failure rate across ≥5 requests
-                    // in a 60 s window, stay open for 30 s before probing again.
-                    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60);
-                    options.CircuitBreaker.FailureRatio = 0.5;
-                    options.CircuitBreaker.MinimumThroughput = 5;
-                    options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
-                });
-
-            services
-                .AddHttpClient<IRssFeedService, HttpRssService>(client =>
-                {
-                    client.Timeout = TimeSpan.FromSeconds(15);
-                    client.DefaultRequestHeaders.Add("User-Agent", "SimurghDashboard-Kiosk/1.0");
-                })
-                .ConfigurePrimaryHttpMessageHandler(BuildPooledHandler)
-                .AddStandardResilienceHandler(options =>
-                {
-                    options.Retry.MaxRetryAttempts = 3;
-                    options.Retry.UseJitter = true;
-
-                    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60);
-                    options.CircuitBreaker.FailureRatio = 0.5;
-                    options.CircuitBreaker.MinimumThroughput = 5;
-                    options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
-                });
-
-            // =================================================================================
-            // VIEWMODELS — Singleton lifetime preserves hardware telemetry and timer state
-            // even when the visual tree unloads/reloads individual UserControls.
-            // =================================================================================
-
-            // App-wide orchestrator (lightweight, handles global commands / navigation signals).
+            // -------------------------------------------------------------------------
+            // VIEWMODELS (Stateful Singletons for Kiosk Lifecycle)
+            // -------------------------------------------------------------------------
             services.AddSingleton<MainViewModel>();
-
-            // Header widget — local time, Jalali calendar, optional weather strip.
             services.AddSingleton<DigitalClockViewModel>();
-
-            // Left-center widget — countdown/chronometer ItemsControl.
             services.AddSingleton<DigitalTimersListViewModel>();
-
-            // Right-center widget — Modbus/hardware telemetry (O₂, temp, humidity).
             services.AddSingleton<DigitalSensorsListViewModel>();
-
-            // Footer widget — fetches and scrolls RSS feeds (IRNA, ISNA, Vebda).
-            services.AddSingleton<RssTickerViewModel>();
-
-
-            // =================================================================================
-            // FUTURE HARDWARE ABSTRACTIONS (stubs shown for discoverability)
-            // =================================================================================
-            // services.AddSingleton<IHardwareMultiplexer, ModbusRtuMultiplexer>();
-            // services.AddSingleton<IDicomBrokerClient, OrthancBrokerClient>();
+            services.AddSingleton<TickerViewModel>();
         }
 
         /// <summary>
-        /// Catches unhandled exceptions on the main UI dispatcher thread.
-        /// Logs the fault and marks it handled so the kiosk shell stays alive.
+        /// Handles unhandled exceptions on the UI dispatcher thread to keep the kiosk operational.
         /// </summary>
         private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
-            _logger.Error(e.Exception, "Unhandled UI dispatcher exception — keeping shell alive.");
-
-            // Mark handled so Windows does not terminate the process.
-            // Individual faulty modules may need a targeted reset, but the OR shell must survive.
+            _logger.Error(e.Exception, "Unhandled UI dispatcher exception trapped. Preventing application crash.");
             e.Handled = true;
         }
 
         /// <summary>
-        /// Ensures NLog flushes all buffered log entries to disk before the process exits.
+        /// Performs graceful shutdown of the host, cancels workers, and flushes log buffers.
         /// </summary>
-        protected override void OnExit(ExitEventArgs e)
+        protected override async void OnExit(ExitEventArgs e)
         {
-            _logger.Info("Simurgh Dashboard shutting down.");
-            LogManager.Shutdown(); // Flush all NLog targets (file buffers, async queues, etc.)
+            _logger.Info("Simurgh Dashboard shutting down. Stopping IHost...");
+
+            if (_host != null)
+            {
+                try
+                {
+                    // Gracefully stop all background services within a 5-second deadline.
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    await _host.StopAsync(cts.Token);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Error occurred during graceful shutdown of IHost.");
+                }
+                finally
+                {
+                    _host.Dispose();
+                }
+            }
+
+            LogManager.Shutdown();
             base.OnExit(e);
         }
     }
