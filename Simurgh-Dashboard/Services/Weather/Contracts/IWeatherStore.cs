@@ -14,9 +14,10 @@ namespace SimurghDashboard.Services.Weather.Contracts
     /// </summary>
     public interface IWeatherStore
     {
-        WeatherState CurrentWeather { get; set; }
+        WeatherState CurrentWeather { get; }
 
-        // An event to notify the UI/ViewModels that the weather data has been updated.
-        event Action WeatherUpdated;
+        event Action? WeatherUpdated;
+
+        void Update(WeatherState newState);
     }
 }

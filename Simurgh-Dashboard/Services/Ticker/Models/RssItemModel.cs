@@ -5,6 +5,7 @@ namespace SimurghDashboard.Services.Ticker.Models;
 public record RssItemModel(
     string Id,
     string Title,
+    string Summary,
     string Source,
     DateTime PublishDate,
     DateTime CreatedAt,

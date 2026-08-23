@@ -51,7 +51,7 @@ public class WeatherBackgroundService(
         try
         {
             logger.LogDebug("Fetching weather data from: {Url}", _options.Url);
-            weatherStore.CurrentWeather = new WeatherState() { IsLoading = true, HasError = false };
+            weatherStore.Update(new WeatherState() { IsLoading = true, HasError = false });
 
             // Use a named client to prevent socket exhaustion and allow central HTTP policies (e.g., Polly retries).
             using var client = httpClientFactory.CreateClient("WeatherClient");
@@ -67,14 +67,14 @@ public class WeatherBackgroundService(
                 var newState = MapToWeatherState(weatherData);
 
                 // Push the mapped data into the shared store for the UI to consume.
-                weatherStore.CurrentWeather = newState;
+                weatherStore.Update( newState);
 
                 logger.LogInformation("Successfully updated and mapped weather data.");
             }
             else
             {
                 logger.LogWarning("Weather API returned a null or empty response.");
-                weatherStore.CurrentWeather = new WeatherState() { IsLoading = false, HasError = true };
+                weatherStore.Update(new WeatherState() { IsLoading = false, HasError = true });
             }
         }
         catch (OperationCanceledException)
@@ -85,13 +85,13 @@ public class WeatherBackgroundService(
         {
             // Network-related errors are caught here to prevent the background service from crashing.
             logger.LogError(ex, "Network error while fetching weather data.");
-            weatherStore.CurrentWeather = new WeatherState() { IsLoading = false, HasError = true };
+            weatherStore.Update(new WeatherState() { IsLoading = false, HasError = true });
         }
         catch (Exception ex)
         {
             // Catch-all to ensure the worker loop remains alive even if unexpected JSON parsing errors occur.
             logger.LogError(ex, "Unexpected error occurred during weather fetch.");
-            weatherStore.CurrentWeather = new WeatherState() { IsLoading = false, HasError = true };
+            weatherStore.Update(new WeatherState() { IsLoading = false, HasError = true });
         }
     }
 

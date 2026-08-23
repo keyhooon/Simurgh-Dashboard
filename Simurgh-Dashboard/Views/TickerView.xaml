@@ -1,14 +1,15 @@
-﻿<!-- 
+﻿<!--
     Usage Example in a View (e.g., DashboardView.xaml)
-    Assuming DataContext is set to TickerViewModel 
+    Assuming DataContext is set to TickerViewModel
 -->
-<UserControl x:Class="SimurghDashboard.Views.TickerView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:SimurghDashboard.Controls"
-             xmlns:views="clr-namespace:SimurghDashboard.Views">
+<UserControl
+    x:Class="SimurghDashboard.Views.TickerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:SimurghDashboard.Controls"
+    xmlns:views="clr-namespace:SimurghDashboard.Views">
 
-    <!-- The Resources dictionary should include the TickerTemplates.xaml we created earlier -->
+    <!--  The Resources dictionary should include the TickerTemplates.xaml we created earlier  -->
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -18,20 +19,22 @@
     </UserControl.Resources>
 
     <Grid>
-        <!-- 
+        <!--
             TickerView binds directly to the ViewModel's properties.
             - ItemsSource: The ReadOnlyObservableCollection
             - ItemFinishedCommand: The auto-generated RelayCommand
             - SeparatorTemplate: Explicitly referenced from TickerTemplates.xaml
             - ItemSpacing / ScrollSpeed: Configured for optimal UX
         -->
-        <controls:MarqueeItemsControl 
-            ItemsSource="{Binding DisplayItems}"
-            ItemFinishedCommand="{Binding ItemFinishedCommand}"
-            SeparatorTemplate="{StaticResource MarqueeSeparatorTemplate}"
-            ItemSpacing="40"
-            ScrollSpeed="80"
+        <controls:MarqueeItemsControl
             Height="50"
-            VerticalAlignment="Bottom"/>
+            Margin="50"
+            VerticalAlignment="Bottom"
+            Direction="LeftToRight"
+            ItemFinishedCommand="{Binding ItemFinishedCommand}"
+            ItemSpacing="40"
+            ItemsSource="{Binding DisplayItems}"
+            ScrollSpeed="80"
+            SeparatorTemplate="{StaticResource MarqueeSeparatorTemplate}" />
     </Grid>
 </UserControl>

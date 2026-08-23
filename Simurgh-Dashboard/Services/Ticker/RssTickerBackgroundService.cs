@@ -139,7 +139,8 @@ public class RssTickerBackgroundService(
                     // Map to our generic domain record.
                     var rssModel = new RssItemModel(
                         Id: uniqueId,
-                        Title: item.Title?.Text ?? "No Title",
+                        Title: item.Title?.Text.Trim() ?? "",
+                        Summary: item.Summary?.Text.Trim() ?? "",
                         Source: feedTitle,
                         PublishDate: pubDate,
                         CreatedAt: now,
