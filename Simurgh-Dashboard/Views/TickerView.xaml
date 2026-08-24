@@ -32,6 +32,7 @@
             VerticalAlignment="Bottom"
             Background="Aqua"
             Direction="LeftToRight"
+            ItemTemplate="{StaticResource MarqueeRssItemTemplate}"
             ItemsSource="{Binding TickerStore}"
             ScrollSpeed="80"
             SeparatorTemplate="{StaticResource MarqueeSeparatorTemplate}" />

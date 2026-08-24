@@ -81,7 +81,7 @@
     <!--  3. RSS ITEM TEMPLATE  -->
     <!--  ==========================================  -->
 
-    <DataTemplate DataType="{x:Type models1:RssItemModel}">
+    <DataTemplate x:Key="MarqueeRssItemTemplate" DataType="{x:Type models1:RssItemModel}">
         <!--  Flat layout: StackPanel is highly optimized for horizontal stacking  -->
         <StackPanel
             FlowDirection="{Binding RelativeSource={RelativeSource AncestorType={x:Type controls:MarqueeItemsControl}}, Path=Content.FlowDirection}"

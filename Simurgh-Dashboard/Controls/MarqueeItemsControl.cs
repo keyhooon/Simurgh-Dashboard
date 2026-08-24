@@ -17,6 +17,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using System.Diagnostics;
 
 namespace SimurghDashboard.Controls
 {
@@ -68,6 +69,8 @@ namespace SimurghDashboard.Controls
     [TemplatePart(Name = PartAlertContainer, Type = typeof(ContentPresenter))]
     public class MarqueeItemsControl : Control
     {
+        private int _rebuildSequence;
+
         public const string PartViewport = "PART_Viewport";
         public const string PartHost = "PART_Host";
         public const string PartAlertContainer = "PART_AlertContainer";
@@ -194,7 +197,8 @@ namespace SimurghDashboard.Controls
 
         public override void OnApplyTemplate()
         {
-            // Halt running animations before tearing down visual components
+            Trace("OnApplyTemplate started.");
+
             StopAnimation(captureCurrentOffset: true);
 
             _host = null;
@@ -207,15 +211,36 @@ namespace SimurghDashboard.Controls
             _host = GetTemplateChild(PartHost) as StackPanel;
             _alertContainer = GetTemplateChild(PartAlertContainer) as ContentPresenter;
 
-            if (_host != null)
+            Trace(
+                $"Template parts resolved. " +
+                $"Viewport={_viewport != null}, " +
+                $"Host={_host != null}, " +
+                $"AlertContainer={_alertContainer != null}, " +
+                $"ItemTemplate={ItemTemplate != null}, " +
+                $"SeparatorTemplate={SeparatorTemplate != null}.");
+
+            if (_viewport == null)
             {
-                // Ensure Transform is isolated on compositor thread
+                Trace($"ERROR: Template part '{PartViewport}' was not found.");
+            }
+
+            if (_host == null)
+            {
+                Trace($"ERROR: Template part '{PartHost}' was not found or is not a StackPanel.");
+            }
+            else
+            {
                 _host.RenderTransform = _hostTransform;
                 _host.RenderTransformOrigin = new Point(0, 0);
+
+                Trace(
+                    $"Host configured. Orientation={_host.Orientation}, " +
+                    $"Children={_host.Children.Count}.");
             }
 
             if (_isLoaded)
             {
+                Trace("Control is already loaded. Requesting rebuild after template application.");
                 RequestRebuild(preserveAnchor: false);
             }
         }
@@ -224,19 +249,25 @@ namespace SimurghDashboard.Controls
         {
             _isLoaded = true;
 
-            // Wire notifications and trigger layout pipeline
+            Trace(
+                $"Loaded. ActualSize={ActualWidth:0.##}x{ActualHeight:0.##}, " +
+                $"ItemsSource={Describe(ItemsSource)}.");
+
             AttachCollection(ItemsSource);
             RequestRebuild(preserveAnchor: false);
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
+            Trace("Unloaded.");
+
             _isLoaded = false;
 
             StopAnimation(captureCurrentOffset: true);
 
             if (_pendingRebuildOperation is { Status: DispatcherOperationStatus.Pending })
             {
+                Trace("Aborting pending rebuild operation.");
                 _pendingRebuildOperation.Abort();
             }
 
@@ -249,6 +280,11 @@ namespace SimurghDashboard.Controls
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
+            Trace(
+                $"SizeChanged. Previous={e.PreviousSize.Width:0.##}x{e.PreviousSize.Height:0.##}, " +
+                $"New={e.NewSize.Width:0.##}x{e.NewSize.Height:0.##}, " +
+                $"Loaded={_isLoaded}, Host={_host != null}, Viewport={_viewport != null}.");
+
             if (!_isLoaded || _host == null || _viewport == null)
             {
                 return;
@@ -264,9 +300,15 @@ namespace SimurghDashboard.Controls
 
         #region Dependency Property Callbacks
 
-        private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnItemsSourceChanged(
+            DependencyObject d,
+            DependencyPropertyChangedEventArgs e)
         {
             var control = (MarqueeItemsControl)d;
+
+            control.Trace(
+                $"ItemsSource changed. Old={Describe(e.OldValue)}, " +
+                $"New={Describe(e.NewValue)}.");
 
             control.DetachCollection();
             control.AttachCollection(e.NewValue);
@@ -315,11 +357,15 @@ namespace SimurghDashboard.Controls
         {
             if (source is not INotifyCollectionChanged collection)
             {
+                Trace(
+                    $"ItemsSource does not implement {nameof(INotifyCollectionChanged)}. " +
+                    $"Source={Describe(source)}.");
                 return;
             }
 
             if (ReferenceEquals(_observedCollection, collection))
             {
+                Trace("Collection is already attached.");
                 return;
             }
 
@@ -327,6 +373,8 @@ namespace SimurghDashboard.Controls
 
             _observedCollection = collection;
             _observedCollection.CollectionChanged += OnCollectionChanged;
+
+            Trace($"CollectionChanged handler attached. Collection={Describe(source)}.");
         }
 
         private void DetachCollection()
@@ -338,6 +386,8 @@ namespace SimurghDashboard.Controls
 
             _observedCollection.CollectionChanged -= OnCollectionChanged;
             _observedCollection = null;
+
+            Trace("CollectionChanged handler detached.");
         }
 
         private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -355,11 +405,17 @@ namespace SimurghDashboard.Controls
         {
             if (!_isLoaded)
             {
+                Trace($"Rebuild ignored. Loaded=false, PreserveAnchor={preserveAnchor}.");
                 return;
             }
 
             _rebuildRequested = true;
             _preserveAnchorRequested |= preserveAnchor;
+
+            Trace(
+                $"Rebuild requested. PreserveAnchor={preserveAnchor}, " +
+                $"AggregatedPreserveAnchor={_preserveAnchorRequested}, " +
+                $"Pending={_pendingRebuildOperation?.Status.ToString() ?? "<none>"}.");
 
             ScheduleDispatcherRebuild();
         }
@@ -382,12 +438,17 @@ namespace SimurghDashboard.Controls
 
             if (!_isLoaded || !_rebuildRequested)
             {
+                Trace(
+                    $"Pending rebuild skipped. Loaded={_isLoaded}, " +
+                    $"Requested={_rebuildRequested}.");
                 return;
             }
 
             var preserveAnchor = _preserveAnchorRequested;
             _rebuildRequested = false;
             _preserveAnchorRequested = false;
+
+            Trace($"Processing rebuild. PreserveAnchor={preserveAnchor}.");
 
             RebuildSequenceAndAnimate(preserveAnchor);
         }
@@ -398,8 +459,17 @@ namespace SimurghDashboard.Controls
 
         private void RebuildSequenceAndAnimate(bool preserveAnchor)
         {
+            var rebuildId = ++_rebuildSequence;
+
+            Trace(
+                $"Rebuild #{rebuildId} started. " +
+                $"PreserveAnchor={preserveAnchor}, " +
+                $"Host={_host != null}, Viewport={_viewport != null}, " +
+                $"AlreadyRebuilding={_isRebuilding}.");
+
             if (_host == null || _viewport == null || _isRebuilding)
             {
+                Trace($"Rebuild #{rebuildId} aborted before layout.");
                 return;
             }
 
@@ -407,28 +477,44 @@ namespace SimurghDashboard.Controls
 
             try
             {
-                // 1. Capture anchor from running GPU state before stopping
                 StopAnimation(captureCurrentOffset: true);
 
                 VisualAnchor? anchor = null;
                 if (preserveAnchor)
                 {
                     anchor = CaptureCurrentAnchor();
+
+                    Trace(
+                        $"Rebuild #{rebuildId} anchor captured. " +
+                        $"Anchor={anchor?.Item?.GetType().Name ?? "<none>"}, " +
+                        $"Index={anchor?.Index}, " +
+                        $"InternalOffset={anchor?.InternalItemOffset:0.##}.");
                 }
 
                 _host.Children.Clear();
                 _logicalMetrics.Clear();
                 _cycleLength = 0;
 
-                var rawSource = ItemsSource?.Cast<object>().Where(x => x != null).ToList();
+                var rawSource = ItemsSource?
+                    .Cast<object>()
+                    .Where(static x => x != null)
+                    .ToList();
+
+                Trace(
+                    $"Rebuild #{rebuildId} source resolved. " +
+                    $"Items={rawSource?.Count ?? 0}, " +
+                    $"ItemTemplate={ItemTemplate != null}, " +
+                    $"SeparatorTemplate={SeparatorTemplate != null}.");
+
                 if (rawSource == null || rawSource.Count == 0)
                 {
                     _hostTransform.X = 0;
                     _currentLogicalOffset = 0;
+
+                    Trace($"Rebuild #{rebuildId} stopped: source is empty.");
                     return;
                 }
 
-                // 2. Measure Single Cycle to calculate cycle length
                 var singleCyclePresenters = new List<FrameworkElement>();
                 double accumulatedWidth = 0;
 
@@ -437,52 +523,110 @@ namespace SimurghDashboard.Controls
                     var item = rawSource[i];
 
                     var itemPresenter = CreateItemPresenter(item);
-                    itemPresenter.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                    itemPresenter.Measure(
+                        new Size(
+                            double.PositiveInfinity,
+                            double.PositiveInfinity));
+
                     var itemWidth = Math.Max(0, itemPresenter.DesiredSize.Width);
 
-                    _logicalMetrics.Add(new LogicalMetric(item, i, accumulatedWidth, itemWidth));
+                    Trace(
+                        $"Rebuild #{rebuildId} item[{i}] measured. " +
+                        $"Type={item.GetType().FullName}, " +
+                        $"Width={itemWidth:0.##}, " +
+                        $"Content={item}.");
+
+                    _logicalMetrics.Add(
+                        new LogicalMetric(
+                            item,
+                            i,
+                            accumulatedWidth,
+                            itemWidth));
+
                     singleCyclePresenters.Add(itemPresenter);
                     accumulatedWidth += itemWidth;
 
-                    // Append separator if template is supplied
-                    if (SeparatorTemplate != null)
+                    if (SeparatorTemplate == null)
                     {
-                        var separatorPresenter = CreateSeparatorPresenter(item);
-                        separatorPresenter.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-                        var separatorWidth = Math.Max(0, separatorPresenter.DesiredSize.Width);
-
-                        accumulatedWidth += separatorWidth;
-                        singleCyclePresenters.Add(separatorPresenter);
+                        continue;
                     }
+
+                    var separatorPresenter = CreateSeparatorPresenter(item);
+
+                    separatorPresenter.Measure(
+                        new Size(
+                            double.PositiveInfinity,
+                            double.PositiveInfinity));
+
+                    var separatorWidth = Math.Max(
+                        0,
+                        separatorPresenter.DesiredSize.Width);
+
+                    Trace(
+                        $"Rebuild #{rebuildId} separator after item[{i}] measured. " +
+                        $"Width={separatorWidth:0.##}.");
+
+                    accumulatedWidth += separatorWidth;
+                    singleCyclePresenters.Add(separatorPresenter);
                 }
 
                 _cycleLength = accumulatedWidth;
+
+                Trace(
+                    $"Rebuild #{rebuildId} first cycle measured. " +
+                    $"CycleLength={_cycleLength:0.##}, " +
+                    $"FirstCycleVisuals={singleCyclePresenters.Count}.");
+
                 if (_cycleLength <= 0.01)
                 {
                     _hostTransform.X = 0;
                     _currentLogicalOffset = 0;
+
+                    Trace(
+                        $"ERROR: Rebuild #{rebuildId} stopped because CycleLength is zero. " +
+                        "Usually ItemTemplate is missing, template content has zero width, " +
+                        "or the item data is not rendered.");
+
                     return;
                 }
 
-                // 3. Mount single cycle elements
                 foreach (var visual in singleCyclePresenters)
                 {
                     _host.Children.Add(visual);
                 }
 
-                // 4. Duplicate sequence to cover viewport width and avoid white gaps
-                var viewportWidth = Math.Max(_viewport.ActualWidth, ActualWidth);
-                if (viewportWidth <= 0)
+                var viewportWidth = Math.Max(
+                    _viewport.ActualWidth,
+                    ActualWidth);
+
+                var usedFallbackViewportWidth = viewportWidth <= 0;
+
+                if (usedFallbackViewportWidth)
                 {
-                    viewportWidth = 1920; // Fallback metric during unrendered initial pass
+                    viewportWidth = 1920;
                 }
 
-                var requiredDuplicates = (int)Math.Ceiling(viewportWidth / _cycleLength) + 1;
-                for (var d = 0; d < requiredDuplicates; d++)
+                var totalCycleCount = Math.Max(
+                    2,
+                    (int)Math.Ceiling(viewportWidth / _cycleLength) + 1);
+
+                var additionalCycleCount = totalCycleCount - 1;
+
+                Trace(
+                    $"Rebuild #{rebuildId} duplication calculation. " +
+                    $"Viewport={viewportWidth:0.##}, " +
+                    $"ViewportActual={_viewport.ActualWidth:0.##}, " +
+                    $"ControlActual={ActualWidth:0.##}, " +
+                    $"Fallback={usedFallbackViewportWidth}, " +
+                    $"TotalCycles={totalCycleCount}, " +
+                    $"AdditionalCycles={additionalCycleCount}.");
+
+                for (var cycleIndex = 0;
+                     cycleIndex < additionalCycleCount;
+                     cycleIndex++)
                 {
-                    for (var i = 0; i < rawSource.Count; i++)
+                    foreach (var item in rawSource)
                     {
-                        var item = rawSource[i];
                         _host.Children.Add(CreateItemPresenter(item));
 
                         if (SeparatorTemplate != null)
@@ -492,21 +636,37 @@ namespace SimurghDashboard.Controls
                     }
                 }
 
-                // 5. Calculate anchor and spin GPU animation
-                var startOffset = 0.0;
-                if (anchor != null)
-                {
-                    startOffset = RestoreAnchorOffset(anchor);
-                }
+                Trace(
+                    $"Rebuild #{rebuildId} visuals mounted. " +
+                    $"HostChildren={_host.Children.Count}, " +
+                    $"Expected={(singleCyclePresenters.Count * totalCycleCount)}.");
+
+                var startOffset = anchor != null
+                    ? RestoreAnchorOffset(anchor)
+                    : 0.0;
+
+                Trace(
+                    $"Rebuild #{rebuildId} starting animation. " +
+                    $"StartOffset={startOffset:0.##}, " +
+                    $"Direction={Direction}, " +
+                    $"ScrollSpeed={ScrollSpeed:0.##}.");
 
                 StartContinuousAnimation(startOffset);
+            }
+            catch (Exception ex)
+            {
+                Trace(
+                    $"ERROR: Rebuild #{rebuildId} failed. " +
+                    $"{ex.GetType().FullName}: {ex.Message}\n{ex.StackTrace}");
+
+                throw;
             }
             finally
             {
                 _isRebuilding = false;
+                Trace($"Rebuild #{rebuildId} finished.");
             }
         }
-
         private ContentPresenter CreateItemPresenter(object item)
         {
             return new ContentPresenter
@@ -691,6 +851,20 @@ namespace SimurghDashboard.Controls
         }
 
         #endregion
+        private void Trace(string message)
+        {
+            Debug.WriteLine(
+                $"[Marquee:{GetHashCode():X8}] " +
+                $"[{DateTime.Now:HH:mm:ss.fff}] " +
+                message);
+        }
+
+        private static string Describe(object? value)
+        {
+            return value == null
+                ? "<null>"
+                : $"{value.GetType().FullName}: {value}";
+        }
     }
 
     #endregion

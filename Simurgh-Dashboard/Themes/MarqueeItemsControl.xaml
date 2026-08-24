@@ -23,6 +23,7 @@
                                 <StackPanel
                                     x:Name="PART_Host"
                                     VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                    FlowDirection="{TemplateBinding FlowDirection}"
                                     Orientation="Horizontal" />
                             </Grid>
 
