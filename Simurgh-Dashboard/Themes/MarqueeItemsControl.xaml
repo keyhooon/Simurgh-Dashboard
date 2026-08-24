@@ -1,0 +1,42 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:SimurghDashboard.Controls">
+
+    <Style TargetType="{x:Type local:MarqueeItemsControl}">
+        <Setter Property="ClipToBounds" Value="True" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsHitTestVisible" Value="True" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:MarqueeItemsControl}">
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        ClipToBounds="True"
+                        CornerRadius="4">
+                        <Grid>
+                            <Grid x:Name="PART_Viewport" ClipToBounds="True">
+                                <StackPanel
+                                    x:Name="PART_Host"
+                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                    Orientation="Horizontal" />
+                            </Grid>
+
+                            <!--  Container reserved for urgent overlay notifications  -->
+                            <ContentPresenter
+                                x:Name="PART_AlertContainer"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

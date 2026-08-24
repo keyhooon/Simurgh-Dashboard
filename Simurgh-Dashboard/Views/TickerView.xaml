@@ -30,10 +30,9 @@
             Height="50"
             Margin="50"
             VerticalAlignment="Bottom"
+            Background="Aqua"
             Direction="LeftToRight"
-            ItemFinishedCommand="{Binding ItemFinishedCommand}"
-            ItemSpacing="40"
-            ItemsSource="{Binding DisplayItems}"
+            ItemsSource="{Binding TickerStore}"
             ScrollSpeed="80"
             SeparatorTemplate="{StaticResource MarqueeSeparatorTemplate}" />
     </Grid>

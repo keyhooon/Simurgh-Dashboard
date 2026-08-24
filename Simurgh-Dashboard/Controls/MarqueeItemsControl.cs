@@ -1,87 +1,120 @@
-﻿using System;
+﻿// ============================================================================
+// File: MarqueeInfrastructure.cs
+// Target: .NET 8.0 / .NET 9.0 (WPF)
+// Notes: Thread-safe batch store, high-performance sequence duplicator,
+//        GPU-accelerated TranslateTransform with visual anchor preservation.
+// ============================================================================
+
 using System.Collections;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace SimurghDashboard.Controls
 {
-    // Direction enumeration for marquee movement
+    #region Enums & Interfaces
+
+    /// <summary>
+    /// Defines horizontal scrolling direction for the marquee sequence.
+    /// </summary>
     public enum MarqueeDirection
     {
-        // Items spawn on the right and scroll to the left
-        RightToLeft,
-
-        // Items spawn on the left and scroll to the right
-        LeftToRight
+        RightToLeft = 0,
+        LeftToRight = 1
     }
 
-    public class MarqueeItemsControl : FrameworkElement
-    {
-        // --- Dependency Properties ---
 
-        public static readonly DependencyProperty DirectionProperty =
-            DependencyProperty.Register(
-                nameof(Direction),
-                typeof(MarqueeDirection),
-                typeof(MarqueeItemsControl),
-                new FrameworkPropertyMetadata(
-                    MarqueeDirection.RightToLeft,
-                    FrameworkPropertyMetadataOptions.AffectsRender,
-                    OnDirectionChanged));
+
+    #endregion
+
+    #region Internal Layout & Tracking Records
+
+    /// <summary>
+    /// Holds pre-calculated layout metrics for single cycle items.
+    /// </summary>
+    internal sealed record LogicalMetric(
+        object Item,
+        int Index,
+        double StartOffset,
+        double ItemWidth);
+
+    /// <summary>
+    /// Captures the relative position of the item visible on screen before rebuilding.
+    /// </summary>
+    internal sealed record VisualAnchor(
+        object Item,
+        int Index,
+        double InternalItemOffset);
+
+    #endregion
+
+
+    #region MarqueeItemsControl Implementation
+
+    /// <summary>
+    /// High-performance marquee control using sequence duplication and GPU transform animation.
+    /// Fully marshals collection changes and maintains screen positioning across dynamic mutations.
+    /// </summary>
+    [TemplatePart(Name = PartViewport, Type = typeof(FrameworkElement))]
+    [TemplatePart(Name = PartHost, Type = typeof(StackPanel))]
+    [TemplatePart(Name = PartAlertContainer, Type = typeof(ContentPresenter))]
+    public class MarqueeItemsControl : Control
+    {
+        public const string PartViewport = "PART_Viewport";
+        public const string PartHost = "PART_Host";
+        public const string PartAlertContainer = "PART_AlertContainer";
+
+        #region Dependency Properties
 
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(
                 nameof(ItemsSource),
                 typeof(IEnumerable),
                 typeof(MarqueeItemsControl),
-                new PropertyMetadata(null, OnItemsSourceChanged));
+                new FrameworkPropertyMetadata(null, OnItemsSourceChanged));
 
         public static readonly DependencyProperty ItemTemplateProperty =
             DependencyProperty.Register(
                 nameof(ItemTemplate),
                 typeof(DataTemplate),
                 typeof(MarqueeItemsControl),
-                new PropertyMetadata(null, OnTemplateChanged));
+                new FrameworkPropertyMetadata(null, OnTemplateOrVisualPropertyChanged));
 
         public static readonly DependencyProperty SeparatorTemplateProperty =
             DependencyProperty.Register(
                 nameof(SeparatorTemplate),
                 typeof(DataTemplate),
                 typeof(MarqueeItemsControl),
-                new PropertyMetadata(null, OnTemplateChanged));
+                new FrameworkPropertyMetadata(null, OnTemplateOrVisualPropertyChanged));
 
-        public static readonly DependencyProperty ItemFinishedCommandProperty =
+        public static readonly DependencyProperty DirectionProperty =
             DependencyProperty.Register(
-                nameof(ItemFinishedCommand),
-                typeof(ICommand),
+                nameof(Direction),
+                typeof(MarqueeDirection),
                 typeof(MarqueeItemsControl),
-                new PropertyMetadata(null));
+                new FrameworkPropertyMetadata(MarqueeDirection.RightToLeft, OnSpeedOrDirectionChanged));
 
         public static readonly DependencyProperty ScrollSpeedProperty =
             DependencyProperty.Register(
                 nameof(ScrollSpeed),
                 typeof(double),
                 typeof(MarqueeItemsControl),
-                new PropertyMetadata(60d));
+                new FrameworkPropertyMetadata(60.0, OnSpeedOrDirectionChanged, CoerceScrollSpeed));
 
-        public static readonly DependencyProperty ItemSpacingProperty =
+        public static readonly DependencyProperty ItemFinishedCommandProperty =
             DependencyProperty.Register(
-                nameof(ItemSpacing),
-                typeof(double),
+                nameof(ItemFinishedCommand),
+                typeof(ICommand),
                 typeof(MarqueeItemsControl),
-                new PropertyMetadata(20d));
-
-        // --- Property Accessors ---
-
-        public MarqueeDirection Direction
-        {
-            get => (MarqueeDirection)GetValue(DirectionProperty);
-            set => SetValue(DirectionProperty, value);
-        }
+                new FrameworkPropertyMetadata(null));
 
         public IEnumerable? ItemsSource
         {
@@ -101,10 +134,10 @@ namespace SimurghDashboard.Controls
             set => SetValue(SeparatorTemplateProperty, value);
         }
 
-        public ICommand? ItemFinishedCommand
+        public MarqueeDirection Direction
         {
-            get => (ICommand?)GetValue(ItemFinishedCommandProperty);
-            set => SetValue(ItemFinishedCommandProperty, value);
+            get => (MarqueeDirection)GetValue(DirectionProperty);
+            set => SetValue(DirectionProperty, value);
         }
 
         public double ScrollSpeed
@@ -113,497 +146,552 @@ namespace SimurghDashboard.Controls
             set => SetValue(ScrollSpeedProperty, value);
         }
 
-        public double ItemSpacing
+        public ICommand? ItemFinishedCommand
         {
-            get => (double)GetValue(ItemSpacingProperty);
-            set => SetValue(ItemSpacingProperty, value);
+            get => (ICommand?)GetValue(ItemFinishedCommandProperty);
+            set => SetValue(ItemFinishedCommandProperty, value);
         }
 
-        // --- Core Internal Fields ---
+        #endregion
 
-        private readonly VisualCollection _visuals;
-        private readonly List<TickerElementState> _activeElements = new();
-        private readonly Queue<ContentPresenter> _presenterPool = new();
+        #region Private Fields
 
-        private IEnumerator? _enumerator;
-        private TimeSpan _lastRenderTime;
-        private object? _currentData;
-        private bool _expectingSeparator;
+        private readonly TranslateTransform _hostTransform = new();
+        private readonly List<LogicalMetric> _logicalMetrics = [];
+
+        private FrameworkElement? _viewport;
+        private StackPanel? _host;
+        private ContentPresenter? _alertContainer;
+
+        private INotifyCollectionChanged? _observedCollection;
+        private DispatcherOperation? _pendingRebuildOperation;
+
         private bool _isLoaded;
+        private bool _isRebuilding;
+        private bool _rebuildRequested;
+        private bool _preserveAnchorRequested;
 
-        private sealed class TickerElementState
+        private double _cycleLength;
+        private double _currentLogicalOffset;
+
+        #endregion
+
+        static MarqueeItemsControl()
         {
-            public required ContentPresenter Presenter { get; init; }
-            public required TranslateTransform Transform { get; init; }
-            public object? DataItem { get; init; }
-            public bool IsSeparator { get; init; }
-            public double Width { get; init; }
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(MarqueeItemsControl),
+                new FrameworkPropertyMetadata(typeof(MarqueeItemsControl)));
         }
 
         public MarqueeItemsControl()
         {
-            ClipToBounds = true;
-            IsHitTestVisible = false;
-
-            _visuals = new VisualCollection(this);
-
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
+            SizeChanged += OnSizeChanged;
         }
 
-        private static void OnDirectionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var control = (MarqueeItemsControl)d;
-            // Purge and rebuild the visual pipeline when direction flips at runtime
-            control.ClearActiveElements();
-            control.ResetEnumeration();
-        }
+        #region Template & Lifecycle Handlers
 
-        private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public override void OnApplyTemplate()
         {
-            var control = (MarqueeItemsControl)d;
+            // Halt running animations before tearing down visual components
+            StopAnimation(captureCurrentOffset: true);
 
-            if (e.OldValue is INotifyCollectionChanged oldCollection)
+            _host = null;
+            _viewport = null;
+            _alertContainer = null;
+
+            base.OnApplyTemplate();
+
+            _viewport = GetTemplateChild(PartViewport) as FrameworkElement;
+            _host = GetTemplateChild(PartHost) as StackPanel;
+            _alertContainer = GetTemplateChild(PartAlertContainer) as ContentPresenter;
+
+            if (_host != null)
             {
-                oldCollection.CollectionChanged -= control.OnCollectionChanged;
+                // Ensure Transform is isolated on compositor thread
+                _host.RenderTransform = _hostTransform;
+                _host.RenderTransformOrigin = new Point(0, 0);
             }
 
-            if (e.NewValue is INotifyCollectionChanged newCollection)
+            if (_isLoaded)
             {
-                newCollection.CollectionChanged += control.OnCollectionChanged;
+                RequestRebuild(preserveAnchor: false);
             }
-
-            control.ResetEnumeration();
-        }
-
-        private static void OnTemplateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var control = (MarqueeItemsControl)d;
-            control.ClearActiveElements();
-        }
-
-        private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (!Dispatcher.CheckAccess())
-            {
-                Dispatcher.BeginInvoke(new Action(() => HandleCollectionChanged(e)));
-                return;
-            }
-
-            HandleCollectionChanged(e);
-        }
-
-        private void HandleCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
-            ResetEnumeration();
-            ClearActiveElements();
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             _isLoaded = true;
-            _lastRenderTime = TimeSpan.Zero;
-            CompositionTarget.Rendering += OnRendering;
+
+            // Wire notifications and trigger layout pipeline
+            AttachCollection(ItemsSource);
+            RequestRebuild(preserveAnchor: false);
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
             _isLoaded = false;
-            CompositionTarget.Rendering -= OnRendering;
-            ResetEnumeration();
-            ClearActiveElements();
+
+            StopAnimation(captureCurrentOffset: true);
+
+            if (_pendingRebuildOperation is { Status: DispatcherOperationStatus.Pending })
+            {
+                _pendingRebuildOperation.Abort();
+            }
+
+            _pendingRebuildOperation = null;
+            _rebuildRequested = false;
+            _preserveAnchorRequested = false;
+
+            DetachCollection();
         }
 
-        private void OnRendering(object? sender, EventArgs e)
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (!_isLoaded || ActualWidth <= 0 || ActualHeight <= 0)
+            if (!_isLoaded || _host == null || _viewport == null)
             {
                 return;
             }
 
-            var renderingArgs = (RenderingEventArgs)e;
+            if (e.WidthChanged || e.HeightChanged)
+            {
+                RequestRebuild(preserveAnchor: true);
+            }
+        }
 
-            if (_lastRenderTime == renderingArgs.RenderingTime)
+        #endregion
+
+        #region Dependency Property Callbacks
+
+        private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (MarqueeItemsControl)d;
+
+            control.DetachCollection();
+            control.AttachCollection(e.NewValue);
+            control.RequestRebuild(preserveAnchor: false);
+        }
+
+        private static void OnTemplateOrVisualPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (MarqueeItemsControl)d;
+            control.RequestRebuild(preserveAnchor: true);
+        }
+
+        private static void OnSpeedOrDirectionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (MarqueeItemsControl)d;
+            if (!control._isLoaded)
             {
                 return;
             }
 
-            var deltaTime = _lastRenderTime == TimeSpan.Zero
-                ? 0
-                : (renderingArgs.RenderingTime - _lastRenderTime).TotalSeconds;
-
-            _lastRenderTime = renderingArgs.RenderingTime;
-            var offset = ScrollSpeed * deltaTime;
-
-            if (offset > 0)
-            {
-                MoveAndCleanupElements(offset);
-            }
-
-            ManageSpawning();
+            var currentOffset = control.GetCurrentLogicalOffset();
+            control.StopAnimation(captureCurrentOffset: false);
+            control.StartContinuousAnimation(currentOffset);
         }
 
-        private void MoveAndCleanupElements(double offset)
+        private static object CoerceScrollSpeed(DependencyObject d, object baseValue)
         {
-            var isRightToLeft = Direction == MarqueeDirection.RightToLeft;
-
-            for (var index = _activeElements.Count - 1; index >= 0; index--)
+            if (baseValue is double val)
             {
-                var state = _activeElements[index];
-
-                // Calculate displacement based on active direction vector
-                if (isRightToLeft)
+                if (double.IsNaN(val) || double.IsInfinity(val) || val < 0.0)
                 {
-                    state.Transform.X -= offset;
-                }
-                else
-                {
-                    state.Transform.X += offset;
+                    return 0.0;
                 }
 
-                // Check out-of-bounds threshold
-                var isOffScreen = isRightToLeft
-                    ? (state.Transform.X + state.Width < 0)
-                    : (state.Transform.X > ActualWidth);
+                return val;
+            }
 
-                if (isOffScreen)
+            return 60.0;
+        }
+
+        #endregion
+
+        #region Collection Binding & Rebuild Coalescing
+
+        private void AttachCollection(object? source)
+        {
+            if (source is not INotifyCollectionChanged collection)
+            {
+                return;
+            }
+
+            if (ReferenceEquals(_observedCollection, collection))
+            {
+                return;
+            }
+
+            DetachCollection();
+
+            _observedCollection = collection;
+            _observedCollection.CollectionChanged += OnCollectionChanged;
+        }
+
+        private void DetachCollection()
+        {
+            if (_observedCollection == null)
+            {
+                return;
+            }
+
+            _observedCollection.CollectionChanged -= OnCollectionChanged;
+            _observedCollection = null;
+        }
+
+        private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (!_isLoaded)
+            {
+                return;
+            }
+
+            // Always request UI marshal to handle background worker updates safely
+            RequestRebuild(preserveAnchor: true);
+        }
+
+        private void RequestRebuild(bool preserveAnchor)
+        {
+            if (!_isLoaded)
+            {
+                return;
+            }
+
+            _rebuildRequested = true;
+            _preserveAnchorRequested |= preserveAnchor;
+
+            ScheduleDispatcherRebuild();
+        }
+
+        private void ScheduleDispatcherRebuild()
+        {
+            if (_pendingRebuildOperation is { Status: DispatcherOperationStatus.Pending })
+            {
+                return;
+            }
+
+            _pendingRebuildOperation = Dispatcher.BeginInvoke(
+                DispatcherPriority.DataBind,
+                new Action(ProcessPendingRebuild));
+        }
+
+        private void ProcessPendingRebuild()
+        {
+            _pendingRebuildOperation = null;
+
+            if (!_isLoaded || !_rebuildRequested)
+            {
+                return;
+            }
+
+            var preserveAnchor = _preserveAnchorRequested;
+            _rebuildRequested = false;
+            _preserveAnchorRequested = false;
+
+            RebuildSequenceAndAnimate(preserveAnchor);
+        }
+
+        #endregion
+
+        #region Core Duplication Engine & Visual Anchoring
+
+        private void RebuildSequenceAndAnimate(bool preserveAnchor)
+        {
+            if (_host == null || _viewport == null || _isRebuilding)
+            {
+                return;
+            }
+
+            _isRebuilding = true;
+
+            try
+            {
+                // 1. Capture anchor from running GPU state before stopping
+                StopAnimation(captureCurrentOffset: true);
+
+                VisualAnchor? anchor = null;
+                if (preserveAnchor)
                 {
-                    if (!state.IsSeparator &&
-                        state.DataItem is not null &&
-                        ItemFinishedCommand?.CanExecute(state.DataItem) == true)
+                    anchor = CaptureCurrentAnchor();
+                }
+
+                _host.Children.Clear();
+                _logicalMetrics.Clear();
+                _cycleLength = 0;
+
+                var rawSource = ItemsSource?.Cast<object>().Where(x => x != null).ToList();
+                if (rawSource == null || rawSource.Count == 0)
+                {
+                    _hostTransform.X = 0;
+                    _currentLogicalOffset = 0;
+                    return;
+                }
+
+                // 2. Measure Single Cycle to calculate cycle length
+                var singleCyclePresenters = new List<FrameworkElement>();
+                double accumulatedWidth = 0;
+
+                for (var i = 0; i < rawSource.Count; i++)
+                {
+                    var item = rawSource[i];
+
+                    var itemPresenter = CreateItemPresenter(item);
+                    itemPresenter.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                    var itemWidth = Math.Max(0, itemPresenter.DesiredSize.Width);
+
+                    _logicalMetrics.Add(new LogicalMetric(item, i, accumulatedWidth, itemWidth));
+                    singleCyclePresenters.Add(itemPresenter);
+                    accumulatedWidth += itemWidth;
+
+                    // Append separator if template is supplied
+                    if (SeparatorTemplate != null)
                     {
-                        ItemFinishedCommand.Execute(state.DataItem);
+                        var separatorPresenter = CreateSeparatorPresenter(item);
+                        separatorPresenter.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                        var separatorWidth = Math.Max(0, separatorPresenter.DesiredSize.Width);
+
+                        accumulatedWidth += separatorWidth;
+                        singleCyclePresenters.Add(separatorPresenter);
                     }
-
-                    RecycleElement(state);
-                    _activeElements.RemoveAt(index);
-                }
-            }
-        }
-
-        private void ManageSpawning()
-        {
-            System.Diagnostics.Debug.WriteLine(
-                $"Width={ActualWidth}, " +
-                $"Active={_activeElements.Count}, " +
-                $"Enumerator={_enumerator is not null}, " +
-                $"Current={_currentData}");
-            var isRightToLeft =
-                Direction == MarqueeDirection.RightToLeft;
-
-            while (true)
-            {
-                double spawnX;
-
-                if (_activeElements.Count == 0)
-                {
-                    // First item starts just outside the entering edge.
-                    spawnX = isRightToLeft
-                        ? ActualWidth
-                        : -1;
-                }
-                else if (isRightToLeft)
-                {
-                    // Next item must be placed after the rightmost active item.
-                    var rightmostElement = _activeElements[^1];
-
-                    spawnX =
-                        rightmostElement.Transform.X +
-                        rightmostElement.Width +
-                        ItemSpacing;
-                }
-                else
-                {
-                    // Next item must be placed before the leftmost active item.
-                    var leftmostElement = _activeElements[0];
-
-                    spawnX =
-                        leftmostElement.Transform.X -
-                        ItemSpacing;
                 }
 
-                object? itemToSpawn;
-                DataTemplate? templateToUse;
-                var isSeparator = false;
-
-                if (_expectingSeparator &&
-                    SeparatorTemplate is not null &&
-                    _currentData is not null)
+                _cycleLength = accumulatedWidth;
+                if (_cycleLength <= 0.01)
                 {
-                    itemToSpawn = _currentData;
-                    templateToUse = SeparatorTemplate;
-                    isSeparator = true;
-                    _expectingSeparator = false;
+                    _hostTransform.X = 0;
+                    _currentLogicalOffset = 0;
+                    return;
                 }
-                else
+
+                // 3. Mount single cycle elements
+                foreach (var visual in singleCyclePresenters)
                 {
-                    if (!AdvanceEnumerator())
+                    _host.Children.Add(visual);
+                }
+
+                // 4. Duplicate sequence to cover viewport width and avoid white gaps
+                var viewportWidth = Math.Max(_viewport.ActualWidth, ActualWidth);
+                if (viewportWidth <= 0)
+                {
+                    viewportWidth = 1920; // Fallback metric during unrendered initial pass
+                }
+
+                var requiredDuplicates = (int)Math.Ceiling(viewportWidth / _cycleLength) + 1;
+                for (var d = 0; d < requiredDuplicates; d++)
+                {
+                    for (var i = 0; i < rawSource.Count; i++)
                     {
-                        break;
+                        var item = rawSource[i];
+                        _host.Children.Add(CreateItemPresenter(item));
+
+                        if (SeparatorTemplate != null)
+                        {
+                            _host.Children.Add(CreateSeparatorPresenter(item));
+                        }
                     }
-
-                    itemToSpawn = _currentData;
-
-                    if (itemToSpawn is null)
-                    {
-                        break;
-                    }
-
-                    templateToUse = ResolveItemTemplate(itemToSpawn);
-
-                    _expectingSeparator = SeparatorTemplate is not null;
                 }
 
-                if (itemToSpawn is null)
+                // 5. Calculate anchor and spin GPU animation
+                var startOffset = 0.0;
+                if (anchor != null)
                 {
-                    break;
+                    startOffset = RestoreAnchorOffset(anchor);
                 }
 
-                var presenter = GetOrCreatePresenter();
-
-                presenter.Content = itemToSpawn;
-                presenter.ContentTemplate = templateToUse;
-
-                presenter.Measure(
-                    new Size(
-                        double.PositiveInfinity,
-                        Math.Max(1, ActualHeight)));
-
-                var width = presenter.DesiredSize.Width;
-
-                if (width <= 0 ||
-                    double.IsNaN(width) ||
-                    double.IsInfinity(width))
-                {
-                    presenter.Content = null;
-                    presenter.ContentTemplate = null;
-                    _presenterPool.Enqueue(presenter);
-                    break;
-                }
-
-                var transform =
-                    presenter.RenderTransform as TranslateTransform
-                    ?? new TranslateTransform();
-
-                presenter.RenderTransform = transform;
-
-                if (isRightToLeft)
-                {
-                    // spawnX is the left edge of the item.
-                    transform.X = spawnX;
-                }
-                else
-                {
-                    // spawnX is the right edge of the item.
-                    transform.X = spawnX - width;
-                }
-
-                transform.Y = 0;
-
-                presenter.Arrange(
-                    new Rect(
-                        0,
-                        0,
-                        width,
-                        Math.Max(1, ActualHeight)));
-
-                _visuals.Add(presenter);
-
-                _activeElements.Add(new TickerElementState
-                {
-                    Presenter = presenter,
-                    Transform = transform,
-                    DataItem = itemToSpawn,
-                    IsSeparator = isSeparator,
-                    Width = width
-                });
+                StartContinuousAnimation(startOffset);
+            }
+            finally
+            {
+                _isRebuilding = false;
             }
         }
 
-
-        private DataTemplate? ResolveItemTemplate(object item)
+        private ContentPresenter CreateItemPresenter(object item)
         {
-            if (ItemTemplate is not null)
-            {
-                return ItemTemplate;
-            }
-
-            // Implicit DataTemplate dynamic lookup using DataTemplateKey
-            var templateKey = new DataTemplateKey(item.GetType());
-            return TryFindResource(templateKey) as DataTemplate;
-        }
-
-        private bool AdvanceEnumerator()
-        {
-            if (ItemsSource is null)
-            {
-                return false;
-            }
-
-            // Create the enumerator on the first request.
-            _enumerator ??= ItemsSource.GetEnumerator();
-
-            // Read the next item from the current cycle.
-            if (_enumerator.MoveNext() && _enumerator.Current is not null)
-            {
-                _currentData = _enumerator.Current;
-                return true;
-            }
-
-            // The current cycle is finished. Dispose the old enumerator.
-            if (_enumerator is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-
-            // Start a new cycle from the first item.
-            _enumerator = ItemsSource.GetEnumerator();
-
-            // Do not keep the marquee alive for an empty source.
-            if (!_enumerator.MoveNext() || _enumerator.Current is null)
-            {
-                if (_enumerator is IDisposable newDisposable)
-                {
-                    newDisposable.Dispose();
-                }
-
-                _enumerator = null;
-                _currentData = null;
-                _expectingSeparator = false;
-
-                return false;
-            }
-
-            _currentData = _enumerator.Current;
-            return true;
-        }
-
-        private void SpawnElement(
-            object dataItem,
-            DataTemplate? template,
-            bool isSeparator,
-            double xPosition,
-            bool isRightToLeft)
-        {
-            var presenter = GetOrCreatePresenter();
-
-            presenter.Content = dataItem;
-            presenter.ContentTemplate = template;
-
-            // Measure child with infinity width to calculate intrinsic bounds
-            presenter.Measure(new Size(double.PositiveInfinity, ActualHeight));
-            presenter.Arrange(new Rect(0, 0, presenter.DesiredSize.Width, ActualHeight));
-
-            var transform = (TranslateTransform)presenter.RenderTransform;
-
-            // In LeftToRight mode, if spawning at index 0, place the element completely behind the left edge
-            if (!isRightToLeft && _activeElements.Count == 0)
-            {
-                transform.X = -presenter.DesiredSize.Width;
-            }
-            else if (!isRightToLeft)
-            {
-                transform.X = xPosition - presenter.DesiredSize.Width;
-            }
-            else
-            {
-                transform.X = xPosition;
-            }
-
-            transform.Y = 0;
-
-            _visuals.Add(presenter);
-
-            _activeElements.Add(new TickerElementState
-            {
-                Presenter = presenter,
-                Transform = transform,
-                DataItem = dataItem,
-                IsSeparator = isSeparator,
-                Width = presenter.DesiredSize.Width
-            });
-        }
-
-        private ContentPresenter GetOrCreatePresenter()
-        {
-            if (_presenterPool.Count > 0)
-            {
-                var pooledPresenter = _presenterPool.Dequeue();
-                pooledPresenter.RenderTransform ??= new TranslateTransform();
-                return pooledPresenter;
-            }
-
-            var transform = new TranslateTransform();
-
             return new ContentPresenter
             {
-                RenderTransform = transform,
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Left,
-                IsHitTestVisible = false,
-                CacheMode = new BitmapCache
-                {
-                    EnableClearType = true,
-                    RenderAtScale = 1.0
-                }
+                Content = item,
+                ContentTemplate = ItemTemplate,
+                VerticalAlignment = VerticalAlignment.Center
             };
         }
 
-        private void RecycleElement(TickerElementState state)
+        private ContentPresenter CreateSeparatorPresenter(object? context)
         {
-            _visuals.Remove(state.Presenter);
-
-            state.Presenter.Content = null;
-            state.Presenter.ContentTemplate = null;
-
-            if (state.Presenter.RenderTransform is TranslateTransform transform)
+            return new ContentPresenter
             {
-                transform.X = 0;
-                transform.Y = 0;
+                Content = context,
+                ContentTemplate = SeparatorTemplate,
+                VerticalAlignment = VerticalAlignment.Center,
+                IsHitTestVisible = false
+            };
+        }
+
+        #endregion
+
+        #region Animation & GPU Orchestration
+
+        private double GetCurrentLogicalOffset()
+        {
+            if (_cycleLength <= 0)
+            {
+                return 0;
             }
 
-            _presenterPool.Enqueue(state.Presenter);
-        }
-
-        private void ClearActiveElements()
-        {
-            foreach (var state in _activeElements)
+            var currentX = _hostTransform.X;
+            if (double.IsNaN(currentX) || double.IsInfinity(currentX))
             {
-                RecycleElement(state);
+                return _currentLogicalOffset;
             }
 
-            _activeElements.Clear();
-        }
-
-        private void ResetEnumeration()
-        {
-            if (_enumerator is IDisposable disposable)
+            double logicalOffset;
+            if (Direction == MarqueeDirection.RightToLeft)
             {
-                disposable.Dispose();
+                logicalOffset = -currentX;
+            }
+            else
+            {
+                logicalOffset = currentX + _cycleLength;
             }
 
-            _enumerator = null;
-            _currentData = null;
-            _expectingSeparator = false;
-        }
-
-        protected override int VisualChildrenCount => _visuals?.Count??0;
-
-        protected override Visual GetVisualChild(int index)
-        {
-            if (index < 0 || index >= _visuals.Count)
+            logicalOffset %= _cycleLength;
+            if (logicalOffset < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(index));
+                logicalOffset += _cycleLength;
             }
 
-            return _visuals[index];
+            return logicalOffset;
         }
 
-        protected override Size MeasureOverride(Size availableSize)
+        private VisualAnchor? CaptureCurrentAnchor()
         {
-            var width = double.IsInfinity(availableSize.Width) ? 0 : availableSize.Width;
-            var height = double.IsInfinity(availableSize.Height) ? 0 : availableSize.Height;
-            return new Size(width, height);
+            if (_logicalMetrics.Count == 0 || _cycleLength <= 0)
+            {
+                return null;
+            }
+
+            var normalizedOffset = GetCurrentLogicalOffset();
+            var activeMetric = _logicalMetrics.LastOrDefault(m => m.StartOffset <= normalizedOffset)
+                               ?? _logicalMetrics[0];
+
+            var internalItemOffset = normalizedOffset - activeMetric.StartOffset;
+
+            return new VisualAnchor(
+                Item: activeMetric.Item,
+                Index: activeMetric.Index,
+                InternalItemOffset: internalItemOffset);
         }
+
+        private double RestoreAnchorOffset(VisualAnchor anchor)
+        {
+            if (_logicalMetrics.Count == 0 || _cycleLength <= 0)
+            {
+                return 0;
+            }
+
+            var match = _logicalMetrics.FirstOrDefault(m => ReferenceEquals(m.Item, anchor.Item))
+                        ?? _logicalMetrics.FirstOrDefault(m => Equals(m.Item, anchor.Item));
+
+            if (match == null)
+            {
+                var safeIndex = Math.Clamp(anchor.Index, 0, _logicalMetrics.Count - 1);
+                match = _logicalMetrics[safeIndex];
+            }
+
+            var internalOffset = Math.Clamp(anchor.InternalItemOffset, 0, Math.Max(0, match.ItemWidth));
+            var restoredOffset = (match.StartOffset + internalOffset) % _cycleLength;
+
+            if (restoredOffset < 0)
+            {
+                restoredOffset += _cycleLength;
+            }
+
+            return restoredOffset;
+        }
+
+        private void StopAnimation(bool captureCurrentOffset)
+        {
+            if (captureCurrentOffset && _cycleLength > 0)
+            {
+                _currentLogicalOffset = GetCurrentLogicalOffset();
+            }
+
+            _hostTransform.BeginAnimation(
+                TranslateTransform.XProperty,
+                null,
+                HandoffBehavior.SnapshotAndReplace);
+        }
+
+        private void StartContinuousAnimation(double startLogicalOffset)
+        {
+            if (_cycleLength <= 0 || double.IsNaN(ScrollSpeed) || double.IsInfinity(ScrollSpeed) || ScrollSpeed <= 0)
+            {
+                _hostTransform.X = 0;
+                return;
+            }
+
+            startLogicalOffset %= _cycleLength;
+            if (startLogicalOffset < 0)
+            {
+                startLogicalOffset += _cycleLength;
+            }
+
+            _currentLogicalOffset = startLogicalOffset;
+
+            var remainingDistance = Math.Max(0.001, _cycleLength - startLogicalOffset);
+            var durationSeconds = remainingDistance / ScrollSpeed;
+
+            var fromX = Direction == MarqueeDirection.RightToLeft
+                ? -startLogicalOffset
+                : startLogicalOffset - _cycleLength;
+
+            var toX = Direction == MarqueeDirection.RightToLeft
+                ? -_cycleLength
+                : 0;
+
+            var initialAnimation = new DoubleAnimation
+            {
+                From = fromX,
+                To = toX,
+                Duration = TimeSpan.FromSeconds(Math.Max(0.01, durationSeconds)),
+                FillBehavior = FillBehavior.Stop
+            };
+
+            initialAnimation.Completed += OnInitialAnimationCompleted;
+
+            _hostTransform.BeginAnimation(
+                TranslateTransform.XProperty,
+                initialAnimation,
+                HandoffBehavior.SnapshotAndReplace);
+        }
+
+        private void OnInitialAnimationCompleted(object? sender, EventArgs e)
+        {
+            if (!_isLoaded || _isRebuilding || _cycleLength <= 0 || ScrollSpeed <= 0)
+            {
+                return;
+            }
+
+            var fullCycleDuration = _cycleLength / ScrollSpeed;
+
+            var loopAnimation = new DoubleAnimation
+            {
+                From = Direction == MarqueeDirection.RightToLeft ? 0 : -_cycleLength,
+                To = Direction == MarqueeDirection.RightToLeft ? -_cycleLength : 0,
+                Duration = TimeSpan.FromSeconds(Math.Max(0.01, fullCycleDuration)),
+                RepeatBehavior = RepeatBehavior.Forever,
+                FillBehavior = FillBehavior.HoldEnd
+            };
+
+            _hostTransform.BeginAnimation(
+                TranslateTransform.XProperty,
+                loopAnimation,
+                HandoffBehavior.SnapshotAndReplace);
+        }
+
+        #endregion
     }
+
+    #endregion
 }
