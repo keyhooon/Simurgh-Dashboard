@@ -39,6 +39,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Page Remove="Themes\MarqueeItemsControl.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Fonts\dseg7-classic-latin-300-italic.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
@@ -121,6 +125,13 @@
       <Generator></Generator>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\Timers\Contracts\" />
+    <Folder Include="Services\Timers\Models\" />
+    <Folder Include="Services\Timers\Options\" />
+    <Folder Include="Services\Timers\Repositories\" />
   </ItemGroup>
 
 </Project>

@@ -16,7 +16,7 @@ public interface ILocalNotificationService
     /// <param name="severity">Categorization for styling (e.g., "Info", "Warning", "Critical", "Success").</param>
     /// <param name="ttl">Optional time-to-live. If null, a default duration is used.</param>
     /// <returns>A unique identifier for the pushed notification.</returns>
-    string ShowNotification(string message, NotificationLevel notificationLevel = NotificationLevel.Information, TimeSpan? ttl = null);
+    string ShowNotification(string message, NotificationLevel notificationLevel = NotificationLevel.Info, TimeSpan? ttl = null);
 
     /// <summary>
     /// Clears a previously published notification before its TTL expires.

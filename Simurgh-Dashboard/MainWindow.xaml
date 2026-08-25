@@ -10,11 +10,8 @@
     xmlns:views="clr-namespace:SimurghDashboard.Views"
     Title="Beveled UI Showcase"
     Background="#FF88898F"
-    ResizeMode="NoResize"
     ShowInTaskbar="False"
-    WindowStartupLocation="Manual"
-    WindowState="Maximized"
-    WindowStyle="SingleBorderWindow">
+    WindowStartupLocation="Manual">
 
     <Window.Resources>
         <ResourceDictionary Source="/SimurghDashboard;component/DataTemplates/DataTemplate.xaml" />
@@ -88,6 +85,20 @@
         </controls:WidgetFrame>
 
 
+        <controls:WidgetFrame
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            MinHeight="150"
+            Margin="-15"
+            FrameVariant="RoundedSunkenLow">
+
+            <ContentControl
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Content="{Binding DigitalTimersListViewModel}" />
+        </controls:WidgetFrame>
+
         <!--
             ============================================================================
             4. RSS TICKER WIDGET (Bottom Full Width)
@@ -96,14 +107,14 @@
             screen real estate for scrolling medical news feeds (IRNA, ISNA, Vebda).
             Height is fixed to 150 to maintain a consistent footer baseline.
         -->
+
         <controls:WidgetFrame
             Grid.Row="2"
             Grid.Column="0"
             Grid.ColumnSpan="5"
             Margin="-15"
             FrameVariant="RoundedSunkenLow">
-
-            <ContentControl Content="{Binding TickerViewModel}" />
+            <ContentControl Margin="-15" Content="{Binding TickerViewModel}" />
         </controls:WidgetFrame>
 
     </Grid>

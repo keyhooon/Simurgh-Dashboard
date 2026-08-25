@@ -26,15 +26,22 @@
             - SeparatorTemplate: Explicitly referenced from TickerTemplates.xaml
             - ItemSpacing / ScrollSpeed: Configured for optimal UX
         -->
-        <controls:MarqueeItemsControl
-            Height="50"
+
+        <controls:DrawingMarqueeControl
+            Height="42"
             Margin="50"
-            VerticalAlignment="Bottom"
-            Background="Aqua"
+            DefaultItemBackground="#CC000000"
             Direction="LeftToRight"
-            ItemTemplate="{StaticResource MarqueeRssItemTemplate}"
+            FontFamily="b titr"
+            FontSize="15"
+            FontWeight="SemiBold"
+            Foreground="#FFF3F7FA"
+            ItemPadding="18,0,18,0"
+            ItemSpacing="14"
             ItemsSource="{Binding TickerStore}"
-            ScrollSpeed="80"
-            SeparatorTemplate="{StaticResource MarqueeSeparatorTemplate}" />
+            ScrollSpeed="70"
+            SeparatorBrush="#33FFFFFF"
+            SeparatorHeightRatio="0.42"
+            SeparatorWidth="1" />
     </Grid>
 </UserControl>

@@ -4,7 +4,6 @@
     xmlns:local="clr-namespace:SimurghDashboard.Controls">
 
     <Style TargetType="{x:Type local:MarqueeItemsControl}">
-        <Setter Property="ClipToBounds" Value="True" />
         <Setter Property="Focusable" Value="False" />
         <Setter Property="IsHitTestVisible" Value="True" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
@@ -16,15 +15,14 @@
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
-                        ClipToBounds="True"
                         CornerRadius="4">
                         <Grid>
+                            <!--  Viewport with active clipping mask  -->
                             <Grid x:Name="PART_Viewport" ClipToBounds="True">
-                                <StackPanel
-                                    x:Name="PART_Host"
-                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                    FlowDirection="{TemplateBinding FlowDirection}"
-                                    Orientation="Horizontal" />
+                                <Canvas
+                                    x:Name="PART_CanvasHost"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch" />
                             </Grid>
 
                             <!--  Container reserved for urgent overlay notifications  -->

@@ -71,7 +71,7 @@ public class RssTickerBackgroundService(
                 var feedTitle = feed.Title?.Text ?? "News";
                 var now = DateTime.UtcNow;
 
-                foreach (var item in feed.Items.Take(10))
+                foreach (var item in feed.Items.Take(3))
                 {
                     var uniqueId = item.Id ?? item.Links.FirstOrDefault()?.Uri?.ToString() ?? CreateFallbackId(item.Title?.Text);
 

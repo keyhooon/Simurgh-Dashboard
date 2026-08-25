@@ -1,12 +1,13 @@
-﻿namespace SimurghDashboard.Services.Ticker.Contracts;
+﻿using SimurghDashboard.Controls;
+using SimurghDashboard.Controls.Marquee;
+
+namespace SimurghDashboard.Services.Ticker.Contracts;
 
 /// <summary>
-/// Unified marker interface for all items rendered in the ticker.
-/// Resolves the previous discrepancy by standardizing on a string Id 
-/// and including explicit lifecycle timestamps (CreatedAt, ExpiresAt) 
-/// so background purgers can evaluate TTL without casting to concrete types.
+/// Unified marker and rendering interface for all items processed by the ticker engine.
+/// Unifies domain lifecycle management with low-level DrawingVisual rendering capabilities.
 /// </summary>
-public interface ITickerItem
+public interface ITickerItem : IMarqueeDrawItem
 {
     string Id { get; }
     DateTime CreatedAt { get; }

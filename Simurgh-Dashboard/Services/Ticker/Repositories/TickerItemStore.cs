@@ -1,10 +1,11 @@
-﻿using System;
+﻿using SimurghDashboard.Services.Ticker.Contracts;
+using SimurghDashboard.Services.Ticker.Models;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using SimurghDashboard.Services.Ticker.Contracts;
 
 namespace SimurghDashboard.Services.Ticker.Repositories;
 

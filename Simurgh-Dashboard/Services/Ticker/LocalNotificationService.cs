@@ -16,7 +16,7 @@ public class LocalNotificationService(ITickerItemStore store) : ILocalNotificati
     // 5 minutes default TTL for local notifications if the caller doesn't specify one.
     // In a real-world scenario, you might inject IOptions<LocalNotificationOptions> here.
 
-    public string ShowNotification(string message, NotificationLevel notificationLevel = NotificationLevel.Information, TimeSpan? ttl = null)
+    public string ShowNotification(string message, NotificationLevel notificationLevel = NotificationLevel.Info, TimeSpan? ttl = null)
     {
         if (string.IsNullOrWhiteSpace(message))
             throw new ArgumentException("Message cannot be empty.", nameof(message));

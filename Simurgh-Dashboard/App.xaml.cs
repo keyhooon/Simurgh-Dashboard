@@ -48,7 +48,7 @@ namespace SimurghDashboard
         {
             // Establish global UI dispatcher protection immediately.
             this.DispatcherUnhandledException += App_DispatcherUnhandledException;
-
+            
             _logger.Info("Simurgh Dashboard starting up (IHost bootstrapping)...");
 
             try

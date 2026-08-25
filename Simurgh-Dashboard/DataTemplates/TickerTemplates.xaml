@@ -83,17 +83,10 @@
 
     <DataTemplate x:Key="MarqueeRssItemTemplate" DataType="{x:Type models1:RssItemModel}">
         <!--  Flat layout: StackPanel is highly optimized for horizontal stacking  -->
-        <StackPanel
-            FlowDirection="{Binding RelativeSource={RelativeSource AncestorType={x:Type controls:MarqueeItemsControl}}, Path=Content.FlowDirection}"
-            IsHitTestVisible="False"
-            Orientation="Horizontal">
+        <StackPanel Orientation="Horizontal">
             <!--  Title Text  -->
-            <TextBlock
-                VerticalAlignment="Center"
-                FontSize="16"
-                Foreground="{StaticResource Ticker.Foreground}"
-                Text="{Binding Title, Mode=OneTime}"
-                TextOptions.TextFormattingMode="Display" />
+
+
             <!--  Source Badge  -->
             <Border
                 Margin="10,0,10,0"
@@ -107,7 +100,11 @@
                     Foreground="White"
                     Text="{Binding Source, Mode=OneTime}" />
             </Border>
-
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="16"
+                Foreground="{StaticResource Ticker.Foreground}"
+                Text="{Binding Title, Mode=OneTime}" />
 
         </StackPanel>
     </DataTemplate>
@@ -126,10 +123,7 @@
             CornerRadius="6"
             IsHitTestVisible="False">
 
-            <StackPanel
-                FlowDirection="{Binding RelativeSource={RelativeSource AncestorType={x:Type controls:MarqueeItemsControl}}, Path=Content.FlowDirection}"
-                IsHitTestVisible="False"
-                Orientation="Horizontal">
+            <StackPanel IsHitTestVisible="False" Orientation="Horizontal">
                 <TextBlock
                     x:Name="IconText"
                     Margin="0,0,8,0"

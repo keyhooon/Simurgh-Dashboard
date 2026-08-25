@@ -17,9 +17,9 @@ namespace SimurghDashboard.Services.Ticker.Options
         public static string SectionName = "RssWorker";
         // A list of RSS/Atom feed URLs to poll.
         public List<string> FeedUrls { get; set; } = [
-                                                         "https://www.yjc.ir/fa/rss/7/57",
-                                                         "https://www.yjc.ir/fa/rss/7/161",
-                                                         "https://www.yjc.ir/fa/rss/7/83"];
+            "https://www.yjc.ir/fa/rss/7/57",
+            "https://www.yjc.ir/fa/rss/7/161",
+            "https://www.yjc.ir/fa/rss/7/83"];
 
         // How often to check for new items (e.g., every 5 minutes).
         public TimeSpan PollingInterval { get; set; } = TimeSpan.FromMinutes(5);

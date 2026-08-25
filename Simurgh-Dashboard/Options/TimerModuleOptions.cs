@@ -6,15 +6,6 @@ using SimurghDashboard.Controls.Timers;
 
 namespace SimurghDashboard.Options;
 
-public class DigitalTimersOptions
-{
-    public const string SectionName = "DigitalTimers";
-
-    [Required]
-    public List<TimerModuleOptions> Timers { get; set; } = [];
-
-}
-
 public sealed class TimerModuleOptions
 {
     public string ModuleName { get; set; } = "Unknown Module";
