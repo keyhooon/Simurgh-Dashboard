@@ -127,11 +127,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\Timers\Contracts\" />
-    <Folder Include="Services\Timers\Models\" />
-    <Folder Include="Services\Timers\Options\" />
-    <Folder Include="Services\Timers\Repositories\" />
-  </ItemGroup>
-
 </Project>
