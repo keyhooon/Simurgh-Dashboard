@@ -22,19 +22,19 @@
             Margin="-20"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
-            StartTime="{Binding StartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-            TargetTime="{Binding TargetTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            Action="{Binding CurrentAction, Mode=TwoWay}"
+            CurrentDuration="{Binding CurrentDuration, Mode=OneWayToSource}"
+            DigitBrush="{Binding DigitBrush, Mode=OneWay}"
             Direction="{Binding Direction, Mode=TwoWay}"
-            WarningThreshold="{Binding WarningThreshold,Mode=TwoWay}"
-            ShowSeconds="{Binding ShowSeconds,Mode=TwoWay}"
-            Action="{Binding CurrentAction,Mode=TwoWay}"
-            CurrentDuration="{Binding CurrentDuration,Mode=OneWayToSource}"
             IsWarning="{Binding IsWarning, Mode=OneWayToSource}"
-            DigitBrush="{Binding DigitBrush,  Mode=OneWay}"
             PlaceholderBrush="{Binding PlaceholderBrush, Mode=OneWay}"
-            WarningBrush="{Binding WarningBrush,  Mode=OneWay}"
+            ShowSeconds="{Binding ShowSeconds, Mode=TwoWay}"
+            StartTime="{Binding StartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             StateChangedCommand="{Binding StateChangedCommand}"
-            WarningReachedCommand="{Binding WarningReachedCommand}" />
+            TargetTime="{Binding TargetTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            WarningBrush="{Binding WarningBrush, Mode=OneWay}"
+            WarningReachedCommand="{Binding WarningReachedCommand}"
+            WarningThreshold="{Binding WarningThreshold, Mode=TwoWay}" />
     </DataTemplate>
 
 
@@ -72,7 +72,7 @@
     -->
 
     <DataTemplate DataType="{x:Type viewmodels:DigitalTimersListViewModel}">
-        <views:DigitalTimersListView  VerticalAlignment="Stretch"/>
+        <views:DigitalTimersListView VerticalAlignment="Stretch" />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewmodels:DigitalSensorsListViewModel}">
