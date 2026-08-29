@@ -5,13 +5,15 @@
     xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:behaviors="clr-namespace:SimurghDashboard.Infrastructures.Behaviors"
     xmlns:controls="clr-namespace:SimurghDashboard.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:simurghDashboard="clr-namespace:SimurghDashboard"
-    xmlns:viewmodels="clr-namespace:SimurghDashboard.ViewModels"
-    xmlns:views="clr-namespace:SimurghDashboard.Views"
-    Title="Beveled UI Showcase"
+    Title="{Binding OperationStatus, StringFormat='Simurgh Medical Dashboard - {0}'}"
+    d:DataContext="{d:DesignInstance Type=simurghDashboard:MainViewModel}"
     Background="#FF88898F"
     ShowInTaskbar="False"
-    WindowStartupLocation="Manual">
+    WindowStartupLocation="Manual"
+    mc:Ignorable="d">
 
     <Window.Resources>
         <ResourceDictionary Source="/SimurghDashboard;component/DataTemplates/DataTemplate.xaml" />
@@ -19,26 +21,27 @@
 
     <!--
         ================================================================================
-        HARDWARE DISPLAY MANAGEMENT
+        HARDWARE DISPLAY MANAGEMENT (MVVM DATA BOUND)
         ================================================================================
-        The KioskDisplayBehavior interfaces directly with User32.dll and Windows Registry
-        to force the display into Portrait mode and ensure the GPU outputs correctly
-        via HDMI. RevertOnClose (implemented previously) will restore the OS defaults.
+        The KioskDisplayBehavior interfaces directly with low-level Win32/WDDM APIs.
+        All timing, display connector type, rotation, and lifecycle behavior
+        are fully decoupled and driven dynamically via MainViewModel.
     -->
-    <!--<b:Interaction.Behaviors>
+    <b:Interaction.Behaviors>
         <behaviors:KioskDisplayBehavior
-            GpuSyncDelayMs="1500"
-            TargetOrientation="Landscape"
-            TargetTechnology="Hdmi" />
-    </b:Interaction.Behaviors>-->
+            ExplicitDeviceName="{Binding ExplicitDeviceName, Mode=OneWay}"
+            GpuSyncDelayMs="{Binding GpuSyncDelayMs, Mode=OneWay}"
+            RevertOnClose="{Binding RevertOnClose, Mode=OneWay}"
+            TargetOrientation="{Binding TargetOrientation, Mode=OneWay}"
+            TargetTechnology="{Binding TargetTechnology, Mode=OneWay}" />
+    </b:Interaction.Behaviors>
 
     <!--
         ================================================================================
-        MAIN KIOSK LAYOUT (1080x1920 Portrait)
+        MAIN KIOSK LAYOUT (Golden Ratio Medical Grid)
         ================================================================================
-        Using a proportional Grid layout (* and .5*) ensures that if the resolution
-        scales (e.g., 4K medical displays: 2160x3840), the golden ratio of the UI
-        remains perfectly intact without hardcoding fixed pixel widths.
+        A multi-column proportional grid ensuring responsive scaling across high-DPI
+        and standard medical grade panels.
     -->
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
@@ -55,11 +58,11 @@
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
-            <!--  Top Header (Clock/Weather)  -->
+            <!--  Top Header (Clock/Weather/OR Metadata)  -->
             <RowDefinition Height="Auto" />
-            <!--  Middle Body (Timers and Sensors split)  -->
+            <!--  Middle Body (Operational Timers and Real-time Sensors)  -->
             <RowDefinition Height="*" />
-            <!--  Bottom Footer (RSS Ticker)  -->
+            <!--  Bottom Footer (Medical News RSS Ticker)  -->
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
@@ -67,46 +70,58 @@
             ============================================================================
             1. DIGITAL CLOCK WIDGET (Top Center)
             ============================================================================
-            Spans across the middle columns. ContentControl delegates the actual rendering
-            to the DataTemplate mapped to DigitalClockViewModel in DataTemplates.xaml.
+            Hosts the real-time clock, date, and environmental telemetry.
         -->
         <controls:WidgetFrame
             Grid.Row="0"
             Grid.Column="1"
             Grid.ColumnSpan="3"
-            MinHeight="150"
             Margin="-15"
             FrameVariant="RoundedSunkenLow">
-
             <ContentControl
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 Content="{Binding DigitalClockViewModel}" />
         </controls:WidgetFrame>
 
+        <!--
+            ============================================================================
+            2. SURGICAL TIMERS LIST (Middle Left)
+            ============================================================================
+            Renders Anesthesia, Tourniquet, and surgical procedure stopwatches.
+        -->
+        <ContentControl
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="-15"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            VerticalContentAlignment="Stretch"
+            Content="{Binding DigitalTimersListViewModel}" />
 
-
-
-            <ContentControl
-                HorizontalAlignment="Stretch"      
-                Grid.Row="1"
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
-                VerticalContentAlignment="Stretch"
-                Margin="-15"
-                VerticalAlignment="Stretch"
-                Content="{Binding DigitalTimersListViewModel}" />
-
+        <!--
+            ============================================================================
+            3. DIGITAL SENSORS TELEMETRY LIST (Middle Right)
+            ============================================================================
+            Ingests and displays environmental, medical gas, and OR hardware parameters.
+        -->
+        <ContentControl
+            Grid.Row="1"
+            Grid.Column="3"
+            Grid.ColumnSpan="2"
+            Margin="-15"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            VerticalContentAlignment="Stretch"
+            Content="{Binding DigitalSensorsListViewModel}" />
 
         <!--
             ============================================================================
             4. RSS TICKER WIDGET (Bottom Full Width)
             ============================================================================
-            Bound to RssTickerViewModel. Spans all 5 columns to provide maximum horizontal
-            screen real estate for scrolling medical news feeds (IRNA, ISNA, Vebda).
-            Height is fixed to 150 to maintain a consistent footer baseline.
+            Spans all 5 columns for marquee broadcasts and medical RSS alerts.
         -->
-
         <controls:WidgetFrame
             Grid.Row="2"
             Grid.Column="0"

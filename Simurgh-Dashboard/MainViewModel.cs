@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SimurghDashboard.Controls.Sensors;
+using SimurghDashboard.Infrastructures.Native;
 using SimurghDashboard.ViewModels;
 using System.Buffers;
 using System.Collections.Immutable;
@@ -80,6 +81,41 @@ public partial class MainViewModel(
     /// </summary>
     [ObservableProperty]
     private bool _isEmergencyModeActive;
+
+
+    // ========================================================================
+    // Kiosk Display & Hardware Topology Management
+    // ========================================================================
+
+    /// <summary>
+    /// Defines the target video output connector technology (e.g., HDMI, DisplayPort, DVI).
+    /// </summary>
+    [ObservableProperty]
+    private DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY _targetTechnology = DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY.Hdmi;
+
+    /// <summary>
+    /// Desired monitor rotation applied dynamically at startup (Landscape vs. Portrait).
+    /// </summary>
+    [ObservableProperty]
+    private DisplayOrientation _targetOrientation = DisplayOrientation.Landscape;
+
+    /// <summary>
+    /// Hardware stabilization delay in milliseconds to allow WDDM and GPU driver transitions to settle.
+    /// </summary>
+    [ObservableProperty]
+    private int _gpuSyncDelayMs = 1500;
+
+    /// <summary>
+    /// Optional explicit GDI display identifier (e.g., "\\.\DISPLAY2") to bypass technology scan.
+    /// </summary>
+    [ObservableProperty]
+    private string _explicitDeviceName = string.Empty;
+
+    /// <summary>
+    /// Flag determining whether the native display topology restores original orientation on window closure.
+    /// </summary>
+    [ObservableProperty]
+    private bool _revertOnClose = true;
 
 }
 
