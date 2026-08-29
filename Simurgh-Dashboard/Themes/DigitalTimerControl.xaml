@@ -156,7 +156,7 @@
                         </DataTrigger>
 
                         <!--  State is assumed to be a DP on the control itself, so simple Trigger works  -->
-                        <Trigger Property="State" Value="{x:Static timers1:TimerRunState.Running}">
+                        <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.Running}">
                             <Setter TargetName="PART_StateText" Property="Text" Value="RUNNING" />
                             <Setter TargetName="PART_StateText" Property="Foreground" Value="#4CAF50" />
                             <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#4CAF50" />
@@ -164,7 +164,7 @@
                             <Setter TargetName="PART_StateIcon" Property="Fill" Value="#4CAF50" />
                         </Trigger>
 
-                        <Trigger Property="State" Value="{x:Static timers1:TimerRunState.Paused}">
+                        <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.Pausing}">
                             <Setter TargetName="PART_StateText" Property="Text" Value="PAUSED" />
                             <Setter TargetName="PART_StateText" Property="Foreground" Value="#FFC107" />
                             <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#FFC107" />
@@ -173,7 +173,7 @@
                             <Setter TargetName="PART_StateIcon" Property="Fill" Value="#FFC107" />
                         </Trigger>
 
-                        <Trigger Property="State" Value="{x:Static timers1:TimerRunState.Completed}">
+                        <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.NotRunning}">
                             <Setter TargetName="PART_StateText" Property="Text" Value="COMPLETED" />
                             <Setter TargetName="PART_StateText" Property="Foreground" Value="#03A9F4" />
                             <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#03A9F4" />

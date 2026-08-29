@@ -7,8 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="clr-namespace:SimurghDashboard.ViewModels"
-    Width="800"
-    Height="450"
+ 
+    
     d:DataContext="{d:DesignInstance Type=viewmodels:DigitalTimersListViewModel}"
     mc:Ignorable="d">
 
@@ -25,7 +25,7 @@
                     across items, ItemsControl is the most performant choice.
                     The 'Timers' binding is an ObservableCollection<DigitalTimerViewModel>.
             -->
-            <ItemsControl Margin="20" ItemsSource="{Binding Timers}">
+            <ItemsControl Margin="5" ItemsSource="{Binding Timers}">
 
                 <!--
                     ItemsPanel defines the spatial arrangement.

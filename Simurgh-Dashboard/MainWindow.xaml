@@ -85,19 +85,18 @@
         </controls:WidgetFrame>
 
 
-        <controls:WidgetFrame
-            Grid.Row="1"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            MinHeight="150"
-            Margin="-15"
-            FrameVariant="RoundedSunkenLow">
+
 
             <ContentControl
-                HorizontalAlignment="Stretch"
+                HorizontalAlignment="Stretch"      
+                Grid.Row="1"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                VerticalContentAlignment="Stretch"
+                Margin="-15"
                 VerticalAlignment="Stretch"
                 Content="{Binding DigitalTimersListViewModel}" />
-        </controls:WidgetFrame>
+
 
         <!--
             ============================================================================

@@ -1,4 +1,4 @@
-﻿namespace SimurghDashboard.Controls;
+﻿namespace SimurghDashboard.Controls.Timers;
 
 /// <summary>
 /// Execution state of the DigitalTimerControl based on user interactions and time intervals.

@@ -1,12 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -20,6 +12,15 @@ using SimurghDashboard.Services.Ticker.Contracts;
 using SimurghDashboard.Services.Ticker.Repositories;
 using SimurghDashboard.Services.Weather;
 using SimurghDashboard.ViewModels;
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
+using SimurghDashboard.Services.Timers;
 
 namespace SimurghDashboard
 {
@@ -127,12 +128,6 @@ namespace SimurghDashboard
                 .ValidateOnStart();
 
             services
-                .AddOptions<DigitalTimersOptions>()
-                .BindConfiguration(DigitalTimersOptions.SectionName)
-                .ValidateDataAnnotations()
-                .ValidateOnStart();
-
-            services
                 .AddOptions<DigitalClockOptions>()
                 .BindConfiguration(DigitalClockOptions.SectionName)
                 .ValidateDataAnnotations()
@@ -144,6 +139,7 @@ namespace SimurghDashboard
             services.AddRssTickerWorker(configuration);
             services.AddLocalNotificationService();
             services.AddWeatherServices(configuration);
+            services.AddTimerWorkerServices(configuration);
 
             // -------------------------------------------------------------------------
             // VIEWMODELS (Stateful Singletons for Kiosk Lifecycle)

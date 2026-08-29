@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using SimurghDashboard.Controls.Timers;
 
 namespace SimurghDashboard.Controls;
 
@@ -12,6 +13,7 @@ namespace SimurghDashboard.Controls;
 /// Self-evaluating Digital Timer control. Automatically handles state from StartTime and TargetTime.
 /// Implements live target pushing on pause, pause duration accumulation, 
 /// dynamic span preservation on reset, and direct command execution.
+/// All telemetry properties are registered as standard DependencyProperties to fully support outward MVVM bindings.
 /// </summary>
 public sealed class DigitalTimerControl : Control
 {
@@ -437,67 +439,68 @@ public sealed class DigitalTimerControl : Control
 
     #endregion
 
-    #region ReadOnly Dependency Properties - States & Output
+    #region Standard Dependency Properties - States & Output Telemetry
 
     public DigitalTimerState State
     {
         get => (DigitalTimerState)GetValue(StateProperty);
-        private set => SetValue(StatePropertyKey, value);
+        set => SetValue(StateProperty, value);
     }
 
-    private static readonly DependencyPropertyKey StatePropertyKey =
-        DependencyProperty.RegisterReadOnly(
+    public static readonly DependencyProperty StateProperty =
+        DependencyProperty.Register(
             nameof(State),
             typeof(DigitalTimerState),
             typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(DigitalTimerState.NotRunning, OnStateChangedCallback));
-
-    public static readonly DependencyProperty StateProperty = StatePropertyKey.DependencyProperty;
+            new FrameworkPropertyMetadata(
+                DigitalTimerState.NotRunning,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                OnStateChangedCallback));
 
     public string TimeText
     {
         get => (string)GetValue(TimeTextProperty);
-        private set => SetValue(TimeTextPropertyKey, value);
+        set => SetValue(TimeTextProperty, value);
     }
 
-    private static readonly DependencyPropertyKey TimeTextPropertyKey =
-        DependencyProperty.RegisterReadOnly(
+    public static readonly DependencyProperty TimeTextProperty =
+        DependencyProperty.Register(
             nameof(TimeText),
             typeof(string),
             typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata("00:00:00"));
-
-    public static readonly DependencyProperty TimeTextProperty = TimeTextPropertyKey.DependencyProperty;
-
-    public TimeSpan CurrentDuration
-    {
-        get => (TimeSpan)GetValue(CurrentDurationProperty);
-        private set => SetValue(CurrentDurationPropertyKey, value);
-    }
-
-    private static readonly DependencyPropertyKey CurrentDurationPropertyKey =
-        DependencyProperty.RegisterReadOnly(
-            nameof(CurrentDuration),
-            typeof(TimeSpan),
-            typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(TimeSpan.Zero));
-
-    public static readonly DependencyProperty CurrentDurationProperty = CurrentDurationPropertyKey.DependencyProperty;
+            new FrameworkPropertyMetadata(
+                defaultValue: "00:00:00",
+                flags: FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
     public bool IsWarning
     {
         get => (bool)GetValue(IsWarningProperty);
-        private set => SetValue(IsWarningPropertyKey, value);
+        set => SetValue(IsWarningProperty, value);
     }
 
-    private static readonly DependencyPropertyKey IsWarningPropertyKey =
-        DependencyProperty.RegisterReadOnly(
+    public static readonly DependencyProperty IsWarningProperty =
+        DependencyProperty.Register(
             nameof(IsWarning),
             typeof(bool),
             typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(false));
+            new FrameworkPropertyMetadata(
+                defaultValue: false,
+                flags: FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
-    public static readonly DependencyProperty IsWarningProperty = IsWarningPropertyKey.DependencyProperty;
+    public TimeSpan CurrentDuration
+    {
+        get => (TimeSpan)GetValue(CurrentDurationProperty);
+        set => SetValue(CurrentDurationProperty, value);
+    }
+
+    public static readonly DependencyProperty CurrentDurationProperty =
+        DependencyProperty.Register(
+            nameof(CurrentDuration),
+            typeof(TimeSpan),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(
+                defaultValue: TimeSpan.Zero,
+                flags: FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
     private static void OnStateChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -596,6 +599,59 @@ public sealed class DigitalTimerControl : Control
         var brush = new SolidColorBrush(Color.FromArgb(alpha, red, green, blue));
         brush.Freeze();
         return brush;
+    }
+
+    #endregion
+
+    #region ViewModel Action Dependency Property
+
+    public DigitalTimerAction Action
+    {
+        get => (DigitalTimerAction)GetValue(ActionProperty);
+        set => SetValue(ActionProperty, value);
+    }
+
+    public static readonly DependencyProperty ActionProperty =
+        DependencyProperty.Register(
+            nameof(Action),
+            typeof(DigitalTimerAction),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(
+                DigitalTimerAction.None,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                OnActionChanged));
+
+    private static void OnActionChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not DigitalTimerControl control)
+        {
+            return;
+        }
+
+        var action = (DigitalTimerAction)e.NewValue;
+
+        switch (action)
+        {
+            case DigitalTimerAction.Pause:
+                control.Pause();
+                break;
+
+            case DigitalTimerAction.Resume:
+                control.Resume();
+                break;
+
+            case DigitalTimerAction.Reset:
+                control.Reset();
+                break;
+        }
+
+        // Reset the trigger value so the same action can be sent again
+        if (action != DigitalTimerAction.None)
+        {
+            control.SetCurrentValue(ActionProperty, DigitalTimerAction.None);
+        }
     }
 
     #endregion

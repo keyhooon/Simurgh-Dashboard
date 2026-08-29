@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using SimurghDashboard.Services.Timers.Contracts;
 using SimurghDashboard.Services.Timers.Options;
 using SimurghDashboard.Services.Timers.Repositories;
@@ -7,18 +8,38 @@ using SimurghDashboard.Services.Timers.Repositories;
 namespace SimurghDashboard.Services.Timers;
 
 /// <summary>
-/// Dependency injection registration extensions for timer services and stores.
+/// Service collection extensions for registering timer background workers,
+/// configuration pipelines, and store instances into the Microsoft Dependency Injection container.
 /// </summary>
-public static class ServiceCollectionExtensions
+public static class TimerServiceCollectionExtensions
 {
-    public static IServiceCollection AddTimerModule(this IServiceCollection services, IConfiguration configuration)
+    /// <summary>
+    /// Registers the <see cref="TimerConfigurationService"/> both as a standalone interface dependency
+    /// and as an active, hosted <see cref="BackgroundService"/> worker, binding it to the configuration section.
+    /// </summary>
+    /// <param name="services">The dependency injection service collection.</param>
+    /// <param name="configuration">The root configuration containing the timer settings section.</param>
+    /// <returns>The modified <see cref="IServiceCollection"/> instance for fluent chaining.</returns>
+    public static IServiceCollection AddTimerWorkerServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
-        // Bind configuration section with hot-reload / options pattern support
-        services.Configure<TimerSettingsOptions>(configuration.GetSection(TimerSettingsOptions.SectionName));
+        // Bind and enable dynamic change tracking (hot-reloading) via IOptionsMonitor<TimerSettingsOptions>
+        services.Configure<TimerSettingsOptions>(
+            configuration.GetSection(TimerSettingsOptions.SectionName));
 
-        // Register central store and loading service
+        // Register the singleton implementation instance
+        services.AddSingleton<TimerConfigurationService>();
+
+
         services.AddSingleton<ITimerStore, TimerStore>();
-        services.AddTransient<ITimerConfigurationService, TimerConfigurationService>();
+        // Expose ITimerConfigurationService resolved directly from the singleton instance
+        services.AddSingleton<ITimerConfigurationService>(sp =>
+            sp.GetRequiredService<TimerConfigurationService>());
+
+        // Register the same singleton instance as a long-running Hosted/Worker Service in the Host pipeline
+        services.AddHostedService(sp =>
+            sp.GetRequiredService<TimerConfigurationService>());
 
         return services;
     }

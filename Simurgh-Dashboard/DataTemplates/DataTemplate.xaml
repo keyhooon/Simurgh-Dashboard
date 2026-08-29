@@ -22,12 +22,21 @@
             Margin="-20"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
-            Configuration="{Binding Configuration}"
-            DigitBrush="{Binding DigitBrush}"
-            HeaderText="{Binding Label}"
-            PlaceholderBrush="{Binding PlaceholderBrush}"
-            RequestedAction="{Binding CurrentAction, Mode=TwoWay}" />
+            StartTime="{Binding StartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            TargetTime="{Binding TargetTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            Direction="{Binding Direction, Mode=TwoWay}"
+            WarningThreshold="{Binding WarningThreshold,Mode=TwoWay}"
+            ShowSeconds="{Binding ShowSeconds,Mode=TwoWay}"
+            Action="{Binding CurrentAction,Mode=TwoWay}"
+            CurrentDuration="{Binding CurrentDuration,Mode=OneWayToSource}"
+            IsWarning="{Binding IsWarning, Mode=OneWayToSource}"
+            DigitBrush="{Binding DigitBrush,  Mode=OneWay}"
+            PlaceholderBrush="{Binding PlaceholderBrush, Mode=OneWay}"
+            WarningBrush="{Binding WarningBrush,  Mode=OneWay}"
+            StateChangedCommand="{Binding StateChangedCommand}"
+            WarningReachedCommand="{Binding WarningReachedCommand}" />
     </DataTemplate>
+
 
     <DataTemplate DataType="{x:Type viewmodels:DigitalSensorViewModel}">
         <controls:DigitalSensorControl
@@ -63,7 +72,7 @@
     -->
 
     <DataTemplate DataType="{x:Type viewmodels:DigitalTimersListViewModel}">
-        <views:DigitalTimersListView />
+        <views:DigitalTimersListView  VerticalAlignment="Stretch"/>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewmodels:DigitalSensorsListViewModel}">
