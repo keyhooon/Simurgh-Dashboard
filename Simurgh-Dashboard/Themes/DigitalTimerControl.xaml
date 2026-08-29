@@ -41,27 +41,48 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <!--  Section A: Title & Icons  -->
+                            <!--  Section A: Header (ID Badge + Title)  -->
                             <Grid Grid.Row="0" Margin="10,0,10,15">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <!--  Title Text: Bound to Configuration.Title instead of direct TemplateBinding  -->
+                                <!--  Timer ID Badge  -->
+                                <Border
+                                    Grid.Column="0"
+                                    Margin="0,0,12,0"
+                                    Padding="10,3"
+                                    VerticalAlignment="Center"
+                                    Background="#26FFFFFF"
+                                    BorderBrush="#33FFFFFF"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                    <TextBlock
+                                        x:Name="PART_Id"
+                                        FontFamily="{StaticResource FontFamilyDigit}"
+                                        FontSize="18"
+                                        FontWeight="Bold"
+                                        Foreground="{TemplateBinding DigitBrush}"
+                                        Text="{TemplateBinding Id}"
+                                        TextAlignment="Center" />
+                                </Border>
+
+                                <!--  Timer Title  -->
                                 <TextBlock
                                     x:Name="PART_Title"
                                     Grid.Column="1"
-                                    HorizontalAlignment="Center"
+                                    HorizontalAlignment="Left"
                                     VerticalAlignment="Center"
                                     FontFamily="{StaticResource FontFamilyApp}"
-                                    FontSize="32"
+                                    FontSize="28"
                                     FontWeight="SemiBold"
                                     Foreground="{TemplateBinding Foreground}"
-                                    Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=HeaderText}"
-                                    TextAlignment="Center" />
+                                    Text="{TemplateBinding Title}"
+                                    TextAlignment="Left"
+                                    TextTrimming="CharacterEllipsis" />
                             </Grid>
+
 
                             <!--  Section B: Digital Display Area  -->
                             <Border
@@ -79,6 +100,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock
+                                        x:Name="PART_PlaceholderText"
                                         Grid.Column="1"
                                         HorizontalAlignment="Center"
                                         FontFamily="{StaticResource FontFamilyDigit}"
@@ -86,9 +108,8 @@
                                         FontStretch="UltraExpanded"
                                         FontWeight="ExtraBold"
                                         Foreground="{TemplateBinding PlaceholderBrush}"
-                                        Text="88:88:88"
+                                        Text="{TemplateBinding PlaceholderText}"
                                         TextOptions.TextFormattingMode="Display" />
-
                                     <!--  TimeText is assumed to be a ReadOnly DP on the control itself, so TemplateBinding is correct  -->
                                     <TextBlock
                                         x:Name="PART_TimeText"
@@ -151,7 +172,7 @@
 
                     <ControlTemplate.Triggers>
                         <!--  Changed Trigger to DataTrigger to observe Configuration.Mode instead of a direct DP  -->
-                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Configuration.Mode}" Value="Up">
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Direction}" Value="CountUp">
                             <Setter TargetName="PART_DirectionIcon" Property="Data" Value="{StaticResource IconTimerUp}" />
                         </DataTrigger>
 

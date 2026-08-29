@@ -22,6 +22,8 @@
             Margin="-20"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
+            Id="{Binding Id, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            Title="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             StartTime="{Binding StartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             TargetTime="{Binding TargetTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             Direction="{Binding Direction, Mode=TwoWay}"

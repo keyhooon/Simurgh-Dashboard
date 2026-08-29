@@ -12,7 +12,7 @@ namespace SimurghDashboard.Controls;
 /// <summary>
 /// Self-evaluating Digital Timer control. Automatically handles state from StartTime and TargetTime.
 /// Implements live target pushing on pause, pause duration accumulation, 
-/// dynamic span preservation on reset, and direct command execution.
+/// dynamic span preservation on reset, synchronized placeholder text generation, and direct command execution.
 /// All telemetry properties are registered as standard DependencyProperties to fully support outward MVVM bindings.
 /// </summary>
 public sealed class DigitalTimerControl : Control
@@ -103,7 +103,7 @@ public sealed class DigitalTimerControl : Control
         if (!StartTime.HasValue || !TargetTime.HasValue)
         {
             CurrentDuration = TimeSpan.Zero;
-            TimeText = FormatTimeSpan(TimeSpan.Zero);
+            ApplyTimeAndPlaceholder(TimeSpan.Zero);
             IsWarning = false;
             return;
         }
@@ -115,7 +115,7 @@ public sealed class DigitalTimerControl : Control
         if (State == DigitalTimerState.Pausing)
         {
             // Keep display static at frozen duration
-            TimeText = FormatTimeSpan(CurrentDuration);
+            ApplyTimeAndPlaceholder(CurrentDuration);
             return;
         }
 
@@ -126,7 +126,7 @@ public sealed class DigitalTimerControl : Control
             if (initialDuration < TimeSpan.Zero) initialDuration = TimeSpan.Zero;
 
             CurrentDuration = initialDuration;
-            TimeText = FormatTimeSpan(initialDuration);
+            ApplyTimeAndPlaceholder(initialDuration);
             IsWarning = false;
             return;
         }
@@ -141,13 +141,13 @@ public sealed class DigitalTimerControl : Control
                 if (remaining <= TimeSpan.Zero)
                 {
                     CurrentDuration = TimeSpan.Zero;
-                    TimeText = FormatTimeSpan(TimeSpan.Zero);
+                    ApplyTimeAndPlaceholder(TimeSpan.Zero);
                     SetStateInternal(DigitalTimerState.NotRunning);
                     return;
                 }
 
                 CurrentDuration = remaining;
-                TimeText = FormatTimeSpan(remaining);
+                ApplyTimeAndPlaceholder(remaining);
 
                 // Warning zone assessment for CountDown
                 bool inWarningZone = remaining <= WarningThreshold;
@@ -170,13 +170,13 @@ public sealed class DigitalTimerControl : Control
                 if (totalTargetSpan > TimeSpan.Zero && elapsed >= totalTargetSpan)
                 {
                     CurrentDuration = totalTargetSpan;
-                    TimeText = FormatTimeSpan(totalTargetSpan);
+                    ApplyTimeAndPlaceholder(totalTargetSpan);
                     SetStateInternal(DigitalTimerState.NotRunning);
                     return;
                 }
 
                 CurrentDuration = elapsed;
-                TimeText = FormatTimeSpan(elapsed);
+                ApplyTimeAndPlaceholder(elapsed);
 
                 // Warning zone assessment for CountUp approaching TargetTime
                 if (totalTargetSpan > TimeSpan.Zero)
@@ -283,7 +283,7 @@ public sealed class DigitalTimerControl : Control
 
     #region Formatting & Allocation-Free Digits
 
-    private string FormatTimeSpan(TimeSpan span)
+    private void ApplyTimeAndPlaceholder(TimeSpan span)
     {
         if (span < TimeSpan.Zero)
         {
@@ -292,21 +292,37 @@ public sealed class DigitalTimerControl : Control
 
         var totalHours = (long)span.TotalHours;
         string formattedTime;
+        string formattedPlaceholder;
 
         if (totalHours > 0)
         {
-            formattedTime = ShowSeconds
-                ? string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}", totalHours, span.Minutes, span.Seconds)
-                : string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}", totalHours, span.Minutes);
+            if (ShowSeconds)
+            {
+                formattedTime = string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}", totalHours, span.Minutes, span.Seconds);
+                formattedPlaceholder = "88:88:88";
+            }
+            else
+            {
+                formattedTime = string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}", totalHours, span.Minutes);
+                formattedPlaceholder = "88:88";
+            }
         }
         else
         {
-            formattedTime = ShowSeconds
-                ? string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}", span.Minutes, span.Seconds)
-                : string.Format(CultureInfo.InvariantCulture, "{0:D2}m", span.Minutes);
+            if (ShowSeconds)
+            {
+                formattedTime = string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}", span.Minutes, span.Seconds);
+                formattedPlaceholder = "88:88";
+            }
+            else
+            {
+                formattedTime = string.Format(CultureInfo.InvariantCulture, "{0:D2}m", span.Minutes);
+                formattedPlaceholder = "88m";
+            }
         }
 
-        return ToLatinDigits(formattedTime);
+        TimeText = ToLatinDigits(formattedTime);
+        PlaceholderText = formattedPlaceholder;
     }
 
     private static string ToLatinDigits(string value)
@@ -346,6 +362,40 @@ public sealed class DigitalTimerControl : Control
 
         eventHandler?.Invoke(this, EventArgs.Empty);
     }
+
+    #endregion
+
+    #region Dependency Properties - Identification & Metadata
+
+    public string Id
+    {
+        get => (string)GetValue(IdProperty);
+        set => SetValue(IdProperty, value);
+    }
+
+    public static readonly DependencyProperty IdProperty =
+        DependencyProperty.Register(
+            nameof(Id),
+            typeof(string),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(
+                string.Empty,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
+    public string Title
+    {
+        get => (string)GetValue(TitleProperty);
+        set => SetValue(TitleProperty, value);
+    }
+
+    public static readonly DependencyProperty TitleProperty =
+        DependencyProperty.Register(
+            nameof(Title),
+            typeof(string),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(
+                string.Empty,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
     #endregion
 
@@ -469,8 +519,23 @@ public sealed class DigitalTimerControl : Control
             typeof(string),
             typeof(DigitalTimerControl),
             new FrameworkPropertyMetadata(
-                defaultValue: "00:00:00",
+                defaultValue: "00:00",
                 flags: FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
+    public string PlaceholderText
+    {
+        get => (string)GetValue(PlaceholderTextProperty);
+        set => SetValue(PlaceholderTextProperty, value);
+    }
+
+    public static readonly DependencyProperty PlaceholderTextProperty =
+        DependencyProperty.Register(
+            nameof(PlaceholderText),
+            typeof(string),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(
+                defaultValue: "88:88",
+                flags: FrameworkPropertyMetadataOptions.AffectsRender));
 
     public bool IsWarning
     {
