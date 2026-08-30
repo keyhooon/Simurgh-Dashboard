@@ -24,7 +24,7 @@
         to the ModuleState dependency property via triggers.
         =====================================================================
     -->
-    <Style TargetType="{x:Type controls1:DigitalSensorControl}">
+    <Style TargetType="{x:Type controls1:SensorControl}">
         <Setter Property="Padding" Value="40" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -32,7 +32,7 @@
 
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type controls1:DigitalSensorControl}">
+                <ControlTemplate TargetType="{x:Type controls1:SensorControl}">
                     <Grid>
                         <!--  LAYER 1: 9-Slice Background Frame  -->
                         <controls:NineSliceBorder
@@ -109,7 +109,7 @@
                                                     Height="26"
                                                     HorizontalAlignment="Left"
                                                     Data="{Binding Config.Type, Converter={infrastructures:SensorIconConverter}}"
-                                                    Fill="{Binding RelativeSource={RelativeSource AncestorType=controls1:DigitalSensorControl}, Path=DigitBrush}"
+                                                    Fill="{Binding RelativeSource={RelativeSource AncestorType=controls1:SensorControl}, Path=DigitBrush}"
                                                     Stretch="Uniform" />
 
                                                 <!--  Digits: two overlaid TextBlocks (placeholder + live value)  -->
@@ -118,13 +118,13 @@
                                                         FontFamily="{StaticResource FontFamilyDigit}"
                                                         FontSize="48"
                                                         FontWeight="ExtraBold"
-                                                        Foreground="{Binding RelativeSource={RelativeSource AncestorType=controls1:DigitalSensorControl}, Path=PlaceholderBrush}"
+                                                        Foreground="{Binding RelativeSource={RelativeSource AncestorType=controls1:SensorControl}, Path=PlaceholderBrush}"
                                                         Text="88.8" />
                                                     <TextBlock
                                                         FontFamily="{StaticResource FontFamilyDigit}"
                                                         FontSize="48"
                                                         FontWeight="ExtraBold"
-                                                        Foreground="{Binding RelativeSource={RelativeSource AncestorType=controls1:DigitalSensorControl}, Path=DigitBrush}"
+                                                        Foreground="{Binding RelativeSource={RelativeSource AncestorType=controls1:SensorControl}, Path=DigitBrush}"
                                                         Text="{Binding FormattedValue}" />
                                                 </Grid>
 

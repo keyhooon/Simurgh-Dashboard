@@ -7,10 +7,6 @@ namespace SimurghDashboard.Sensors.Options;
 /// </summary>
 public sealed class MeasurableValueOptions
 {
-    /// <summary>
-    /// Identifier matching the hardware/telemetry source channel.
-    /// </summary>
-    public string MeasurementId { get; set; } = string.Empty;
 
     /// <summary>
     /// Metric type categorization (e.g., Temperature, Humidity, Pressure).
@@ -25,7 +21,7 @@ public sealed class MeasurableValueOptions
     /// <summary>
     /// Default display string fallback when no valid reading is present.
     /// </summary>
-    public string DefaultFormattedValue { get; set; } = "--";
+    public string FormattedValue { get; set; } = "F1";
 
     /// <summary>
     /// Hex color string for active digits (e.g., "#FFFF7878" or "#FF7878").

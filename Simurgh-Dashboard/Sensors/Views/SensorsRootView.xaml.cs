@@ -5,9 +5,9 @@ namespace SimurghDashboard.Sensors.Views
     /// <summary>
     /// Interaction logic for UserControl1.xaml
     /// </summary>
-    public partial class DigitalSensorsListView : UserControl
+    public partial class SensorsRootView : UserControl
     {
-        public DigitalSensorsListView()
+        public SensorsRootView()
         {
             InitializeComponent();
         }

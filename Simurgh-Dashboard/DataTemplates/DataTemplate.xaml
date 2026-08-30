@@ -44,7 +44,7 @@
 
 
     <DataTemplate DataType="{x:Type viewModels:DigitalSensorViewModel}">
-        <controls2:DigitalSensorControl
+        <controls2:SensorControl
             Margin="-20"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
@@ -82,7 +82,7 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewModels:DigitalSensorsListViewModel}">
-        <views1:DigitalSensorsListView Height="800" />
+        <views1:SensorsRootView Height="800" />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewModels1:TickerViewModel}">
