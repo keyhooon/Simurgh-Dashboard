@@ -43,7 +43,7 @@
         A multi-column proportional grid ensuring responsive scaling across high-DPI
         and standard medical grade panels.
     -->
-    <Grid Margin="20">
+    <Grid Margin="5">
         <Grid.ColumnDefinitions>
             <!--  Left gutter / spacing  -->
             <ColumnDefinition Width=".5*" />
@@ -76,7 +76,7 @@
             Grid.Row="0"
             Grid.Column="1"
             Grid.ColumnSpan="3"
-            Margin="-15"
+          
             FrameVariant="RoundedSunkenLow">
             <ContentControl
                 HorizontalAlignment="Stretch"
@@ -94,9 +94,9 @@
             Grid.Row="1"
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            Margin="-15"
+          
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
+            VerticalAlignment="Center"
             VerticalContentAlignment="Stretch"
             Content="{Binding DigitalTimersListViewModel}" />
 
@@ -110,9 +110,9 @@
             Grid.Row="1"
             Grid.Column="3"
             Grid.ColumnSpan="2"
-            Margin="-15"
+           
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
+            VerticalAlignment="Center"
             VerticalContentAlignment="Stretch"
             Content="{Binding DigitalSensorsListViewModel}" />
 
@@ -126,9 +126,9 @@
             Grid.Row="2"
             Grid.Column="0"
             Grid.ColumnSpan="5"
-            Margin="-15"
+         
             FrameVariant="RoundedSunkenLow">
-            <ContentControl Margin="-15" Content="{Binding TickerViewModel}" />
+            <ContentControl  Content="{Binding TickerViewModel}" />
         </controls:WidgetFrame>
 
     </Grid>

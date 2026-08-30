@@ -17,7 +17,7 @@
             WidgetFrame adds the Neumorphic styling (RoundedSunkenLow) to the container.
             Negative margin helps offset inner paddings for flush alignment.
         -->
-        <controls:WidgetFrame Margin="-10" FrameVariant="RoundedSunkenLow">
+        <controls:WidgetFrame  FrameVariant="RoundedSunkenLow">
 
             <!--
                     ItemsControl avoids the heavy overhead of Selector controls (ListBox/ListView).
@@ -25,7 +25,7 @@
                     across items, ItemsControl is the most performant choice.
                     The 'Timers' binding is an ObservableCollection<DigitalTimerViewModel>.
             -->
-            <ItemsControl Margin="5" ItemsSource="{Binding Timers}">
+            <ItemsControl  ItemsSource="{Binding Timers}">
 
                 <!--
                     ItemsPanel defines the spatial arrangement.
@@ -52,7 +52,7 @@
                 -->
                 <ItemsControl.ItemContainerStyle>
                     <Style TargetType="ContentPresenter">
-                        <Setter Property="Margin" Value="15" />
+                        <Setter Property="Margin" Value="10" />
                         <!--
                             We can hook into the 'Loaded' event via EventTrigger to stagger
                             the entrance animations of each timer, creating a cascade effect

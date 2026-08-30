@@ -30,9 +30,7 @@
             IsWarning="{Binding IsWarning, Mode=OneWayToSource}"
             PlaceholderBrush="{Binding PlaceholderBrush, Mode=OneWay}"
             ShowSeconds="{Binding ShowSeconds, Mode=TwoWay}"
-            StartTime="{Binding StartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             StateChangedCommand="{Binding StateChangedCommand}"
-            TargetTime="{Binding TargetTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             WarningBrush="{Binding WarningBrush, Mode=OneWay}"
             WarningReachedCommand="{Binding WarningReachedCommand}"
             WarningThreshold="{Binding WarningThreshold, Mode=TwoWay}" />

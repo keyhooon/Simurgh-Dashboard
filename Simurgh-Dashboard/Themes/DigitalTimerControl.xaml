@@ -43,36 +43,12 @@
 
                             <!--  Section A: Header (ID Badge + Title)  -->
                             <Grid Grid.Row="0" Margin="10,0,10,15">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-
-                                <!--  Timer ID Badge  -->
-                                <Border
-                                    Grid.Column="0"
-                                    Margin="0,0,12,0"
-                                    Padding="10,3"
-                                    VerticalAlignment="Center"
-                                    Background="#26FFFFFF"
-                                    BorderBrush="#33FFFFFF"
-                                    BorderThickness="1"
-                                    CornerRadius="6">
-                                    <TextBlock
-                                        x:Name="PART_Id"
-                                        FontFamily="{StaticResource FontFamilyDigit}"
-                                        FontSize="18"
-                                        FontWeight="Bold"
-                                        Foreground="{TemplateBinding DigitBrush}"
-                                        Text="{TemplateBinding Id}"
-                                        TextAlignment="Center" />
-                                </Border>
 
                                 <!--  Timer Title  -->
                                 <TextBlock
                                     x:Name="PART_Title"
                                     Grid.Column="1"
-                                    HorizontalAlignment="Left"
+                                    HorizontalAlignment="Right"
                                     VerticalAlignment="Center"
                                     FontFamily="{StaticResource FontFamilyApp}"
                                     FontSize="28"
@@ -98,6 +74,7 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock
                                         x:Name="PART_PlaceholderText"
@@ -141,7 +118,27 @@
                                             Data="{StaticResource IconClock}"
                                             Fill="{TemplateBinding DigitBrush}"
                                             Stretch="Uniform" />
+                                        
                                     </StackPanel>
+                                    <!--  Timer ID Badge  -->
+                                    <Border
+                                        Grid.Column="2"
+                                        Margin="0,0,12,0"
+                                        Padding="10,3"
+                                        VerticalAlignment="Top"
+                                       
+                                        BorderBrush="#33FFFFFF"
+                                        BorderThickness="1"
+                                        CornerRadius="6">
+                                        <TextBlock
+                                            x:Name="PART_Id"
+                                            FontFamily="{StaticResource FontFamilyDigit}"
+                                            FontSize="18"
+                                            FontWeight="Bold"
+                                            Foreground="{TemplateBinding DigitBrush}"
+                                            Text="{TemplateBinding Id}"
+                                            TextAlignment="Center" />
+                                    </Border>
                                 </Grid>
                             </Border>
 
@@ -152,20 +149,20 @@
                                 Margin="0,15,0,0"
                                 HorizontalAlignment="Center"
                                 Orientation="Horizontal">
-
+                                <TextBlock FontFamily="{StaticResource FontFamilyApp}"
+                                           x:Name="PART_StateText"
+                                           FontSize="18"
+                                           FontWeight="ExtraBold"
+                                           Foreground="#90A4AE"
+                                           Text="توقف" />
                                 <Ellipse
                                     x:Name="PART_StatusIndicator"
                                     Width="10"
                                     Height="10"
-                                    Margin="0,0,8,0"
+                                    Margin="8,0,8,0"
                                     Fill="#607D8B" />
 
-                                <TextBlock
-                                    x:Name="PART_StateText"
-                                    FontSize="14"
-                                    FontWeight="Medium"
-                                    Foreground="#90A4AE"
-                                    Text="STOPPED" />
+        
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -178,7 +175,7 @@
 
                         <!--  State is assumed to be a DP on the control itself, so simple Trigger works  -->
                         <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.Running}">
-                            <Setter TargetName="PART_StateText" Property="Text" Value="RUNNING" />
+                            <Setter TargetName="PART_StateText" Property="Text" Value="اجرا" />
                             <Setter TargetName="PART_StateText" Property="Foreground" Value="#4CAF50" />
                             <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#4CAF50" />
                             <Setter TargetName="PART_StateIcon" Property="Data" Value="{StaticResource IconTimerRunning}" />
@@ -186,7 +183,7 @@
                         </Trigger>
 
                         <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.Pausing}">
-                            <Setter TargetName="PART_StateText" Property="Text" Value="PAUSED" />
+                            <Setter TargetName="PART_StateText" Property="Text" Value="توقف" />
                             <Setter TargetName="PART_StateText" Property="Foreground" Value="#FFC107" />
                             <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#FFC107" />
                             <Setter TargetName="PART_TimeText" Property="Foreground" Value="#FFC107" />
@@ -195,7 +192,7 @@
                         </Trigger>
 
                         <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.NotRunning}">
-                            <Setter TargetName="PART_StateText" Property="Text" Value="COMPLETED" />
+                            <Setter TargetName="PART_StateText" Property="Text" Value="پایان" />
                             <Setter TargetName="PART_StateText" Property="Foreground" Value="#03A9F4" />
                             <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#03A9F4" />
                             <Setter TargetName="PART_TimeText" Property="Foreground" Value="#03A9F4" />
