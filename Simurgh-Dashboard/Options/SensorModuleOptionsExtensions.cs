@@ -1,6 +1,6 @@
 ﻿// Extensions/SensorModuleOptionsExtensions.cs
 
-using SimurghDashboard.Controls.Sensors;
+using SimurghDashboard.Sensors.Controls.Sensors;
 
 namespace SimurghDashboard.Options;
 

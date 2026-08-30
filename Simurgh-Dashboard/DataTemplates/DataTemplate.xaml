@@ -3,10 +3,16 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:SimurghDashboard.Controls"
-    xmlns:models="clr-namespace:SimurghDashboard.Services.Ticker.Models"
-    xmlns:ticker="clr-namespace:SimurghDashboard.Services.Ticker"
-    xmlns:viewmodels="clr-namespace:SimurghDashboard.ViewModels"
-    xmlns:views="clr-namespace:SimurghDashboard.Views">
+    xmlns:viewmodels="clr-namespace:SimurghDashboard.Timers.ViewModels"
+    xmlns:controls1="clr-namespace:SimurghDashboard.Timers.Controls"
+    xmlns:viewModels="clr-namespace:SimurghDashboard.Sensors.ViewModels"
+    xmlns:controls2="clr-namespace:SimurghDashboard.Sensors.Controls"
+    xmlns:viewmodels1="clr-namespace:SimurghDashboard.Clock.ViewModels"
+    xmlns:controls3="clr-namespace:SimurghDashboard.Clock.Controls"
+    xmlns:views="clr-namespace:SimurghDashboard.Timers.Views"
+    xmlns:views1="clr-namespace:SimurghDashboard.Sensors.Views"
+    xmlns:viewModels1="clr-namespace:SimurghDashboard.RssFeed.ViewModels"
+    xmlns:views2="clr-namespace:SimurghDashboard.RssFeed.Views">
 
     <!--
         Implicit DataTemplates (No x:Key):
@@ -18,7 +24,7 @@
     <!--  ============================================================  -->
 
     <DataTemplate DataType="{x:Type viewmodels:DigitalTimerViewModel}">
-        <controls:DigitalTimerControl
+        <controls1:DigitalTimerControl
             Margin="-20"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
@@ -37,11 +43,12 @@
     </DataTemplate>
 
 
-    <DataTemplate DataType="{x:Type viewmodels:DigitalSensorViewModel}">
-        <controls:DigitalSensorControl
+    <DataTemplate DataType="{x:Type viewModels:DigitalSensorViewModel}">
+        <controls2:DigitalSensorControl
             Margin="-20"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
+            Id="{Binding Id}"
             Configuration="{Binding Configuration}"
             DigitBrush="{Binding DigitBrush}"
             HeaderText="{Binding Label}"
@@ -51,9 +58,9 @@
 
 
 
-    <DataTemplate DataType="{x:Type viewmodels:DigitalClockViewModel}">
+    <DataTemplate DataType="{x:Type viewmodels1:DigitalClockViewModel}">
 
-        <controls:DigitalClockControl
+        <controls3:DigitalClockControl
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             DateBrush="{Binding DateBrush}"
@@ -74,12 +81,12 @@
         <views:DigitalTimersListView VerticalAlignment="Stretch" />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type viewmodels:DigitalSensorsListViewModel}">
-        <views:DigitalSensorsListView Height="800" />
+    <DataTemplate DataType="{x:Type viewModels:DigitalSensorsListViewModel}">
+        <views1:DigitalSensorsListView Height="800" />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type viewmodels:TickerViewModel}">
-        <views:TickerView
+    <DataTemplate DataType="{x:Type viewModels1:TickerViewModel}">
+        <views2:TickerView
             Height="150"
             Margin="-20"
             HorizontalAlignment="Stretch"

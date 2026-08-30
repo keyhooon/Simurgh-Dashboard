@@ -1,0 +1,2 @@
+﻿namespace SimurghDashboard.RssFeed.Contracts;
+

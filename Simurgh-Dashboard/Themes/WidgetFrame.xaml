@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:SimurghDashboard.Controls">
+    xmlns:local="clr-namespace:SimurghDashboard.Controls"
+    xmlns:controls="clr-namespace:SimurghDashboard.Clock.Controls">
 
     <!--  =========================================================  -->
     <!--  Image Assets  -->
@@ -235,7 +236,7 @@
                         <!--  Frame Variant: RoundedRaised  -->
                         <!--  =================================================  -->
 
-                        <Trigger Property="FrameVariant" Value="{x:Static local:WidgetFrameVariant.RoundedRaised}">
+                        <Trigger Property="FrameVariant" Value="{x:Static controls:WidgetFrameVariant.RoundedRaised}">
                             <Setter TargetName="PART_Frame" Property="Source" Value="{StaticResource ImgPanelRoundedRaised}" />
                             <Setter TargetName="PART_Frame" Property="SliceThickness" Value="75,75,75,75" />
                             <Setter TargetName="PART_LayoutRoot" Property="Margin" Value="12" />
@@ -245,7 +246,7 @@
                         <!--  Frame Variant: RoundedSunken  -->
                         <!--  =================================================  -->
 
-                        <Trigger Property="FrameVariant" Value="{x:Static local:WidgetFrameVariant.RoundedSunken}">
+                        <Trigger Property="FrameVariant" Value="{x:Static controls:WidgetFrameVariant.RoundedSunken}">
                             <Setter TargetName="PART_Frame" Property="Source" Value="{StaticResource ImgPanelRoundedSunken}" />
                             <Setter TargetName="PART_Frame" Property="SliceThickness" Value="75,75,75,75" />
                             <Setter TargetName="PART_LayoutRoot" Property="Margin" Value="12" />
@@ -255,7 +256,7 @@
                         <!--  Frame Variant: SquareRaised  -->
                         <!--  =================================================  -->
 
-                        <Trigger Property="FrameVariant" Value="{x:Static local:WidgetFrameVariant.RoundedRaisedLow}">
+                        <Trigger Property="FrameVariant" Value="{x:Static controls:WidgetFrameVariant.RoundedRaisedLow}">
                             <Setter TargetName="PART_Frame" Property="Source" Value="{StaticResource ImgPanelRoundedRaisedLow}" />
                             <Setter TargetName="PART_Frame" Property="SliceThickness" Value="75,75,75,75" />
                             <Setter TargetName="PART_LayoutRoot" Property="Margin" Value="10" />
@@ -265,7 +266,7 @@
                         <!--  Frame Variant: SquareSunken  -->
                         <!--  =================================================  -->
 
-                        <Trigger Property="FrameVariant" Value="{x:Static local:WidgetFrameVariant.RoundedSunkenLow}">
+                        <Trigger Property="FrameVariant" Value="{x:Static controls:WidgetFrameVariant.RoundedSunkenLow}">
                             <Setter TargetName="PART_Frame" Property="Source" Value="{StaticResource ImgPanelRoundedSunkenLow}" />
                             <Setter TargetName="PART_Frame" Property="SliceThickness" Value="75,75,75,75" />
                             <Setter TargetName="PART_LayoutRoot" Property="Margin" Value="10" />
@@ -275,7 +276,7 @@
                         <!--  Frame Variant: NestedInset  -->
                         <!--  =================================================  -->
 
-                        <Trigger Property="FrameVariant" Value="{x:Static local:WidgetFrameVariant.SquareSunken}">
+                        <Trigger Property="FrameVariant" Value="{x:Static controls:WidgetFrameVariant.SquareSunken}">
                             <Setter TargetName="PART_Frame" Property="Source" Value="{StaticResource ImgPanelSquareSunken}" />
                             <Setter TargetName="PART_Frame" Property="SliceThickness" Value="115,115,115,115" />
                             <Setter TargetName="PART_LayoutRoot" Property="Margin" Value="14" />

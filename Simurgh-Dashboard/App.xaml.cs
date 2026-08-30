@@ -1,26 +1,20 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
-using SimurghDashboard.Infrastructures;
-using SimurghDashboard.Options;
-using SimurghDashboard.Services;
-using SimurghDashboard.Services.Ticker;
-using SimurghDashboard.Services.Ticker.Contracts;
-using SimurghDashboard.Services.Ticker.Repositories;
-using SimurghDashboard.Services.Weather;
-using SimurghDashboard.ViewModels;
-using System;
-using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using SimurghDashboard.Services.Timers;
+using SimurghDashboard.Clock.Options;
+using SimurghDashboard.Clock.Services.Weather;
+using SimurghDashboard.Clock.ViewModels;
+using SimurghDashboard.RssFeed.Services;
+using SimurghDashboard.RssFeed.ViewModels;
+using SimurghDashboard.Sensors.Services;
+using SimurghDashboard.Sensors.ViewModels;
+using SimurghDashboard.Timers.Services;
+using SimurghDashboard.Timers.ViewModels;
 
 namespace SimurghDashboard
 {
@@ -122,24 +116,23 @@ namespace SimurghDashboard
             // STRONGLY-TYPED OPTIONS WITH FAIL-FAST VALIDATION
             // -------------------------------------------------------------------------
             services
-                .AddOptions<DigitalSensorsOptions>()
-                .BindConfiguration(DigitalSensorsOptions.SectionName)
-                .ValidateDataAnnotations()
-                .ValidateOnStart();
-
-            services
                 .AddOptions<DigitalClockOptions>()
                 .BindConfiguration(DigitalClockOptions.SectionName)
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
             // -------------------------------------------------------------------------
-            // BACKGROUND WORKERS & DOMAIN MODULES (Weather, Ticker, Notifications)
+            // BACKGROUND WORKERS & DOMAIN MODULES (Weather, Ticker, Notifications, Timers)
             // -------------------------------------------------------------------------
             services.AddRssTickerWorker(configuration);
             services.AddLocalNotificationService();
             services.AddWeatherServices(configuration);
             services.AddTimerWorkerServices(configuration);
+
+            // -------------------------------------------------------------------------
+            // SENSOR WORKER SERVICES (BackgroundService + Store + Hot-Reload)
+            // -------------------------------------------------------------------------
+            services.AddSensorWorkerServices(configuration);
 
             // -------------------------------------------------------------------------
             // VIEWMODELS (Stateful Singletons for Kiosk Lifecycle)

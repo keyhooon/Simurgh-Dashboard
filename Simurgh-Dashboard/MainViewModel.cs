@@ -1,10 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using SimurghDashboard.Controls.Sensors;
-using SimurghDashboard.Infrastructures.Native;
-using SimurghDashboard.ViewModels;
-using System.Buffers;
-using System.Collections.Immutable;
+using SimurghDashboard.Clock.ViewModels;
+using SimurghDashboard.Core.Infrastructures.Native;
+using SimurghDashboard.RssFeed.ViewModels;
+using SimurghDashboard.Sensors.ViewModels;
+using SimurghDashboard.Timers.ViewModels;
 
 namespace SimurghDashboard;
 

@@ -1,9 +1,4 @@
-﻿using SimurghDashboard.Infrastructures.Native;
-using SimurghDashboard.Services;
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 
 namespace SimurghDashboard
 {

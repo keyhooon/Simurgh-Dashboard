@@ -10,32 +10,32 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Fonts\dseg7-classic-latin-300-italic.ttf" />
-    <None Remove="Fonts\dseg7-classic-latin-300-normal.ttf" />
-    <None Remove="Fonts\dseg7-classic-latin-400-italic.ttf" />
-    <None Remove="Fonts\dseg7-classic-latin-400-normal.ttf" />
-    <None Remove="Fonts\dseg7-classic-latin-700-italic.ttf" />
-    <None Remove="Fonts\dseg7-classic-latin-700-normal.ttf" />
-    <None Remove="Fonts\Vazirmatn-Black.ttf" />
-    <None Remove="Fonts\Vazirmatn-Bold.ttf" />
-    <None Remove="Fonts\Vazirmatn-ExtraBold.ttf" />
-    <None Remove="Fonts\Vazirmatn-ExtraLight.ttf" />
-    <None Remove="Fonts\Vazirmatn-Light.ttf" />
-    <None Remove="Fonts\Vazirmatn-Medium.ttf" />
-    <None Remove="Fonts\Vazirmatn-Regular.ttf" />
-    <None Remove="Fonts\Vazirmatn-SemiBold.ttf" />
-    <None Remove="Fonts\Vazirmatn-Thin.ttf" />
-    <None Remove="Fonts\weathericons-regular-webfont.ttf" />
-    <None Remove="Images\Button_Pill_Raised.png" />
-    <None Remove="Images\Button_Pill_Sunken.png" />
-    <None Remove="Images\Frame_Nested_Inset.png" />
-    <None Remove="Images\Panel_Circle_Raised.png" />
-    <None Remove="Images\Panel_Circle_Sunken.png" />
-    <None Remove="Images\Panel_Rounded_Raised.png" />
-    <None Remove="Images\Panel_Rounded_Raised_Low.png" />
-    <None Remove="Images\Panel_Rounded_Sunken.png" />
-    <None Remove="Images\Panel_Rounded_Sunken_Low.png" />
-    <None Remove="Images\Panel_Square_Sunken.png" />
+    <None Remove="Core\Fonts\dseg7-classic-latin-300-italic.ttf" />
+    <None Remove="Core\Fonts\dseg7-classic-latin-300-normal.ttf" />
+    <None Remove="Core\Fonts\dseg7-classic-latin-400-italic.ttf" />
+    <None Remove="Core\Fonts\dseg7-classic-latin-400-normal.ttf" />
+    <None Remove="Core\Fonts\dseg7-classic-latin-700-italic.ttf" />
+    <None Remove="Core\Fonts\dseg7-classic-latin-700-normal.ttf" />
+    <None Remove="Core\Fonts\Vazirmatn-Black.ttf" />
+    <None Remove="Core\Fonts\Vazirmatn-Bold.ttf" />
+    <None Remove="Core\Fonts\Vazirmatn-ExtraBold.ttf" />
+    <None Remove="Core\Fonts\Vazirmatn-ExtraLight.ttf" />
+    <None Remove="Core\Fonts\Vazirmatn-Light.ttf" />
+    <None Remove="Core\Fonts\Vazirmatn-Medium.ttf" />
+    <None Remove="Core\Fonts\Vazirmatn-Regular.ttf" />
+    <None Remove="Core\Fonts\Vazirmatn-SemiBold.ttf" />
+    <None Remove="Core\Fonts\Vazirmatn-Thin.ttf" />
+    <None Remove="Core\Fonts\weathericons-regular-webfont.ttf" />
+    <None Remove="Core\Images\Button_Pill_Raised.png" />
+    <None Remove="Core\Images\Button_Pill_Sunken.png" />
+    <None Remove="Core\Images\Frame_Nested_Inset.png" />
+    <None Remove="Core\Images\Panel_Circle_Raised.png" />
+    <None Remove="Core\Images\Panel_Circle_Sunken.png" />
+    <None Remove="Core\Images\Panel_Rounded_Raised.png" />
+    <None Remove="Core\Images\Panel_Rounded_Raised_Low.png" />
+    <None Remove="Core\Images\Panel_Rounded_Sunken.png" />
+    <None Remove="Core\Images\Panel_Rounded_Sunken_Low.png" />
+    <None Remove="Core\Images\Panel_Square_Sunken.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,65 +43,65 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Fonts\dseg7-classic-latin-300-italic.ttf">
+    <Resource Include="Core\Fonts\dseg7-classic-latin-300-italic.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\dseg7-classic-latin-300-normal.ttf">
+    <Resource Include="Core\Fonts\dseg7-classic-latin-300-normal.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\dseg7-classic-latin-400-italic.ttf">
+    <Resource Include="Core\Fonts\dseg7-classic-latin-400-italic.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\dseg7-classic-latin-400-normal.ttf">
+    <Resource Include="Core\Fonts\dseg7-classic-latin-400-normal.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\dseg7-classic-latin-700-italic.ttf">
+    <Resource Include="Core\Fonts\dseg7-classic-latin-700-italic.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\dseg7-classic-latin-700-normal.ttf">
+    <Resource Include="Core\Fonts\dseg7-classic-latin-700-normal.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\Vazirmatn-Black.ttf">
+    <Resource Include="Core\Fonts\Vazirmatn-Black.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\Vazirmatn-Bold.ttf">
+    <Resource Include="Core\Fonts\Vazirmatn-Bold.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\Vazirmatn-ExtraBold.ttf">
+    <Resource Include="Core\Fonts\Vazirmatn-ExtraBold.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\Vazirmatn-ExtraLight.ttf">
+    <Resource Include="Core\Fonts\Vazirmatn-ExtraLight.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\Vazirmatn-Light.ttf">
+    <Resource Include="Core\Fonts\Vazirmatn-Light.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\Vazirmatn-Medium.ttf">
+    <Resource Include="Core\Fonts\Vazirmatn-Medium.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\Vazirmatn-Regular.ttf">
+    <Resource Include="Core\Fonts\Vazirmatn-Regular.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\Vazirmatn-SemiBold.ttf">
+    <Resource Include="Core\Fonts\Vazirmatn-SemiBold.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\Vazirmatn-Thin.ttf">
+    <Resource Include="Core\Fonts\Vazirmatn-Thin.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Fonts\weathericons-regular-webfont.ttf" />
-    <Resource Include="Images\Panel_Rounded_Raised_Low.png">
+    <Resource Include="Core\Fonts\weathericons-regular-webfont.ttf" />
+    <Resource Include="Core\Images\Panel_Rounded_Raised_Low.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\Panel_Rounded_Sunken_Low.png">
+    <Resource Include="Core\Images\Panel_Rounded_Sunken_Low.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\Panel_Rounded_Raised.png">
+    <Resource Include="Core\Images\Panel_Rounded_Raised.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\Panel_Rounded_Sunken.png">
+    <Resource Include="Core\Images\Panel_Rounded_Sunken.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\Panel_Square_Sunken.png">
+    <Resource Include="Core\Images\Panel_Square_Sunken.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

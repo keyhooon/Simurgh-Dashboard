@@ -1,0 +1,46 @@
+﻿<!--
+    Usage Example in a View (e.g., DashboardView.xaml)
+    Assuming DataContext is set to TickerViewModel
+-->
+<UserControl
+    x:Class="SimurghDashboard.RssFeed.Views.TickerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls1="clr-namespace:SimurghDashboard.RssFeed.Controls">
+
+    <!--  The Resources dictionary should include the TickerTemplates.xaml we created earlier  -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DataTemplates/TickerTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <!--
+            TickerView binds directly to the ViewModel's properties.
+            - ItemsSource: The ReadOnlyObservableCollection
+            - ItemFinishedCommand: The auto-generated RelayCommand
+            - SeparatorTemplate: Explicitly referenced from TickerTemplates.xaml
+            - ItemSpacing / ScrollSpeed: Configured for optimal UX
+        -->
+
+        <controls1:DrawingMarqueeControl
+            Height="42"
+            Margin="50"
+            DefaultItemBackground="#CC000000"
+            Direction="LeftToRight"
+            FontFamily="b titr"
+            FontSize="15"
+            FontWeight="SemiBold"
+            Foreground="#FFF3F7FA"
+            ItemPadding="18,0,18,0"
+            ItemSpacing="14"
+            ItemsSource="{Binding TickerStore}"
+            ScrollSpeed="70"
+            SeparatorBrush="#33FFFFFF"
+            SeparatorHeightRatio="0.42"
+            SeparatorWidth="1" />
+    </Grid>
+</UserControl>
