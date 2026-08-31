@@ -35,7 +35,7 @@
 
                 <ItemsControl.ItemContainerStyle>
                     <Style TargetType="ContentPresenter">
-                        <Setter Property="Margin" Value="10" />
+                        <Setter Property="Margin" Value="-5" />
                     </Style>
                 </ItemsControl.ItemContainerStyle>
             </ItemsControl>

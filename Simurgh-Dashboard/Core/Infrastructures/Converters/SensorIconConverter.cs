@@ -1,16 +1,16 @@
-﻿using Microsoft.Extensions.Diagnostics.Latency;
-using SimurghDashboard.Sensors.Models;
+﻿using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
 using System.Windows.Media;
+using SimurghDashboard.Sensors.Models;
 
 namespace SimurghDashboard.Core.Infrastructures;
 
 /// <summary>
-/// Converts a SensorType enum value to its corresponding Path Geometry resource defined in Icons.xaml.
-/// Implements MarkupExtension to allow clean in-place XAML binding usage without explicit static resource declarations.
+/// Converts a <see cref="SensorType"/> enum value to its corresponding Path Geometry resource defined in Icons.xaml.
+/// Implements <see cref="MarkupExtension"/> to allow clean in-place XAML binding usage without explicit static resource declarations.
 /// </summary>
 [ValueConversion(typeof(SensorType), typeof(Geometry))]
 public sealed class SensorIconConverter : MarkupExtension, IValueConverter
@@ -26,13 +26,38 @@ public sealed class SensorIconConverter : MarkupExtension, IValueConverter
 
         var resourceKey = sensorType switch
         {
-            SensorType.Temperature => "IconThermometer",
-            SensorType.Humidity => "IconWaterDrop",
+            // Environmental & Climate Telemetry
+            SensorType.Temperature => "IconTemperature",
+            SensorType.Humidity => "IconHumidity",
             SensorType.Pressure => "IconPressure",
+            SensorType.Illuminance => "IconIlluminance",
             SensorType.AirQuality => "IconAirQuality",
-            SensorType.Illuminance=> "IconAirQuality",
-            SensorType.MedicalGasPressure => "IconAirQuality",
+            SensorType.CarbonDioxide => "IconCarbonDioxide",
 
+            // Medical & Life-Support Instrumentation
+            SensorType.PulseOximetry => "IconPulseOximetry",
+            SensorType.Ecg => "IconEcg",
+            SensorType.BloodPressure => "IconBloodPressure",
+            SensorType.Capnography => "IconCapnography",
+            SensorType.MedicalGasPressure => "IconMedicalGasPressure",
+            SensorType.AnestheticAgent => "IconAnestheticAgent",
+
+            // Kinematic, Spatial & Physical Transducers
+            SensorType.Presence => "IconPresence",
+            SensorType.Vibration => "IconVibration",
+            SensorType.PositionEncoder => "IconPositionEncoder",
+            SensorType.LoadCell => "IconLoadCell",
+            SensorType.Proximity => "IconProximity",
+
+            // Electrical, Power & Thermal Diagnostics
+            SensorType.Voltage => "IconVoltage",
+            SensorType.Current => "IconCurrent",
+            SensorType.Power => "IconPower",
+
+            // Radiation Dosimetry & Telemetry
+            SensorType.RadiationDosimetry => "IconRadiationDosimetry",
+
+            // Default fallback
             _ => "IconSensor"
         };
 

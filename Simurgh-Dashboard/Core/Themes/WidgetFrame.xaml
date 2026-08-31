@@ -149,7 +149,7 @@
                                 Padding="{TemplateBinding ContentPadding}"
                                 Background="Transparent">
 
-                                <ContentPresenter
+                                <ContentPresenter 
                                     x:Name="PART_ContentPresenter"
                                     HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                     VerticalAlignment="{TemplateBinding VerticalContentAlignment}"

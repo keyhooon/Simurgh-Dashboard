@@ -3,11 +3,12 @@
 // Purpose: Highly Configurable, Generalized Kiosk Display Behavior (Expanded)
 // ============================================================================
 
+using Microsoft.Xaml.Behaviors;
+using SimurghDashboard.Core.Infrastructures.Native;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
-using Microsoft.Xaml.Behaviors;
-using SimurghDashboard.Core.Infrastructures.Native;
 
 namespace SimurghDashboard.Core.Infrastructures.Behaviors
 {
@@ -173,18 +174,31 @@ namespace SimurghDashboard.Core.Infrastructures.Behaviors
 
         private async Task ApplyKioskTopologyAsync()
         {
+            Debug.WriteLine("================ [APPLY KIOSK TOPOLOGY PIPELINE] ================");
+            Debug.WriteLine($"[Kiosk Config] ExplicitDeviceName='{ExplicitDeviceName}', TargetTechnology={TargetTechnology}, TargetOrientation={TargetOrientation}, GpuSyncDelayMs={GpuSyncDelayMs}");
+
             try
             {
+                // Enumerate and log all connected display pipelines and GPU ports for diagnostic audit
+                DisplayConfigHelper.LogActiveDisplaysAndGraphicsPorts();
+
                 // Resolve device target priority: Explicit String > Technology Discovery > Primary Monitor
+                Debug.WriteLine("[Topology Resolution] Resolving target device name...");
                 string targetDeviceName = string.IsNullOrWhiteSpace(ExplicitDeviceName)
                     ? DisplayConfigHelper.GetMonitorDeviceNameByTechnology(TargetTechnology)
                     : ExplicitDeviceName;
 
+                Debug.WriteLine($"[Topology Resolution] Resulting targetDeviceName='{targetDeviceName ?? "<NULL>"}'");
+
                 if (string.IsNullOrEmpty(targetDeviceName))
                 {
                     // Full Fallback logic if technology is unplugged/unavailable
+                    Debug.WriteLine("[Topology Fallback] Target device name not found or unplugged. Falling back to primary monitor bounds.");
                     var fallbackBounds = MonitorHelper.GetPrimaryMonitorBounds();
+                    Debug.WriteLine($"[Topology Fallback] Primary Monitor Bounds: X={fallbackBounds.left}, Y={fallbackBounds.top}, W={fallbackBounds.Width}, H={fallbackBounds.Height}");
+
                     ApplyBoundsToWindow(fallbackBounds);
+                    Debug.WriteLine("================ [KIOSK TOPOLOGY COMPLETED (FALLBACK)] ================\n");
                     return;
                 }
 
@@ -193,24 +207,39 @@ namespace SimurghDashboard.Core.Infrastructures.Behaviors
                 _originalOrientation = (DisplayOrientation)currentSettings.dmDisplayOrientation;
                 _appliedDeviceName = targetDeviceName;
 
+                Debug.WriteLine($"[Hardware Query] Target='{targetDeviceName}', Current Resolution: {currentSettings.dmPelsWidth}x{currentSettings.dmPelsHeight} @ {currentSettings.dmDisplayFrequency}Hz, Original Orientation={_originalOrientation}");
+
+                Debug.WriteLine($"[Hardware Mutate] Applying new orientation '{TargetOrientation}' to device '{targetDeviceName}'...");
                 bool rotationApplied = MonitorHelper.SetOrientation(targetDeviceName, TargetOrientation);
+                Debug.WriteLine($"[Hardware Mutate] MonitorHelper.SetOrientation result: {rotationApplied}");
 
                 if (rotationApplied && GpuSyncDelayMs > 0)
                 {
                     // Asynchronously waiting for WM_DISPLAYCHANGE OS propagation
+                    Debug.WriteLine($"[GPU Sync] Awaiting {GpuSyncDelayMs}ms for DWM / driver WM_DISPLAYCHANGE propagation...");
                     await Task.Delay(GpuSyncDelayMs);
+                    Debug.WriteLine("[GPU Sync] Delay elapsed. Fetching updated layout bounds.");
                 }
 
                 var finalBounds = MonitorHelper.GetMonitorBoundsByName(targetDeviceName);
+                Debug.WriteLine($"[Viewport Bounds] Target='{targetDeviceName}', Final Bounds: X={finalBounds.left}, Y={finalBounds.top}, W={finalBounds.Width}, H={finalBounds.Height}");
+
                 ApplyBoundsToWindow(finalBounds);
+                Debug.WriteLine("================ [KIOSK TOPOLOGY COMPLETED (SUCCESS)] ================\n");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Safety net: ensure window is at least visible on primary screen if DWM faults
+                Debug.WriteLine($"[Topology Exception] Critical failure during display topology application: {ex.GetType().FullName}: {ex.Message}");
+                Debug.WriteLine($"[Topology Exception] StackTrace:\n{ex.StackTrace}");
+
                 var safeBounds = MonitorHelper.GetPrimaryMonitorBounds();
+                Debug.WriteLine($"[Topology Safety Net] Applying safe fallback bounds: X={safeBounds.left}, Y={safeBounds.top}, W={safeBounds.Width}, H={safeBounds.Height}");
                 ApplyBoundsToWindow(safeBounds);
+                Debug.WriteLine("================ [KIOSK TOPOLOGY COMPLETED (EXCEPTION RESCUE)] ================\n");
             }
         }
+
 
         /// <summary>
         /// Handles the complex math of mapping Windows API Physical Pixels to WPF Logical DIPs,

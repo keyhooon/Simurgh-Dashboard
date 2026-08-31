@@ -6,14 +6,14 @@
     xmlns:infrastructures="clr-namespace:SimurghDashboard.Core.Infrastructures"
     xmlns:models="clr-namespace:SimurghDashboard.Sensors.Models">
 
+    <!-- Merged theme resource dictionaries -->
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Icons.xaml" />
         <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Fonts.xaml" />
         <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Images.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
-
-    <!--  Example ItemTemplate consumption inside DigitalSensorControl  -->
+    <!-- Example ItemTemplate consumption inside DigitalSensorControl -->
     <DataTemplate x:Key="MeasurableValueItemTemplate">
         <controls1:MeasurableValueControl
             ChannelIndex="{Binding ChannelIndex}"
@@ -24,22 +24,24 @@
             ValueText="{Binding FormattedValue}" />
     </DataTemplate>
 
-
-
     <!--
         =====================================================================
         DIGITAL SENSOR CONTROL CONTAINER STYLE
         =====================================================================
         Card container providing module framing, title header, items list,
-        and module operational state footer.
+        and module operational state footer with decoupled 9-slice padding.
         =====================================================================
     -->
     <Style TargetType="{x:Type controls1:SensorControl}">
-        <Setter Property="Padding" Value="40" />
+        <!-- Dynamic user padding property passed down via TemplateBinding -->
+        <Setter Property="Padding" Value="0" />
         <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="#33FFFFFF" />
+        <Setter Property="Background" Value="#CC000000" />
         <Setter Property="ItemTemplate" Value="{StaticResource MeasurableValueItemTemplate}" />
-        <Setter Property="HorizontalContentAlignment" Value="Center" />
-        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="ItemsPanel">
             <Setter.Value>
                 <ItemsPanelTemplate>
@@ -54,82 +56,102 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls1:SensorControl}">
-                    <Grid>
-                        <!--  LAYER 1: Skeuomorphic 9-Slice Background Frame  -->
+                    <!-- Root Container -->
+                    <Grid SnapsToDevicePixels="True">
+                        <!-- LAYER 1: NineSlice Border Background Frame -->
                         <controls:NineSliceBorder
                             x:Name="PART_Frame"
-                            Margin="-10"
                             IsHitTestVisible="False"
                             SliceThickness="60"
                             Source="{StaticResource ImgPanelRoundedRaised}" />
 
-                        <!--  LAYER 2: Container Content  -->
-                        <Grid Margin="{TemplateBinding Padding}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <!--  SECTION A: HEADER  -->
-                            <StackPanel
-                                Grid.Row="0"
-                                Margin="0,0,0,15"
-                                HorizontalAlignment="Center"
-                                Orientation="Horizontal">
-                                <Path
-                                    Width="24"
-                                    Height="24"
-                                    Margin="0,0,10,0"
-                                    Data="{StaticResource IconSensor}"
-                                    Fill="{TemplateBinding Foreground}"
-                                    Stretch="Uniform" />
-                                <TextBlock
-                                    FontSize="20"
-                                    FontWeight="SemiBold"
-                                    Foreground="{TemplateBinding Foreground}"
-                                    Text="{TemplateBinding HeaderText}" />
-                            </StackPanel>
-
-                            <!--  SECTION B: MEASUREMENT LIST (ITEMS DELEGATION)  -->
+                        <!-- LAYER 2: Nested Container 1 - NineSlice Hard Inset Margin Layer -->
+                        <Grid Margin="24,24,24,28">
+                            <!-- LAYER 3: Nested Container 2 - Dynamic Control.Padding Boundary Host -->
                             <Border
-                                Grid.Row="1"
-                                Grid.RowSpan="2"
-                                Padding="20,5"
-                                Background="#CC000000"
-                                BorderBrush="#33FFFFFF"
-                                BorderThickness="1"
-                                CornerRadius="8" />
-                            <ItemsControl
-                                Grid.Row="1"
-                                Padding="5,5,5,0"
-                                ItemTemplate="{TemplateBinding ItemTemplate}"
-                                ItemTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                ItemsPanel="{TemplateBinding ItemsPanel}"
-                                ItemsSource="{TemplateBinding ItemsSource}" />
-                            <!--  SECTION C: FOOTER STATUS  -->
-                            <StackPanel
-                                Grid.Row="2"
-                                Margin="0,0,0,5"
-                                HorizontalAlignment="Center"
-                                Orientation="Horizontal">
-                                <Ellipse
-                                    x:Name="PART_StatusIndicator"
-                                    Width="10"
-                                    Height="10"
-                                    Margin="0,0,8,0"
-                                    Fill="#4CAF50" />
-                                <TextBlock
-                                    x:Name="PART_StateText"
-                                    FontSize="14"
-                                    FontWeight="Medium"
-                                    Foreground="#4CAF50"
-                                    Text="متصل" />
-                            </StackPanel>
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+
+                                <!-- LAYER 4: Content Layout Rows Grid -->
+                                <Grid x:Name="PART_ContentGrid">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- SECTION A: HEADER -->
+                                    <StackPanel
+                                        Grid.Row="0"
+                                        Margin="0,0,0,12"
+                                        HorizontalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <Path
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Data="{StaticResource IconSensor}"
+                                            Fill="{TemplateBinding Foreground}"
+                                            Stretch="Uniform" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource FontFamilyApp}"
+                                            FontSize="18"
+                                            FontWeight="ExtraBold"
+                                            Foreground="{TemplateBinding Foreground}"
+                                            Text="{TemplateBinding HeaderText}"
+                                            TextAlignment="Center"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+
+                                    <!-- SECTION B: MEASUREMENT LIST HOUSING (ITEMS DELEGATION) -->
+                                    <Border
+                                        Grid.Row="1"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="8">
+                                        <ItemsControl
+                                            Padding="10,0"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"
+                                            ItemTemplate="{TemplateBinding ItemTemplate}"
+                                            ItemTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                            ItemsPanel="{TemplateBinding ItemsPanel}"
+                                            ItemsSource="{TemplateBinding ItemsSource}" />
+                                    </Border>
+
+                                    <!-- SECTION C: FOOTER STATUS INDICATOR -->
+                                    <StackPanel
+                                        x:Name="PART_StatePanel"
+                                        Grid.Row="2"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            x:Name="PART_StateText"
+                                            FontFamily="{StaticResource FontFamilyApp}"
+                                            FontSize="16"
+                                            FontWeight="ExtraBlack"
+                                            Foreground="#4CAF50"
+                                            Text="متصل" />
+                                        <Ellipse
+                                            x:Name="PART_StatusIndicator"
+                                            Width="8"
+                                            Height="8"
+                                            Margin="6,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Fill="#4CAF50" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
                         </Grid>
                     </Grid>
 
-                    <!--  STATE-DRIVEN VISUAL TRIGGERS  -->
+                    <!-- STATE-DRIVEN VISUAL TRIGGERS -->
                     <ControlTemplate.Triggers>
                         <Trigger Property="State" Value="{x:Static models:ModuleState.Offline}">
                             <Setter TargetName="PART_StateText" Property="Text" Value="ارتباط قطع" />

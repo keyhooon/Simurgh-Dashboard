@@ -15,20 +15,21 @@
             WidgetFrame adds the Neumorphic styling (RoundedSunkenLow) to the container.
             Negative margin helps offset inner paddings for flush alignment.
         -->
-        <controls:WidgetFrame FrameVariant="RoundedSunkenLow">
+        <controls:WidgetFrame FrameVariant="RoundedSunkenLow" HorizontalAlignment="Center">
 
-            <ItemsControl ItemsSource="{Binding Timers}">
+            <ItemsControl  ItemsSource="{Binding Timers}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel
-                            HorizontalAlignment="Stretch"
+                            HorizontalAlignment="Center"
                             VerticalAlignment="Stretch"
                             Orientation="Vertical" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemContainerStyle>
                     <Style TargetType="ContentPresenter">
-                        <Setter Property="Margin" Value="10" />
+                        <Setter Property="Margin" Value="15" />
+                        <Setter Property="HorizontalAlignment" Value="Stretch" />
                     </Style>
                 </ItemsControl.ItemContainerStyle>
             </ItemsControl>

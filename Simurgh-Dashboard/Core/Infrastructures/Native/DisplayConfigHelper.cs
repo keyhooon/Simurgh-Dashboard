@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace SimurghDashboard.Core.Infrastructures.Native;
@@ -62,6 +63,137 @@ public static class DisplayConfigHelper
         uint numModeInfoArrayElements,
         [In] DISPLAYCONFIG_MODE_INFO[] modeInfoArray,
         uint flags);
+
+
+    /// <summary>
+    /// Exhaustively queries the Windows CCD (Connecting and Configuring Displays) engine 
+    /// to enumerate and trace active graphics adapters, physical ports, monitor descriptors, 
+    /// and raster pipeline modes directly into the diagnostic output.
+    /// </summary>
+    public static void LogActiveDisplaysAndGraphicsPorts()
+    {
+        Debug.WriteLine("================ [CCD DISPLAY PIPELINE & PORT ENUMERATION] ================");
+
+        // Determine exact buffer allocation sizes for all active pathways and modes
+        int queryError = GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS, out uint pathCount, out uint modeCount);
+        if (queryError != ERROR_SUCCESS)
+        {
+            Debug.WriteLine($"[CCD API ERROR] Failed to query buffer sizes. Win32 Error: {queryError} ({new Win32Exception(queryError).Message})");
+            Debug.WriteLine("============================================================================\n");
+            return;
+        }
+
+        Debug.WriteLine($"[CCD Buffer Allocation] Paths Array Count: {pathCount} | Modes Array Count: {modeCount}");
+
+        var paths = new DISPLAYCONFIG_PATH_INFO[pathCount];
+        var modes = new DISPLAYCONFIG_MODE_INFO[modeCount];
+
+        // Fetch snapshot of active topology
+        queryError = QueryDisplayConfig(QDC_ONLY_ACTIVE_PATHS, ref pathCount, paths, ref modeCount, modes, IntPtr.Zero);
+        if (queryError != ERROR_SUCCESS)
+        {
+            Debug.WriteLine($"[CCD API ERROR] QueryDisplayConfig failed. Win32 Error: {queryError} ({new Win32Exception(queryError).Message})");
+            Debug.WriteLine("============================================================================\n");
+            return;
+        }
+
+        Debug.WriteLine($"[CCD API] Query successful. Parsing {pathCount} path descriptors...");
+
+        for (int i = 0; i < pathCount; i++)
+        {
+            var path = paths[i];
+            Debug.WriteLine($"\n--- [Pipeline #{i + 1} / {pathCount}] ---");
+
+            // 1. Query GDI Device Name (e.g., \\.\DISPLAY1)
+            var sourceDeviceName = new DISPLAYCONFIG_SOURCE_DEVICE_NAME
+            {
+                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER
+                {
+                    type = DISPLAYCONFIG_DEVICE_INFO_TYPE.GetSourceName,
+                    size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_SOURCE_DEVICE_NAME)),
+                    adapterId = path.sourceInfo.adapterId,
+                    id = path.sourceInfo.id
+                }
+            };
+
+            string gdiDevice = "Unknown (GDI Unavailable)";
+            if (DisplayConfigGetDeviceInfo(ref sourceDeviceName) == ERROR_SUCCESS)
+            {
+                gdiDevice = sourceDeviceName.viewGdiDeviceName;
+            }
+
+            // 2. Query GPU Adapter Path and Device Instance
+            var adapterName = new DISPLAYCONFIG_SOURCE_DEVICE_NAME
+            {
+                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER
+                {
+                    type = DISPLAYCONFIG_DEVICE_INFO_TYPE.GetAdapterName,
+                    size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_SOURCE_DEVICE_NAME)),
+                    adapterId = path.targetInfo.adapterId,
+                    id = path.targetInfo.id
+                }
+            };
+
+            string gpuAdapterPath = "Unknown Adapter Path";
+            if (DisplayConfigGetDeviceInfo(ref adapterName) == ERROR_SUCCESS)
+            {
+                gpuAdapterPath = adapterName.viewGdiDeviceName;
+            }
+
+            // 3. Query Physical Monitor Descriptor & EDID Friendly Name
+            var targetDeviceName = new DISPLAYCONFIG_TARGET_DEVICE_NAME
+            {
+                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER
+                {
+                    type = DISPLAYCONFIG_DEVICE_INFO_TYPE.GetTargetName,
+                    size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_TARGET_DEVICE_NAME)),
+                    adapterId = path.targetInfo.adapterId,
+                    id = path.targetInfo.id
+                }
+            };
+
+            string monitorFriendlyName = "Generic / Virtual Monitor";
+            string monitorDevicePath = "Unknown Target Path";
+            DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY outputTech = path.targetInfo.outputTechnology;
+
+            if (DisplayConfigGetDeviceInfo(ref targetDeviceName) == ERROR_SUCCESS)
+            {
+                if (!string.IsNullOrWhiteSpace(targetDeviceName.monitorFriendlyDeviceName))
+                {
+                    monitorFriendlyName = targetDeviceName.monitorFriendlyDeviceName;
+                }
+                monitorDevicePath = targetDeviceName.monitorDevicePath;
+            }
+
+            // 4. Extract Timing, Refresh Rates & Raster Resolution Modes
+            string modeInfoDetails = "Mode Info Index out of bounds";
+            if (path.targetInfo.modeInfoIdx < modes.Length)
+            {
+                var targetMode = modes[path.targetInfo.modeInfoIdx];
+                var vSyncNum = targetMode.targetMode.targetVideoSignalInfo.vSyncFreq.Numerator;
+                var vSyncDenom = targetMode.targetMode.targetVideoSignalInfo.vSyncFreq.Denominator;
+                double refreshRate = vSyncDenom > 0 ? (double)vSyncNum / vSyncDenom : 0.0;
+
+                var activeSize = targetMode.targetMode.targetVideoSignalInfo.activeSize;
+                var totalSize = targetMode.targetMode.targetVideoSignalInfo.totalSize;
+
+                modeInfoDetails = $"{activeSize.cx}x{activeSize.cy} (Total: {totalSize.cx}x{totalSize.cy}) @ {refreshRate:F2}Hz (Fraction: {vSyncNum}/{vSyncDenom})";
+            }
+
+            // 5. Emit detailed diagnostic traces
+            Debug.WriteLine($"  [GDI Binding]         : {gdiDevice}");
+            Debug.WriteLine($"  [Monitor Name]        : {monitorFriendlyName}");
+            Debug.WriteLine($"  [Physical Connector]  : {outputTech} (Enum: 0x{(int)outputTech:X2})");
+            Debug.WriteLine($"  [Hardware Mode]       : {modeInfoDetails}");
+            Debug.WriteLine($"  [Rotation/Scaling]    : Rotation={path.targetInfo.rotation}, Scaling={path.targetInfo.scaling}");
+            Debug.WriteLine($"  [Pipeline Flags]      : Active={path.flags}, InUse={path.targetInfo.targetAvailable}");
+            Debug.WriteLine($"  [GPU LUID]            : High=0x{path.targetInfo.adapterId.HighPart:X8}, Low=0x{path.targetInfo.adapterId.LowPart:X8}");
+            Debug.WriteLine($"  [Adapter Hardware ID] : {gpuAdapterPath}");
+            Debug.WriteLine($"  [Monitor Hardware ID] : {monitorDevicePath}");
+        }
+
+        Debug.WriteLine("============================================================================\n");
+    }
 
 
     /// <summary>

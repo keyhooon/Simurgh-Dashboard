@@ -5,186 +5,214 @@
     xmlns:controls2="clr-namespace:SimurghDashboard.Core.Controls"
     xmlns:timers1="clr-namespace:SimurghDashboard.Timers.Controls.Timers">
 
+    <!-- Merged theme resource dictionaries -->
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Icons.xaml" />
         <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Fonts.xaml" />
         <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Images.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
+    <!-- DigitalTimerControl Style with clean nested grid architecture -->
     <Style TargetType="{x:Type controls1:DigitalTimerControl}">
-        <Setter Property="Padding" Value="40" />
+        <!-- Minimum baseline width for the entire control to avoid layout collapse inside ItemsControl/StackPanel -->
+        <Setter Property="MinWidth" Value="420" />
+        <!-- Dynamic user padding property passed down via TemplateBinding -->
+        <Setter Property="Padding" Value="0" />
         <Setter Property="PlaceholderBrush" Value="#20263238" />
         <Setter Property="DigitBrush" Value="#63D7FF" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
-        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="#33FFFFFF" />
+        <Setter Property="Background" Value="#CC000000" />
 
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls1:DigitalTimerControl}">
-                    <Grid>
-                        <!--  LAYER 1: Background  -->
+                    <!-- Root Container inheriting MinWidth from the control definition -->
+                    <Grid SnapsToDevicePixels="True" MinWidth="{TemplateBinding MinWidth}">
+                        <!-- LAYER 1: NineSlice Border Background Frame -->
                         <controls2:NineSliceBorder
                             x:Name="PART_Frame"
                             IsHitTestVisible="False"
                             SliceThickness="60"
                             Source="{StaticResource ImgPanelRoundedRaised}" />
 
-                        <!--  LAYER 2: Main Content  -->
-                        <Grid
-                            Margin="{TemplateBinding Padding}"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
-
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <!--  Section A: Header (ID Badge + Title)  -->
-                            <Grid Grid.Row="0" Margin="10,0,10,15">
-
-                                <!--  Timer Title  -->
-                                <TextBlock
-                                    x:Name="PART_Title"
-                                    Grid.Column="1"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    FontFamily="{StaticResource FontFamilyApp}"
-                                    FontSize="20"
-                                    FontWeight="SemiBold"
-                                    Foreground="{TemplateBinding Foreground}"
-                                    Text="{TemplateBinding Title}"
-                                    TextAlignment="Left"
-                                    TextTrimming="CharacterEllipsis" />
-                            </Grid>
-
-
-                            <!--  Section B: Digital Display Area  -->
+                        <!-- LAYER 2: Nested Container 1 - NineSlice Hard Inset Margin Layer -->
+                        <Grid Margin="24,24,24,28">
+                            <!-- LAYER 3: Nested Container 2 - Dynamic Control.Padding Boundary Host -->
                             <Border
-                                Grid.Row="1"
-                                Padding="15"
-                                VerticalAlignment="Center"
-                                Background="#CC000000"
-                                BorderBrush="#33FFFFFF"
-                                BorderThickness="1"
-                                CornerRadius="8">
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
 
-                                <Grid x:Name="PART_TimeContainer" ClipToBounds="False">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
+                                <!-- LAYER 4: Content Layout Rows Grid -->
+                                <Grid x:Name="PART_ContentGrid">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock
-                                        x:Name="PART_PlaceholderText"
-                                        Grid.RowSpan="2"
-                                        Grid.Column="1"
-                                        HorizontalAlignment="Right"
-                                        FontFamily="{StaticResource FontFamilyDigit}"
-                                        FontSize="52"
-                                        FontStretch="UltraExpanded"
-                                        FontWeight="ExtraBold"
-                                        Foreground="{TemplateBinding PlaceholderBrush}"
-                                        Text="{TemplateBinding PlaceholderText}"
-                                        TextOptions.TextFormattingMode="Display" />
-                                    <!--  TimeText is assumed to be a ReadOnly DP on the control itself, so TemplateBinding is correct  -->
-                                    <TextBlock
-                                        x:Name="PART_TimeText"
-                                        Grid.RowSpan="2"
-                                        Grid.Column="1"
-                                        HorizontalAlignment="Right"
-                                        FontFamily="{StaticResource FontFamilyDigit}"
-                                        FontSize="52"
-                                        FontStretch="UltraExpanded"
-                                        FontWeight="ExtraBold"
-                                        Foreground="{TemplateBinding DigitBrush}"
-                                        Text="{TemplateBinding TimeText}"
-                                        TextOptions.TextFormattingMode="Display" />
-                                    <StackPanel
-                                        Grid.Row="1"
-                                        Grid.Column="0"
-                                        Orientation="Horizontal">
-                                        <Path
-                                            x:Name="PART_DirectionIcon"
-                                            Width="20"
-                                            Height="20"
-                                            Margin="2"
-                                            VerticalAlignment="Center"
-                                            Data="{StaticResource IconTimerDown}"
-                                            Fill="{TemplateBinding DigitBrush}"
-                                            Stretch="Uniform" />
-                                        <Path
-                                            x:Name="PART_StateIcon"
-                                            Width="20"
-                                            Height="20"
-                                            Margin="2"
-                                            VerticalAlignment="Center"
-                                            Data="{StaticResource IconClock}"
-                                            Fill="{TemplateBinding DigitBrush}"
-                                            Stretch="Uniform" />
 
-                                    </StackPanel>
-                                    <!--  Timer ID Badge  -->
+                                    <!-- Section A: Title Header -->
+
+                                    <TextBlock Grid.Row="0" Margin="0,0,0,8"
+                                               x:Name="PART_Title"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontFamily="{StaticResource FontFamilyApp}"
+                                               FontSize="18"
+                                               FontWeight="ExtraBold"
+                                               Foreground="{TemplateBinding Foreground}"
+                                               Text="{TemplateBinding Title}"
+                                               TextAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                  
+
+                                    <!-- Section B: Digit & Segment Display Housing -->
                                     <Border
-                                        Grid.Column="0"
-                                        Margin="0,0,12,0"
-                                        Padding="10,3"
-                                        VerticalAlignment="Top"
-                                        BorderBrush="#33FFFFFF"
-                                        BorderThickness="1"
-                                        CornerRadius="6">
-                                        <TextBlock
-                                            x:Name="PART_Id"
-                                            FontFamily="{StaticResource FontFamilyDigit}"
-                                            FontSize="18"
-                                            FontWeight="Bold"
-                                            Foreground="{TemplateBinding DigitBrush}"
-                                            Text="{TemplateBinding Id}"
-                                            TextAlignment="Center" />
+                                        Grid.Row="1"
+                                        
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="3">
+
+                                        <Grid x:Name="PART_TimeContainer" Margin="14,6" ClipToBounds="False">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Timer ID Badge -->
+                                            <Border
+                                                Grid.Row="0"
+                                                Grid.Column="0"
+                                                Margin="0,2,10,0"
+                                                Padding="8,2"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Top"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="4">
+                                                <TextBlock
+                                                    x:Name="PART_Id"
+                                                    FontFamily="{StaticResource FontFamilyDigit}"
+                                                    FontSize="16"
+                                                    FontWeight="Heavy"
+                                                    Foreground="{TemplateBinding DigitBrush}"
+                                                    Text="{TemplateBinding Id}"
+                                                    TextAlignment="Center" />
+                                            </Border>
+
+                                            <!-- Telemetry Direction and State Vector Icons -->
+                                            <StackPanel
+                                                Grid.Row="1"
+                                                Grid.Column="0"
+                                                Margin="0,4,8,2"
+                                                VerticalAlignment="Bottom"
+                                                Orientation="Horizontal">
+                                                <Path
+                                                    x:Name="PART_DirectionIcon"
+                                                    Width="18"
+                                                    Height="18"
+                                                    Margin="0,0,4,0"
+                                                    VerticalAlignment="Center"
+                                                    Data="{StaticResource IconTimerDown}"
+                                                    Fill="{TemplateBinding DigitBrush}"
+                                                    Stretch="Uniform" />
+                                                <Path
+                                                    x:Name="PART_StateIcon"
+                                                    Width="18"
+                                                    Height="18"
+                                                    VerticalAlignment="Center"
+                                                    Data="{StaticResource IconClock}"
+                                                    Fill="{TemplateBinding DigitBrush}"
+                                                    Stretch="Uniform" />
+                                            </StackPanel>
+
+                                            <!-- Unified Numerical Display Matrix Host with Minimum Width Constraint -->
+                                            <Grid
+                                                Grid.Row="0"
+                                                Grid.RowSpan="2"
+                                                Grid.Column="1"
+                                                Width="270"
+                                                
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center">
+
+                                                <!-- Ghost Inactive Segments Matrix -->
+                                                <TextBlock
+                                                    x:Name="PART_PlaceholderText"
+                                        
+                                                    FontFamily="{StaticResource FontFamilyDigit}"
+                                                    FontSize="50"
+                                                    FontStretch="UltraExpanded"
+                                                    FontWeight="ExtraBold"
+                                                    Foreground="{TemplateBinding PlaceholderBrush}"
+                                                    Text="{TemplateBinding PlaceholderText}"
+                                                    TextAlignment="Right"
+                                                    TextOptions.TextFormattingMode="Display" />
+
+                                                <!-- Active Illuminated Numerical Digits -->
+                                                <TextBlock
+                                                    x:Name="PART_TimeText"
+                                                    TextAlignment="Right"
+                                                    FontFamily="{StaticResource FontFamilyDigit}"
+                                                    FontSize="50"
+                                                    FontStretch="UltraExpanded"
+                                                    FontWeight="ExtraBold"
+                                                    Foreground="{TemplateBinding DigitBrush}"
+                                                    Text="{TemplateBinding TimeText}"
+                                                    
+                                                    TextOptions.TextFormattingMode="Display" />
+                                            </Grid>
+                                        </Grid>
                                     </Border>
+
+                                    <!-- Section C: Footer Status Indicators -->
+                                    <StackPanel
+                                        x:Name="PART_StatePanel"
+                                        Grid.Row="2"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            x:Name="PART_StateText"
+                                            FontFamily="{StaticResource FontFamilyApp}"
+                                            FontSize="16"
+                                            FontWeight="SemiBold"
+                                            Foreground="#90A4AE"
+                                            Text="آماده" />
+                                        <Ellipse
+                                            x:Name="PART_StatusIndicator"
+                                            Width="8"
+                                            Height="8"
+                                            Margin="6,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Fill="#607D8B" />
+                                    </StackPanel>
                                 </Grid>
                             </Border>
-
-                            <!--  Section C: Footer Status  -->
-                            <StackPanel
-                                x:Name="PART_StatePanel"
-                                Grid.Row="2"
-                                Margin="0,15,0,0"
-                                HorizontalAlignment="Center"
-                                Orientation="Horizontal">
-                                <TextBlock
-                                    x:Name="PART_StateText"
-                                    FontFamily="{StaticResource FontFamilyApp}"
-                                    FontSize="18"
-                                    FontWeight="ExtraBold"
-                                    Foreground="#90A4AE"
-                                    Text="توقف" />
-                                <Ellipse
-                                    x:Name="PART_StatusIndicator"
-                                    Width="10"
-                                    Height="10"
-                                    Margin="8,0,8,0"
-                                    Fill="#607D8B" />
-
-
-                            </StackPanel>
                         </Grid>
                     </Grid>
 
+                    <!-- State Machine and Telemetry Triggers -->
                     <ControlTemplate.Triggers>
-                        <!--  Changed Trigger to DataTrigger to observe Configuration.Mode instead of a direct DP  -->
+                        <!-- Directional Trigger -->
                         <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Direction}" Value="CountUp">
                             <Setter TargetName="PART_DirectionIcon" Property="Data" Value="{StaticResource IconTimerUp}" />
                         </DataTrigger>
 
-                        <!--  State is assumed to be a DP on the control itself, so simple Trigger works  -->
+                        <!-- Operational State Triggers -->
                         <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.Running}">
-                            <Setter TargetName="PART_StateText" Property="Text" Value="اجرا" />
+                            <Setter TargetName="PART_StateText" Property="Text" Value="در حال شمارش" />
                             <Setter TargetName="PART_StateText" Property="Foreground" Value="#4CAF50" />
                             <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#4CAF50" />
                             <Setter TargetName="PART_StateIcon" Property="Data" Value="{StaticResource IconTimerRunning}" />
@@ -192,7 +220,7 @@
                         </Trigger>
 
                         <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.Pausing}">
-                            <Setter TargetName="PART_StateText" Property="Text" Value="توقف" />
+                            <Setter TargetName="PART_StateText" Property="Text" Value="توقف موقت" />
                             <Setter TargetName="PART_StateText" Property="Foreground" Value="#FFC107" />
                             <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#FFC107" />
                             <Setter TargetName="PART_TimeText" Property="Foreground" Value="#FFC107" />

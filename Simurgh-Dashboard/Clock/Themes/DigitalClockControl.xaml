@@ -42,7 +42,7 @@
                             </Grid.RowDefinitions>
 
                             <!--  Clock and weather content  -->
-                            <Grid Grid.Row="0">
+                            <Grid Grid.Row="0" MinWidth="600">
 
                                 <Border
                                     Padding="25,15"
@@ -53,7 +53,7 @@
                                     BorderThickness="1"
                                     CornerRadius="15">
 
-                                    <Grid HorizontalAlignment="Center" ClipToBounds="False">
+                                    <Grid HorizontalAlignment="Center" ClipToBounds="False" MinWidth="450">
 
                                         <!--  Ghost clock digits  -->
                                         <TextBlock
