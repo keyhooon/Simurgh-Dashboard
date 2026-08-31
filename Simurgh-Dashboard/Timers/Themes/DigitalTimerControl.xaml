@@ -1,14 +1,14 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:SimurghDashboard.Controls"
     xmlns:controls1="clr-namespace:SimurghDashboard.Timers.Controls"
+    xmlns:controls2="clr-namespace:SimurghDashboard.Core.Controls"
     xmlns:timers1="clr-namespace:SimurghDashboard.Timers.Controls.Timers">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Icons.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Fonts.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Images.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Fonts.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Images.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <Style TargetType="{x:Type controls1:DigitalTimerControl}">
@@ -24,7 +24,7 @@
                 <ControlTemplate TargetType="{x:Type controls1:DigitalTimerControl}">
                     <Grid>
                         <!--  LAYER 1: Background  -->
-                        <controls:NineSliceBorder
+                        <controls2:NineSliceBorder
                             x:Name="PART_Frame"
                             IsHitTestVisible="False"
                             SliceThickness="60"
@@ -49,10 +49,10 @@
                                 <TextBlock
                                     x:Name="PART_Title"
                                     Grid.Column="1"
-                                    HorizontalAlignment="Right"
+                                    HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     FontFamily="{StaticResource FontFamilyApp}"
-                                    FontSize="28"
+                                    FontSize="20"
                                     FontWeight="SemiBold"
                                     Foreground="{TemplateBinding Foreground}"
                                     Text="{TemplateBinding Title}"
@@ -75,12 +75,16 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
                                     <TextBlock
                                         x:Name="PART_PlaceholderText"
+                                        Grid.RowSpan="2"
                                         Grid.Column="1"
-                                        HorizontalAlignment="Center"
+                                        HorizontalAlignment="Right"
                                         FontFamily="{StaticResource FontFamilyDigit}"
                                         FontSize="52"
                                         FontStretch="UltraExpanded"
@@ -91,8 +95,9 @@
                                     <!--  TimeText is assumed to be a ReadOnly DP on the control itself, so TemplateBinding is correct  -->
                                     <TextBlock
                                         x:Name="PART_TimeText"
+                                        Grid.RowSpan="2"
                                         Grid.Column="1"
-                                        HorizontalAlignment="Center"
+                                        HorizontalAlignment="Right"
                                         FontFamily="{StaticResource FontFamilyDigit}"
                                         FontSize="52"
                                         FontStretch="UltraExpanded"
@@ -100,12 +105,15 @@
                                         Foreground="{TemplateBinding DigitBrush}"
                                         Text="{TemplateBinding TimeText}"
                                         TextOptions.TextFormattingMode="Display" />
-                                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                                    <StackPanel
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal">
                                         <Path
                                             x:Name="PART_DirectionIcon"
                                             Width="20"
                                             Height="20"
-                                            Margin="0,3,0,0"
+                                            Margin="2"
                                             VerticalAlignment="Center"
                                             Data="{StaticResource IconTimerDown}"
                                             Fill="{TemplateBinding DigitBrush}"
@@ -114,20 +122,19 @@
                                             x:Name="PART_StateIcon"
                                             Width="20"
                                             Height="20"
-                                            Margin="0,3,0,0"
+                                            Margin="2"
                                             VerticalAlignment="Center"
                                             Data="{StaticResource IconClock}"
                                             Fill="{TemplateBinding DigitBrush}"
                                             Stretch="Uniform" />
-                                        
+
                                     </StackPanel>
                                     <!--  Timer ID Badge  -->
                                     <Border
-                                        Grid.Column="2"
+                                        Grid.Column="0"
                                         Margin="0,0,12,0"
                                         Padding="10,3"
                                         VerticalAlignment="Top"
-                                       
                                         BorderBrush="#33FFFFFF"
                                         BorderThickness="1"
                                         CornerRadius="6">
@@ -150,12 +157,13 @@
                                 Margin="0,15,0,0"
                                 HorizontalAlignment="Center"
                                 Orientation="Horizontal">
-                                <TextBlock FontFamily="{StaticResource FontFamilyApp}"
-                                           x:Name="PART_StateText"
-                                           FontSize="18"
-                                           FontWeight="ExtraBold"
-                                           Foreground="#90A4AE"
-                                           Text="توقف" />
+                                <TextBlock
+                                    x:Name="PART_StateText"
+                                    FontFamily="{StaticResource FontFamilyApp}"
+                                    FontSize="18"
+                                    FontWeight="ExtraBold"
+                                    Foreground="#90A4AE"
+                                    Text="توقف" />
                                 <Ellipse
                                     x:Name="PART_StatusIndicator"
                                     Width="10"
@@ -163,7 +171,7 @@
                                     Margin="8,0,8,0"
                                     Fill="#607D8B" />
 
-        
+
                             </StackPanel>
                         </Grid>
                     </Grid>

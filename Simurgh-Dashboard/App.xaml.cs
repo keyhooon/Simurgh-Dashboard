@@ -121,6 +121,12 @@ namespace SimurghDashboard
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+            services
+                .AddOptions<KioskDisplayOptions>()
+                .BindConfiguration(KioskDisplayOptions.SectionName)
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
             // -------------------------------------------------------------------------
             // BACKGROUND WORKERS & DOMAIN MODULES (Weather, Ticker, Notifications, Timers)
             // -------------------------------------------------------------------------
@@ -132,7 +138,7 @@ namespace SimurghDashboard
             // -------------------------------------------------------------------------
             // SENSOR WORKER SERVICES (BackgroundService + Store + Hot-Reload)
             // -------------------------------------------------------------------------
-            services.AddSensorWorkerServices(configuration);
+            services.AddSensorSubsystem(configuration);
 
             // -------------------------------------------------------------------------
             // VIEWMODELS (Stateful Singletons for Kiosk Lifecycle)
@@ -140,7 +146,7 @@ namespace SimurghDashboard
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<DigitalClockViewModel>();
             services.AddSingleton<DigitalTimersListViewModel>();
-            services.AddSingleton<DigitalSensorsListViewModel>();
+
             services.AddSingleton<TickerViewModel>();
         }
 

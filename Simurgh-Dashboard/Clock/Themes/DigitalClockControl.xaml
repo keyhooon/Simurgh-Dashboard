@@ -1,13 +1,13 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:SimurghDashboard.Controls"
-    xmlns:controls="clr-namespace:SimurghDashboard.Clock.Controls">
+    xmlns:controls="clr-namespace:SimurghDashboard.Clock.Controls"
+    xmlns:controls1="clr-namespace:SimurghDashboard.Core.Controls">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Icons.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Fonts.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Images.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Fonts.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Images.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <Style TargetType="{x:Type controls:DigitalClockControl}">
@@ -24,7 +24,7 @@
 
                     <Grid HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
 
-                        <local:NineSliceBorder
+                        <controls1:NineSliceBorder
                             x:Name="PART_Frame"
                             IsHitTestVisible="False"
                             RenderOptions.BitmapScalingMode="Fant"

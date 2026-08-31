@@ -1,24 +1,24 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:SimurghDashboard.Controls"
-    xmlns:controls="clr-namespace:SimurghDashboard.Clock.Controls">
+    xmlns:controls="clr-namespace:SimurghDashboard.Clock.Controls"
+    xmlns:local1="clr-namespace:SimurghDashboard.Core.Controls">
 
     <!--  =========================================================  -->
     <!--  Image Assets  -->
     <!--  =========================================================  -->
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Borders.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Icons.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Fonts.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Colors.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Images.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Borders.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Fonts.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Colors.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Images.xaml" />
     </ResourceDictionary.MergedDictionaries>
-    <BitmapImage x:Key="ImgPanelRoundedRaised" UriSource="/Images/Panel_Rounded_Raised.png" />
-    <BitmapImage x:Key="ImgPanelRoundedSunken" UriSource="/Images/Panel_Rounded_Sunken.png" />
-    <BitmapImage x:Key="ImgPanelRoundedRaisedLow" UriSource="/Images/Panel_Rounded_Raised_Low.png" />
-    <BitmapImage x:Key="ImgPanelRoundedSunkenLow" UriSource="/Images/Panel_Rounded_Sunken_Low.png" />
-    <BitmapImage x:Key="ImgPanelSquareSunken" UriSource="/Images/Panel_Square_Sunken.png" />
+    <BitmapImage x:Key="ImgPanelRoundedRaised" UriSource="/Core/Images/Panel_Rounded_Raised.png" />
+    <BitmapImage x:Key="ImgPanelRoundedSunken" UriSource="/Core/Images/Panel_Rounded_Sunken.png" />
+    <BitmapImage x:Key="ImgPanelRoundedRaisedLow" UriSource="/Core/Images/Panel_Rounded_Raised_Low.png" />
+    <BitmapImage x:Key="ImgPanelRoundedSunkenLow" UriSource="/Core/Images/Panel_Rounded_Sunken_Low.png" />
+    <BitmapImage x:Key="ImgPanelSquareSunken" UriSource="/Core/Images/Panel_Square_Sunken.png" />
 
 
 
@@ -29,7 +29,7 @@
     <!--  Single-Variant 9-Slice Template  -->
     <!--  =========================================================  -->
 
-    <Style TargetType="{x:Type local:WidgetFrame}">
+    <Style TargetType="{x:Type local1:WidgetFrame}">
 
         <!--  =====================================================  -->
         <!--  Core Properties  -->
@@ -56,7 +56,7 @@
         <Setter Property="Template">
             <Setter.Value>
 
-                <ControlTemplate TargetType="{x:Type local:WidgetFrame}">
+                <ControlTemplate TargetType="{x:Type local1:WidgetFrame}">
 
                     <Grid
                         x:Name="PART_TemplateRoot"
@@ -75,8 +75,9 @@
                         <!--  Only one frame asset is rendered at a time  -->
                         <!--  =================================================  -->
 
-                        <local:NineSliceBorder
-                            x:Name="PART_Frame" Margin="-5"
+                        <local1:NineSliceBorder
+                            x:Name="PART_Frame"
+                            Margin="-5"
                             IsHitTestVisible="False"
                             RenderOptions.BitmapScalingMode="Fant"
                             SliceThickness="50,50,50,50"
@@ -144,7 +145,7 @@
 
                             <Border
                                 Grid.Row="1"
-                                Margin="10"
+                                Margin="16,0"
                                 Padding="{TemplateBinding ContentPadding}"
                                 Background="Transparent">
 

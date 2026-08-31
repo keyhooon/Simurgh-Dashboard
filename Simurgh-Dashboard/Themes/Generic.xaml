@@ -1,15 +1,16 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.MergedDictionaries>
         <!--  Load assets first  -->
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Colors.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Borders.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Icons.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Fonts.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Colors.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Borders.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Fonts.xaml" />
         <!--  Load control styles  -->
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/WidgetFrame.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/DigitalClockControl.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/DigitalSensorControl.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/DigitalTimerControl.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/WeatherBadgeControl.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/WidgetFrame.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Clock/Themes/DigitalClockControl.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Timers/Themes/DigitalTimerControl.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Clock/Themes/WeatherBadgeControl.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Sensors/Themes/MeasurableValueControl.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Sensors/Themes/SensorControl.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

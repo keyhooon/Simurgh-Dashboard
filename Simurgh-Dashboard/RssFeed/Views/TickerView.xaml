@@ -28,7 +28,7 @@
 
         <controls1:DrawingMarqueeControl
             Height="42"
-            Margin="50"
+            Margin="5"
             DefaultItemBackground="#CC000000"
             Direction="LeftToRight"
             FontFamily="b titr"
@@ -36,6 +36,7 @@
             FontWeight="SemiBold"
             Foreground="#FFF3F7FA"
             ItemPadding="18,0,18,0"
+            ItemRolledOverCommand="{Binding ItemFinishedCommand}"
             ItemSpacing="14"
             ItemsSource="{Binding TickerStore}"
             ScrollSpeed="70"

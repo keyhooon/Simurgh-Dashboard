@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
-using SimurghDashboard.Sensors.Controls.Sensors;
 using SimurghDashboard.Sensors.Options;
 
 namespace SimurghDashboard.Sensors.Models;

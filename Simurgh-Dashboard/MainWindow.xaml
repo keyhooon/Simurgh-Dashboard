@@ -3,8 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:behaviors="clr-namespace:SimurghDashboard.Infrastructures.Behaviors"
-    xmlns:controls="clr-namespace:SimurghDashboard.Controls"
+    xmlns:behaviors="clr-namespace:SimurghDashboard.Core.Infrastructures.Behaviors"
+    xmlns:controls="clr-namespace:SimurghDashboard.Core.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:simurghDashboard="clr-namespace:SimurghDashboard"
@@ -50,9 +50,9 @@
             <!--  Left main content area (Timers)  -->
             <ColumnDefinition Width="*" />
             <!--  Center gutter  -->
-            <ColumnDefinition Width=".5*" />
+            <ColumnDefinition Width=".00*" />
             <!--  Right main content area (Sensors)  -->
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="1.1*" />
             <!--  Right gutter / spacing  -->
             <ColumnDefinition Width=".5*" />
         </Grid.ColumnDefinitions>
@@ -76,7 +76,6 @@
             Grid.Row="0"
             Grid.Column="1"
             Grid.ColumnSpan="3"
-          
             FrameVariant="RoundedSunkenLow">
             <ContentControl
                 HorizontalAlignment="Stretch"
@@ -94,10 +93,6 @@
             Grid.Row="1"
             Grid.Column="0"
             Grid.ColumnSpan="2"
-          
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Center"
-            VerticalContentAlignment="Stretch"
             Content="{Binding DigitalTimersListViewModel}" />
 
         <!--
@@ -110,10 +105,7 @@
             Grid.Row="1"
             Grid.Column="3"
             Grid.ColumnSpan="2"
-           
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Center"
-            VerticalContentAlignment="Stretch"
+            VerticalAlignment="Stretch"
             Content="{Binding DigitalSensorsListViewModel}" />
 
         <!--
@@ -126,9 +118,8 @@
             Grid.Row="2"
             Grid.Column="0"
             Grid.ColumnSpan="5"
-         
             FrameVariant="RoundedSunkenLow">
-            <ContentControl  Content="{Binding TickerViewModel}" />
+            <ContentControl Content="{Binding TickerViewModel}" />
         </controls:WidgetFrame>
 
     </Grid>

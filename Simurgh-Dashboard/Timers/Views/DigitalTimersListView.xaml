@@ -3,12 +3,11 @@
     x:Class="SimurghDashboard.Timers.Views.DigitalTimersListView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:SimurghDashboard.Core.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="clr-namespace:SimurghDashboard.Core.Controls"
-
-
-    d:DataContext="{d:DesignInstance Type=viewmodels:DigitalTimersListViewModel}"
+    xmlns:viewModels="clr-namespace:SimurghDashboard.Timers.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewModels:DigitalTimersListViewModel}"
     mc:Ignorable="d">
 
     <Grid Background="Transparent">
@@ -16,24 +15,9 @@
             WidgetFrame adds the Neumorphic styling (RoundedSunkenLow) to the container.
             Negative margin helps offset inner paddings for flush alignment.
         -->
-        <controls:WidgetFrame  FrameVariant="RoundedSunkenLow">
+        <controls:WidgetFrame FrameVariant="RoundedSunkenLow">
 
-            <!--
-                    ItemsControl avoids the heavy overhead of Selector controls (ListBox/ListView).
-                    Since Kiosk dashboards do not need "SelectedItem" tracking or keyboard focus management
-                    across items, ItemsControl is the most performant choice.
-                    The 'Timers' binding is an ObservableCollection<DigitalTimerViewModel>.
-            -->
-            <ItemsControl  ItemsSource="{Binding Timers}">
-
-                <!--
-                    ItemsPanel defines the spatial arrangement.
-                    WrapPanel natively handles responsiveness. If the kiosk resolution changes
-                    (e.g., Portrait to Landscape), the timers will flow horizontally and wrap
-                    to the next row automatically.
-                    Note: WrapPanel does not support UI Virtualization. If you ever scale to 100+ timers,
-                    consider a VirtualizingWrapPanel implementation.
-                -->
+            <ItemsControl ItemsSource="{Binding Timers}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel
@@ -42,26 +26,12 @@
                             Orientation="Vertical" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
-
-                <!--
-                    ItemContainerStyle wraps each generated DataTemplate.
-                    Instead of putting Margin="15" directly in the DigitalTimerControl DataTemplate,
-                    we put it here. This keeps the atomic DigitalTimerControl completely unaware
-                    of its spacing context, making it reusable elsewhere without weird layout side-effects.
-                -->
                 <ItemsControl.ItemContainerStyle>
                     <Style TargetType="ContentPresenter">
                         <Setter Property="Margin" Value="10" />
-                        <!--
-                            We can hook into the 'Loaded' event via EventTrigger to stagger
-                            the entrance animations of each timer, creating a cascade effect
-                            when the dashboard boots up.
-                        -->
                     </Style>
                 </ItemsControl.ItemContainerStyle>
-
             </ItemsControl>
-
         </controls:WidgetFrame>
     </Grid>
 </UserControl>

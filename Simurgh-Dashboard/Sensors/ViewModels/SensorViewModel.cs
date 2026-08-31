@@ -3,7 +3,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using SimurghDashboard.Sensors.Controls.Sensors;
 using SimurghDashboard.Sensors.Models;
 
 namespace SimurghDashboard.Sensors.ViewModels;

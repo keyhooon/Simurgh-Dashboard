@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
-using SimurghDashboard.Sensors.Controls.Sensors;
+using SimurghDashboard.Sensors.Models;
 
 namespace SimurghDashboard.Sensors.Controls;
 

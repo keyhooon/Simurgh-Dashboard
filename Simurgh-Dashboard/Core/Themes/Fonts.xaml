@@ -5,13 +5,13 @@
     <!--  =================================================================  -->
 
     <!--  Persian UI Family  -->
-    <FontFamily x:Key="FontFamilyApp">pack://application:,,,/Fonts/#Vazirmatn</FontFamily>
+    <FontFamily x:Key="FontFamilyApp">pack://application:,,,/Core/Fonts/#Vazirmatn</FontFamily>
 
     <!--  Numeric / Digital Family  -->
-    <FontFamily x:Key="FontFamilyDigit">pack://application:,,,/Fonts/#DSEG7 Classic</FontFamily>
+    <FontFamily x:Key="FontFamilyDigit">pack://application:,,,/Core/Fonts/#DSEG7 Classic</FontFamily>
 
 
-    <FontFamily x:Key="WeatherIconsFont">pack://application:,,,/Fonts/#Weather Icons</FontFamily>
+    <FontFamily x:Key="WeatherIconsFont">pack://application:,,,/Core/Fonts/#Weather Icons</FontFamily>
 
     <!--  =================================================================  -->
     <!--  TYPOGRAPHY ALIASES  -->

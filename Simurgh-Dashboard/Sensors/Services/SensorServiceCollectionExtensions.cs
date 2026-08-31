@@ -13,7 +13,7 @@ namespace SimurghDashboard.Sensors.Services;
 /// </summary>
 public static class SensorServiceCollectionExtensions
 {
-    private const string DefaultConfigurationSectionName = "SensorsOptions";
+
 
     /// <summary>
     /// Registers all components of the Sensor Subsystem into the <see cref="IServiceCollection"/>.
@@ -26,15 +26,18 @@ public static class SensorServiceCollectionExtensions
     /// <returns>The same <see cref="IServiceCollection"/> for fluent chaining.</returns>
     public static IServiceCollection AddSensorSubsystem(
         this IServiceCollection services,
-        IConfiguration configuration,
-        string sectionName = DefaultConfigurationSectionName)
+        IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
         // 1. Configuration & Options Mapping (Hot-Reloadable via IOptionsMonitor<SensorsOptions>)
-        var configSection = configuration.GetSection(sectionName);
-        services.Configure<SensorsOptions>(configSection);
+        services
+            .AddOptions<SensorsOptions>()
+            .BindConfiguration(SensorsOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
 
         // 2. Core Accessor Layer (Thread-Safe Single Instance)
         services.TryAddSingleton<ISensorAccessor, SensorAccessor>();

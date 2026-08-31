@@ -33,13 +33,9 @@ public class RssTickerBackgroundService(
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            // 1. Purge expired items atomically inside store
-            store.PurgeExpiredItems();
 
-            // 2. Fetch and batch commit
             await FetchAndProcessFeedsAsync(stoppingToken);
 
-            // 3. Keep local hash tracking clean
             CleanupProcessedIds();
         }
     }
@@ -57,7 +53,7 @@ public class RssTickerBackgroundService(
             {
                 logger.LogDebug("Fetching RSS feed from: {Url}", feedUrl);
 
-                using var responseStream = await client.GetStreamAsync(feedUrl, cancellationToken);
+                await using var responseStream = await client.GetStreamAsync(feedUrl, cancellationToken);
                 using var xmlReader = XmlReader.Create(responseStream);
                 var feed = SyndicationFeed.Load(xmlReader);
 

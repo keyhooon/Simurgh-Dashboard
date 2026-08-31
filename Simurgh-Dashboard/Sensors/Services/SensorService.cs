@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SimurghDashboard.Sensors.Contracts;
-using SimurghDashboard.Sensors.Controls.Sensors;
 using SimurghDashboard.Sensors.Models;
 
 namespace SimurghDashboard.Sensors.Services;

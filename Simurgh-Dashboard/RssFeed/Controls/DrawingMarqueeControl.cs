@@ -13,16 +13,16 @@ namespace SimurghDashboard.RssFeed.Controls;
 /// <summary>
 /// High-performance DrawingVisual-backed marquee control.
 /// Synchronizes seamlessly with INotifyCollectionChanged, renders RTL text correctly,
-/// avoids UI allocations during animation, and provides manual hit-testing.
+/// avoids UI allocations during animation, supports post-animation item exit tracking, and provides manual hit-testing.
 /// </summary>
 public class DrawingMarqueeControl : FrameworkElement
 {
     private const double MaxFrameDeltaSeconds = 0.25;
     private const double MinimumCycleLength = 0.5;
+    private const string DiagnosticPrefix = "[DrawingMarqueeControl]";
 
     private readonly DrawingVisual _stripVisual = new();
     private readonly VisualCollection _visualChildren;
-
     private readonly List<LayoutItem> _layoutItems = [];
 
     private INotifyCollectionChanged? _observedCollection;
@@ -34,11 +34,6 @@ public class DrawingMarqueeControl : FrameworkElement
     private double _cycleLength;
     private double _logicalOffset;
     private TimeSpan _lastFrameTime;
-
-    private const string DiagnosticPrefix = "[DrawingMarqueeControl]";
-
-    private int _renderFrameCount;
-    private bool _hasLoggedFirstFrame;
 
     public DrawingMarqueeControl()
     {
@@ -59,6 +54,13 @@ public class DrawingMarqueeControl : FrameworkElement
     }
 
     #region Dependency Properties
+
+    public static readonly DependencyProperty ItemRolledOverCommandProperty =
+        DependencyProperty.Register(
+            nameof(ItemRolledOverCommand),
+            typeof(ICommand),
+            typeof(DrawingMarqueeControl),
+            new FrameworkPropertyMetadata(null));
 
     public static readonly DependencyProperty ItemsSourceProperty =
         DependencyProperty.Register(
@@ -178,12 +180,32 @@ public class DrawingMarqueeControl : FrameworkElement
                 OnVisualConfigurationChanged,
                 CoerceRatio));
 
+    public static readonly DependencyProperty EnableDiagnosticsProperty =
+        DependencyProperty.Register(
+            nameof(EnableDiagnostics),
+            typeof(bool),
+            typeof(DrawingMarqueeControl),
+            new FrameworkPropertyMetadata(false));
+
     public static readonly RoutedEvent ItemClickedEvent =
         EventManager.RegisterRoutedEvent(
             nameof(ItemClicked),
             RoutingStrategy.Bubble,
             typeof(EventHandler<MarqueeItemClickedEventArgs>),
             typeof(DrawingMarqueeControl));
+
+    public static readonly RoutedEvent ItemRolledOverEvent =
+        EventManager.RegisterRoutedEvent(
+            nameof(ItemRolledOver),
+            RoutingStrategy.Bubble,
+            typeof(EventHandler<MarqueeItemRolledOverEventArgs>),
+            typeof(DrawingMarqueeControl));
+
+    public ICommand? ItemRolledOverCommand
+    {
+        get => (ICommand?)GetValue(ItemRolledOverCommandProperty);
+        set => SetValue(ItemRolledOverCommandProperty, value);
+    }
 
     public IEnumerable? ItemsSource
     {
@@ -269,10 +291,22 @@ public class DrawingMarqueeControl : FrameworkElement
         set => SetValue(SeparatorHeightRatioProperty, value);
     }
 
+    public bool EnableDiagnostics
+    {
+        get => (bool)GetValue(EnableDiagnosticsProperty);
+        set => SetValue(EnableDiagnosticsProperty, value);
+    }
+
     public event EventHandler<MarqueeItemClickedEventArgs> ItemClicked
     {
         add => AddHandler(ItemClickedEvent, value);
         remove => RemoveHandler(ItemClickedEvent, value);
+    }
+
+    public event EventHandler<MarqueeItemRolledOverEventArgs> ItemRolledOver
+    {
+        add => AddHandler(ItemRolledOverEvent, value);
+        remove => RemoveHandler(ItemRolledOverEvent, value);
     }
 
     #endregion
@@ -617,7 +651,7 @@ public class DrawingMarqueeControl : FrameworkElement
                     FlowDirection.RightToLeft,
                     typeface,
                     FontSize,
-                    item.Foreground ?? Foreground,
+                    EnsureFrozenBrush(item.Foreground) ?? EnsureFrozenBrush(Foreground) ?? Brushes.White,
                     dpi.PixelsPerDip);
 
                 text.Trimming = TextTrimming.None;
@@ -666,6 +700,9 @@ public class DrawingMarqueeControl : FrameworkElement
             3,
             (int)Math.Ceiling(ActualWidth / _cycleLength) + 3);
 
+        var frozenDefaultBg = EnsureFrozenBrush(DefaultItemBackground);
+        var frozenSeparatorBrush = EnsureFrozenBrush(SeparatorBrush);
+
         using var drawingContext = _stripVisual.RenderOpen();
 
         for (var cycleIndex = 0; cycleIndex < cycleCount; cycleIndex++)
@@ -674,7 +711,7 @@ public class DrawingMarqueeControl : FrameworkElement
 
             foreach (var layoutItem in _layoutItems)
             {
-                DrawItem(drawingContext, layoutItem, cycleX, null,null);
+                DrawItem(drawingContext, layoutItem, cycleX, frozenDefaultBg, frozenSeparatorBrush);
             }
         }
 
@@ -704,11 +741,7 @@ public class DrawingMarqueeControl : FrameworkElement
         var borderBrush = EnsureFrozenBrush(item.BorderBrush);
         if (borderBrush != null && item.BorderThickness > 0)
         {
-            var pen = new Pen(borderBrush, item.BorderThickness);
-            if (pen.CanFreeze)
-            {
-                pen.Freeze();
-            }
+            var pen = EnsureFrozenPen(new Pen(borderBrush, item.BorderThickness));
             drawingContext.DrawRectangle(null, pen, itemRect);
         }
 
@@ -733,7 +766,6 @@ public class DrawingMarqueeControl : FrameworkElement
                 new Rect(separatorX, separatorTop, SeparatorWidth, separatorHeight));
         }
     }
-
 
     private void ClearVisual()
     {
@@ -824,8 +856,14 @@ public class DrawingMarqueeControl : FrameworkElement
 
         deltaSeconds = Math.Min(deltaSeconds, MaxFrameDeltaSeconds);
 
-        _logicalOffset += ScrollSpeed * deltaSeconds;
-        _logicalOffset %= _cycleLength;
+        // Snapshot previous logical offset before applying delta advance
+        var prevOffset = _logicalOffset;
+
+        // Advance and wrap offset within cycle length boundary
+        _logicalOffset = (_logicalOffset + (ScrollSpeed * deltaSeconds)) % _cycleLength;
+
+        // Detect any items whose trailing edge crossed the exit threshold during this frame
+        DetectAndNotifyRolledOverItems(prevOffset, _logicalOffset, _cycleLength);
 
         ApplyTransform();
     }
@@ -853,6 +891,58 @@ public class DrawingMarqueeControl : FrameworkElement
         };
 
         _stripVisual.Transform = new TranslateTransform(transformX, 0);
+    }
+
+    private void DetectAndNotifyRolledOverItems(double previousOffset, double currentOffset, double cycleLength)
+    {
+        if (_layoutItems.Count == 0 || cycleLength < MinimumCycleLength)
+        {
+            return;
+        }
+
+        // An item has completely scrolled out of viewport once the scroll boundary crosses:
+        // boundary = item.Offset + item.Width
+        foreach (var layoutItem in _layoutItems)
+        {
+            var exitBoundary = layoutItem.Offset + layoutItem.Width;
+            var hasCrossed = false;
+
+            if (currentOffset >= previousOffset)
+            {
+                // Normal forward movement within the same cycle period: (prev, curr]
+                if (exitBoundary > previousOffset && exitBoundary <= currentOffset)
+                {
+                    hasCrossed = true;
+                }
+            }
+            else
+            {
+                // Offset wrapped around the cycle boundary: (prev, cycleLength] OR [0, curr]
+                if (exitBoundary > previousOffset || exitBoundary <= currentOffset)
+                {
+                    hasCrossed = true;
+                }
+            }
+
+            if (hasCrossed)
+            {
+                NotifyItemRolledOver(layoutItem.Item);
+            }
+        }
+    }
+
+    private void NotifyItemRolledOver(IMarqueeDrawItem item)
+    {
+        Log($"ItemRolledOver | Text=\"{item.Text}\"");
+
+        // 1. Raise Routed Event
+        RaiseEvent(new MarqueeItemRolledOverEventArgs(ItemRolledOverEvent, this, item));
+
+        // 2. Execute MVVM Bound Command
+        if (ItemRolledOverCommand != null && ItemRolledOverCommand.CanExecute(item))
+        {
+            ItemRolledOverCommand.Execute(item);
+        }
     }
 
     #endregion
@@ -912,27 +1002,7 @@ public class DrawingMarqueeControl : FrameworkElement
 
     #endregion
 
-
-
-    private sealed record LayoutItem(
-        IMarqueeDrawItem Item,
-        FormattedText Text,
-        double Offset,
-        double Width);
-
-
-    public static readonly DependencyProperty EnableDiagnosticsProperty =
-        DependencyProperty.Register(
-            nameof(EnableDiagnostics),
-            typeof(bool),
-            typeof(DrawingMarqueeControl),
-            new FrameworkPropertyMetadata(false));
-
-    public bool EnableDiagnostics
-    {
-        get => (bool)GetValue(EnableDiagnosticsProperty);
-        set => SetValue(EnableDiagnosticsProperty, value);
-    }
+    #region Helpers & Diagnostics
 
     private void Log(string message)
     {
@@ -964,12 +1034,10 @@ public class DrawingMarqueeControl : FrameworkElement
 
         if (brush.CanFreeze)
         {
-            // Safe to freeze original instance directly
             brush.Freeze();
             return brush;
         }
 
-        // If original cannot freeze (e.g. data-bound or animated), clone and freeze the copy
         var clone = brush.Clone();
         if (clone.CanFreeze)
         {
@@ -997,7 +1065,6 @@ public class DrawingMarqueeControl : FrameworkElement
         if (pen.CanFreeze)
         {
             pen.Freeze();
-            return pen;
         }
 
         var clone = pen.Clone();
@@ -1009,4 +1076,11 @@ public class DrawingMarqueeControl : FrameworkElement
         return clone;
     }
 
+    private sealed record LayoutItem(
+        IMarqueeDrawItem Item,
+        FormattedText Text,
+        double Offset,
+        double Width);
+
+    #endregion
 }

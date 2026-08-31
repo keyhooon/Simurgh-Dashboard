@@ -1,4 +1,4 @@
-using SimurghDashboard.Sensors.Controls.Sensors;
+using SimurghDashboard.Sensors.Models;
 
 namespace SimurghDashboard.Sensors.Contracts;
 

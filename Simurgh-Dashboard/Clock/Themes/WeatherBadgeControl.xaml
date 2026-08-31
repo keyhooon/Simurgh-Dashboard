@@ -3,9 +3,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls1="clr-namespace:SimurghDashboard.Clock.Controls">
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Icons.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Fonts.xaml" />
-        <ResourceDictionary Source="/SimurghDashboard;component/Themes/Images.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Fonts.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Images.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <Style TargetType="{x:Type controls1:WeatherBadgeControl}">

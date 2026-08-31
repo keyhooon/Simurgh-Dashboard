@@ -1,9 +1,10 @@
-﻿using System.Globalization;
+﻿using Microsoft.Extensions.Diagnostics.Latency;
+using SimurghDashboard.Sensors.Models;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
 using System.Windows.Media;
-using SimurghDashboard.Sensors.Controls.Sensors;
 
 namespace SimurghDashboard.Core.Infrastructures;
 
@@ -29,6 +30,9 @@ public sealed class SensorIconConverter : MarkupExtension, IValueConverter
             SensorType.Humidity => "IconWaterDrop",
             SensorType.Pressure => "IconPressure",
             SensorType.AirQuality => "IconAirQuality",
+            SensorType.Illuminance=> "IconAirQuality",
+            SensorType.MedicalGasPressure => "IconAirQuality",
+
             _ => "IconSensor"
         };
 

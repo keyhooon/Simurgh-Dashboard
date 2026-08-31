@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using SimurghDashboard.Sensors.Controls.Sensors;
 using SimurghDashboard.Sensors.Options;
 
 namespace SimurghDashboard.Sensors.Models;
