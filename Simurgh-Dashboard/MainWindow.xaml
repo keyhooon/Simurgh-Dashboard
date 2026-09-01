@@ -16,7 +16,13 @@
     mc:Ignorable="d">
 
     <Window.Resources>
-        <ResourceDictionary Source="/SimurghDashboard;component/DataTemplates/DataTemplate.xaml" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/SimurghDashboard;component/DataTemplates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/SimurghDashboard;component/Timers/Templates/DataTemplate.xaml" />
+
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
 
     <!--
@@ -46,7 +52,7 @@
     <Grid Margin="5">
         <Grid.ColumnDefinitions>
             <!--  Left main content area (Timers)  -->
-            <ColumnDefinition Width="Auto"  />
+            <ColumnDefinition Width="Auto" />
             <!--  Center gutter  -->
             <ColumnDefinition Width="1*" />
 
@@ -70,7 +76,8 @@
         <controls:WidgetFrame
             Grid.Row="0"
             Grid.Column="0"
-            Grid.ColumnSpan="2" HorizontalAlignment="Center"
+            Grid.ColumnSpan="2"
+            HorizontalAlignment="Center"
             FrameVariant="RoundedSunkenLow">
             <ContentControl
                 HorizontalAlignment="Stretch"
@@ -84,7 +91,7 @@
             ============================================================================
             Renders Anesthesia, Tourniquet, and surgical procedure stopwatches.
         -->
-        <ContentControl 
+        <ContentControl
             Grid.Row="1"
             Grid.Column="0"
             Content="{Binding DigitalTimersListViewModel}" />
@@ -98,7 +105,6 @@
         <ContentControl
             Grid.Row="1"
             Grid.Column="1"
-
             VerticalAlignment="Stretch"
             Content="{Binding DigitalSensorsListViewModel}" />
 

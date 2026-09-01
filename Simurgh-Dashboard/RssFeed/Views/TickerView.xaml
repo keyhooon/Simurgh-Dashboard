@@ -32,16 +32,16 @@
             DefaultItemBackground="#CC000000"
             Direction="LeftToRight"
             FontFamily="b titr"
-            FontSize="15"
+            FontSize="20"
             FontWeight="SemiBold"
             Foreground="#FFF3F7FA"
             ItemPadding="18,0,18,0"
             ItemRolledOverCommand="{Binding ItemFinishedCommand}"
-            ItemSpacing="14"
+            ItemSpacing="70"
             ItemsSource="{Binding TickerStore}"
             ScrollSpeed="70"
             SeparatorBrush="#33FFFFFF"
             SeparatorHeightRatio="0.42"
-            SeparatorWidth="1" />
+            SeparatorWidth="10" />
     </Grid>
 </UserControl>

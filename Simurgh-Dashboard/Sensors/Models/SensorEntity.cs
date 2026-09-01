@@ -131,14 +131,14 @@ public sealed class SensorEntity : IReadOnlyList<MeasurableValueEntity>, INotify
     /// <summary>
     /// Ingests live telemetry into a child channel using zero-based positional channel indexing.
     /// </summary>
-    public bool IngestChannelTelemetry(int channelIndex, double rawValue, DateTimeOffset? timestamp = null)
+    public bool IngestChannelTelemetry(int channelIndex, double value, DateTimeOffset? timestamp = null)
     {
         if (channelIndex < 0 || channelIndex >= _measurableValues.Count)
         {
             return false;
         }
 
-        _measurableValues[channelIndex].UpdateTelemetry(rawValue, timestamp);
+        _measurableValues[channelIndex].UpdateTelemetry(value, timestamp);
         LastSeenUtc = timestamp ?? DateTimeOffset.UtcNow;
         return true;
     }

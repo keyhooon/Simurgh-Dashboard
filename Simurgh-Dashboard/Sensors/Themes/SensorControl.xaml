@@ -6,14 +6,14 @@
     xmlns:infrastructures="clr-namespace:SimurghDashboard.Core.Infrastructures"
     xmlns:models="clr-namespace:SimurghDashboard.Sensors.Models">
 
-    <!-- Merged theme resource dictionaries -->
+    <!--  Merged theme resource dictionaries  -->
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Icons.xaml" />
         <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Fonts.xaml" />
         <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Images.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
-    <!-- Example ItemTemplate consumption inside DigitalSensorControl -->
+    <!--  Example ItemTemplate consumption inside DigitalSensorControl  -->
     <DataTemplate x:Key="MeasurableValueItemTemplate">
         <controls1:MeasurableValueControl
             ChannelIndex="{Binding ChannelIndex}"
@@ -33,8 +33,8 @@
         =====================================================================
     -->
     <Style TargetType="{x:Type controls1:SensorControl}">
-        <!-- Dynamic user padding property passed down via TemplateBinding -->
-        <Setter Property="Padding" Value="0" />
+        <!--  Dynamic user padding property passed down via TemplateBinding  -->
+        <Setter Property="Padding" Value="20" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="#33FFFFFF" />
@@ -56,24 +56,24 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls1:SensorControl}">
-                    <!-- Root Container -->
+                    <!--  Root Container  -->
                     <Grid SnapsToDevicePixels="True">
-                        <!-- LAYER 1: NineSlice Border Background Frame -->
+                        <!--  LAYER 1: NineSlice Border Background Frame  -->
                         <controls:NineSliceBorder
                             x:Name="PART_Frame"
                             IsHitTestVisible="False"
                             SliceThickness="60"
                             Source="{StaticResource ImgPanelRoundedRaised}" />
 
-                        <!-- LAYER 2: Nested Container 1 - NineSlice Hard Inset Margin Layer -->
+                        <!--  LAYER 2: Nested Container 1 - NineSlice Hard Inset Margin Layer  -->
                         <Grid Margin="24,24,24,28">
-                            <!-- LAYER 3: Nested Container 2 - Dynamic Control.Padding Boundary Host -->
+                            <!--  LAYER 3: Nested Container 2 - Dynamic Control.Padding Boundary Host  -->
                             <Border
                                 Padding="{TemplateBinding Padding}"
                                 HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                 VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
 
-                                <!-- LAYER 4: Content Layout Rows Grid -->
+                                <!--  LAYER 4: Content Layout Rows Grid  -->
                                 <Grid x:Name="PART_ContentGrid">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
@@ -81,7 +81,7 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <!-- SECTION A: HEADER -->
+                                    <!--  SECTION A: HEADER  -->
                                     <StackPanel
                                         Grid.Row="0"
                                         Margin="0,0,0,12"
@@ -106,13 +106,13 @@
                                             TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
 
-                                    <!-- SECTION B: MEASUREMENT LIST HOUSING (ITEMS DELEGATION) -->
+                                    <!--  SECTION B: MEASUREMENT LIST HOUSING (ITEMS DELEGATION)  -->
                                     <Border
                                         Grid.Row="1"
                                         Background="{TemplateBinding Background}"
                                         BorderBrush="{TemplateBinding BorderBrush}"
                                         BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="8">
+                                        CornerRadius="5">
                                         <ItemsControl
                                             Padding="10,0"
                                             HorizontalAlignment="Stretch"
@@ -123,7 +123,7 @@
                                             ItemsSource="{TemplateBinding ItemsSource}" />
                                     </Border>
 
-                                    <!-- SECTION C: FOOTER STATUS INDICATOR -->
+                                    <!--  SECTION C: FOOTER STATUS INDICATOR  -->
                                     <StackPanel
                                         x:Name="PART_StatePanel"
                                         Grid.Row="2"
@@ -151,7 +151,7 @@
                         </Grid>
                     </Grid>
 
-                    <!-- STATE-DRIVEN VISUAL TRIGGERS -->
+                    <!--  STATE-DRIVEN VISUAL TRIGGERS  -->
                     <ControlTemplate.Triggers>
                         <Trigger Property="State" Value="{x:Static models:ModuleState.Offline}">
                             <Setter TargetName="PART_StateText" Property="Text" Value="ارتباط قطع" />

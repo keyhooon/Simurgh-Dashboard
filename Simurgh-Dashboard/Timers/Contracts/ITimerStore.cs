@@ -8,20 +8,20 @@ namespace SimurghDashboard.Timers.Contracts;
 /// Timer store contract exposing full ObservableCollection capabilities along with custom batch and lookup operations.
 /// Guarantees thread-safe UI binding through INotifyCollectionChanged and INotifyPropertyChanged.
 /// </summary>
-public interface ITimerStore : IList<TimerModel>,
-    IReadOnlyList<TimerModel>,
+public interface ITimerStore : IList<TimerEntity>,
+    IReadOnlyList<TimerEntity>,
     INotifyCollectionChanged,
     INotifyPropertyChanged
 {
     /// <summary>
     /// Appends a new timer item to the store.
     /// </summary>
-    new void Add(TimerModel item);
+    new void Add(TimerEntity item);
 
     /// <summary>
     /// Removes a timer instance from the store.
     /// </summary>
-    new bool Remove(TimerModel item);
+    new bool Remove(TimerEntity item);
 
     /// <summary>
     /// Removes a timer instance matching the provided unique identifier.
@@ -31,15 +31,15 @@ public interface ITimerStore : IList<TimerModel>,
     /// <summary>
     /// Looks up a timer model by its unique identifier using ordinal comparison.
     /// </summary>
-    TimerModel? FindById(string id);
+    TimerEntity? FindById(string id);
 
     /// <summary>
     /// Appends a batch of timer items efficiently and notifies observers.
     /// </summary>
-    void AddRange(IEnumerable<TimerModel> items);
+    void AddRange(IEnumerable<TimerEntity> items);
 
     /// <summary>
     /// Clears the existing items and repopulates the store with the provided collection.
     /// </summary>
-    void Reset(IEnumerable<TimerModel> items);
+    void Reset(IEnumerable<TimerEntity> items);
 }

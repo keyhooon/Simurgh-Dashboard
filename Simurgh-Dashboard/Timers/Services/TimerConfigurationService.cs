@@ -155,7 +155,7 @@ public sealed class TimerConfigurationService : BackgroundService, ITimerConfigu
                         ? ParseBrush(item.WarningBrush, FallbackDefaultWarningColor)
                         : defaultWarningBrush;
 
-                    var timerModel = new TimerModel(
+                    var timerModel = new TimerEntity(
                         id: item.Id,
                         title: item.Title,
                         startTime: item.StartTime,

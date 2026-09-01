@@ -6,139 +6,231 @@ using SimurghDashboard.Sensors.Options;
 namespace SimurghDashboard.Sensors.Models;
 
 /// <summary>
-/// Domain entity maintaining separation between identity, options-based configuration, and dynamic telemetry state.
-/// Implements INotifyPropertyChanged for data-binding and view-model synchronization.
+/// Domain model representing sensor identity, threshold configurations, and dynamic telemetry snapshots.
+/// Implements <see cref="INotifyPropertyChanged"/> with optimized field-backing,
+/// value equality guards, and thread-safe frozen brush handling.
 /// </summary>
 public sealed class MeasurableValueEntity : INotifyPropertyChanged
 {
-    private static readonly SolidColorBrush DefaultDigitBrush;
-    private static readonly SolidColorBrush DefaultPlaceholderBrush;
+    #region Constants & Fallbacks
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    private const string DefaultValueFormat = "F1";
+    private const string DefaultFormattedValue = "--";
+
+    private static readonly SolidColorBrush DefaultDigitBrush = (SolidColorBrush)new BrushConverter().ConvertFromInvariantString("#FF7878")!;
+    private static readonly SolidColorBrush DefaultPlaceholderBrush = (SolidColorBrush)new BrushConverter().ConvertFromInvariantString("#2D263238")!;
 
     static MeasurableValueEntity()
     {
-        DefaultDigitBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0x78, 0x78));
-        DefaultDigitBrush.Freeze();
-
-        DefaultPlaceholderBrush = new SolidColorBrush(Color.FromArgb(0x2D, 0x26, 0x32, 0x38));
-        DefaultPlaceholderBrush.Freeze();
+        // Permanently freeze static default singletons for cross-thread access and rendering pipeline performance
+        if (DefaultDigitBrush.CanFreeze) DefaultDigitBrush.Freeze();
+        if (DefaultPlaceholderBrush.CanFreeze) DefaultPlaceholderBrush.Freeze();
     }
 
-    #region 1. Positional Identity
+    #endregion
+
+    #region Backing Fields
+
+    private int _index;
+    private SensorType _type = SensorType.Temperature;
+    private string _unit = string.Empty;
+    private string _valueFormat = DefaultValueFormat;
+    private double? _lowWarningThreshold;
+    private double? _highWarningThreshold;
+    private double? _lowCriticalThreshold;
+    private double? _highCriticalThreshold;
+    private Brush _digitBrush = DefaultDigitBrush;
+    private Brush _placeholderBrush = DefaultPlaceholderBrush;
+
+    private double _realValue;
+    private string _formattedValue = DefaultFormattedValue;
+    private bool _isInWarning;
+    private bool _isInCritical;
+    private DateTimeOffset _lastUpdated = DateTimeOffset.UtcNow;
+
+    #endregion
+
+    #region Events
+
     /// <summary>
-    /// Immutable channel index matching hardware slot / channel offset.
+    /// Occurs when a property value changes.
     /// </summary>
-    public int Index { get; }
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    #endregion
+
+    #region 1. Positional Identity
+
+    /// <summary>
+    /// Channel index matching hardware slot or channel offset.
+    /// </summary>
+    public int Index
+    {
+        get => _index;
+        set => SetProperty(ref _index, value);
+    }
+
     #endregion
 
     #region 2. Configuration State
-    private SensorType _type = SensorType.Temperature;
+
+    /// <summary>
+    /// Sensor category / physical metric classification.
+    /// </summary>
     public SensorType Type
     {
         get => _type;
-        private set => SetField(ref _type, value);
+        set => SetProperty(ref _type, value);
     }
 
-    private string _unit = string.Empty;
+    /// <summary>
+    /// Unit descriptor string for visual display (e.g. °C, %, Pa).
+    /// </summary>
     public string Unit
     {
         get => _unit;
-        private set => SetField(ref _unit, value);
+        set => SetProperty(ref _unit, value);
     }
 
-    private string _valueFormat = "F1";
+    /// <summary>
+    /// Numerical formatting specifier applied to raw telemetry data (e.g. "F1", "F2", "N0").
+    /// </summary>
     public string ValueFormat
     {
         get => _valueFormat;
-        private set => SetField(ref _valueFormat, value);
+        set => SetProperty(ref _valueFormat, value);
     }
 
-    private double? _lowWarningThreshold;
+    /// <summary>
+    /// Lower boundary threshold triggering warning alarm state.
+    /// </summary>
     public double? LowWarningThreshold
     {
         get => _lowWarningThreshold;
-        private set => SetField(ref _lowWarningThreshold, value);
+        set => SetProperty(ref _lowWarningThreshold, value);
     }
 
-    private double? _highWarningThreshold;
+    /// <summary>
+    /// Upper boundary threshold triggering warning alarm state.
+    /// </summary>
     public double? HighWarningThreshold
     {
         get => _highWarningThreshold;
-        private set => SetField(ref _highWarningThreshold, value);
+        set => SetProperty(ref _highWarningThreshold, value);
     }
 
-    private double? _lowCriticalThreshold;
+    /// <summary>
+    /// Lower boundary threshold triggering critical alarm state.
+    /// </summary>
     public double? LowCriticalThreshold
     {
         get => _lowCriticalThreshold;
-        private set => SetField(ref _lowCriticalThreshold, value);
+        set => SetProperty(ref _lowCriticalThreshold, value);
     }
 
-    private double? _highCriticalThreshold;
+    /// <summary>
+    /// Upper boundary threshold triggering critical alarm state.
+    /// </summary>
     public double? HighCriticalThreshold
     {
         get => _highCriticalThreshold;
-        private set => SetField(ref _highCriticalThreshold, value);
+        set => SetProperty(ref _highCriticalThreshold, value);
     }
 
-    private Brush _digitBrush = DefaultDigitBrush;
+    /// <summary>
+    /// Active telemetry digit rendering brush. Ensures frozen state on assignment.
+    /// </summary>
     public Brush DigitBrush
     {
         get => _digitBrush;
-        private set => SetField(ref _digitBrush, value);
+        set
+        {
+            var frozen = FreezeOrFallback(value, DefaultDigitBrush);
+            SetProperty(ref _digitBrush, frozen);
+        }
     }
 
-    private Brush _placeholderBrush = DefaultPlaceholderBrush;
+    /// <summary>
+    /// Inactive placeholder segment rendering brush. Ensures frozen state on assignment.
+    /// </summary>
     public Brush PlaceholderBrush
     {
         get => _placeholderBrush;
-        private set => SetField(ref _placeholderBrush, value);
+        set
+        {
+            var frozen = FreezeOrFallback(value, DefaultPlaceholderBrush);
+            SetProperty(ref _placeholderBrush, frozen);
+        }
     }
+
     #endregion
 
     #region 3. Real-Time Telemetry State
-    private double _realValue;
+
+    /// <summary>
+    /// Raw unformatted numerical telemetry value received from hardware/data stream.
+    /// </summary>
     public double RealValue
     {
         get => _realValue;
-        private set => SetField(ref _realValue, value);
+        set => SetProperty(ref _realValue, value);
     }
 
-    private string _formattedValue = "--";
+    /// <summary>
+    /// Render-ready formatted string representation of the raw value.
+    /// </summary>
     public string FormattedValue
     {
         get => _formattedValue;
-        private set => SetField(ref _formattedValue, value);
+        set => SetProperty(ref _formattedValue, value);
     }
 
-    private bool _isInWarning;
+    /// <summary>
+    /// Indicates whether the active value falls into warning threshold range.
+    /// </summary>
     public bool IsInWarning
     {
         get => _isInWarning;
-        private set => SetField(ref _isInWarning, value);
+        set => SetProperty(ref _isInWarning, value);
     }
 
-    private bool _isInCritical;
+    /// <summary>
+    /// Indicates whether the active value violates critical threshold range.
+    /// </summary>
     public bool IsInCritical
     {
         get => _isInCritical;
-        private set => SetField(ref _isInCritical, value);
+        set => SetProperty(ref _isInCritical, value);
     }
 
-    private DateTimeOffset _lastUpdated;
+    /// <summary>
+    /// UTC timestamp of the most recent telemetry sample update.
+    /// </summary>
     public DateTimeOffset LastUpdated
     {
         get => _lastUpdated;
-        private set => SetField(ref _lastUpdated, value);
+        set => SetProperty(ref _lastUpdated, value);
     }
+
     #endregion
 
+    #region Constructors
+
+    /// <summary>
+    /// Default parameterless constructor for object initializers and deserializers.
+    /// </summary>
+    public MeasurableValueEntity()
+    {
+    }
+
+    /// <summary>
+    /// Parameterized constructor with positional hardware index and optional configuration options.
+    /// </summary>
     public MeasurableValueEntity(int index, MeasurableValueOptions? initialOptions = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
-        Index = index;
-        LastUpdated = DateTimeOffset.UtcNow;
+        _index = index;
+        _lastUpdated = DateTimeOffset.UtcNow;
 
         if (initialOptions is not null)
         {
@@ -147,7 +239,40 @@ public sealed class MeasurableValueEntity : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Performs in-place mutation of configuration parameters directly from MeasurableValueOptions.
+    /// Full parameterized constructor for domain instantiation.
+    /// </summary>
+    public MeasurableValueEntity(
+        int index,
+        SensorType type,
+        string? unit,
+        string? valueFormat = DefaultValueFormat,
+        double? lowWarningThreshold = null,
+        double? highWarningThreshold = null,
+        double? lowCriticalThreshold = null,
+        double? highCriticalThreshold = null,
+        Brush? digitBrush = null,
+        Brush? placeholderBrush = null)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        _index = index;
+        _type = type;
+        _unit = unit ?? string.Empty;
+        _valueFormat = string.IsNullOrWhiteSpace(valueFormat) ? DefaultValueFormat : valueFormat;
+        _lowWarningThreshold = lowWarningThreshold;
+        _highWarningThreshold = highWarningThreshold;
+        _lowCriticalThreshold = lowCriticalThreshold;
+        _highCriticalThreshold = highCriticalThreshold;
+        _digitBrush = FreezeOrFallback(digitBrush, DefaultDigitBrush);
+        _placeholderBrush = FreezeOrFallback(placeholderBrush, DefaultPlaceholderBrush);
+        _lastUpdated = DateTimeOffset.UtcNow;
+    }
+
+    #endregion
+
+    #region Domain Operations
+
+    /// <summary>
+    /// Performs in-place mutation of configuration parameters directly from <see cref="MeasurableValueOptions"/>.
     /// </summary>
     public bool ApplyConfiguration(MeasurableValueOptions options)
     {
@@ -155,7 +280,7 @@ public sealed class MeasurableValueEntity : INotifyPropertyChanged
 
         Type = options.Type;
         Unit = options.Unit ?? string.Empty;
-        ValueFormat = string.IsNullOrWhiteSpace(options.FormattedValue) ? "F1" : options.FormattedValue;
+        ValueFormat = string.IsNullOrWhiteSpace(options.FormattedValue) ? DefaultValueFormat : options.FormattedValue;
         LowWarningThreshold = options.LowWarningThreshold;
         HighWarningThreshold = options.HighWarningThreshold;
         LowCriticalThreshold = options.LowCriticalThreshold;
@@ -181,10 +306,10 @@ public sealed class MeasurableValueEntity : INotifyPropertyChanged
     private void EvaluateState(double value)
     {
         RealValue = value;
-        FormattedValue = double.IsNaN(value) ? "--" : value.ToString(ValueFormat);
+        FormattedValue = double.IsNaN(value) ? DefaultFormattedValue : value.ToString(ValueFormat);
 
-        var isLowCritical = LowCriticalThreshold.HasValue && value <= LowCriticalThreshold.Value;
-        var isHighCritical = HighCriticalThreshold.HasValue && value >= HighCriticalThreshold.Value;
+        var isLowCritical = value <= LowCriticalThreshold;
+        var isHighCritical = value >= HighCriticalThreshold;
         IsInCritical = isLowCritical || isHighCritical;
 
         if (IsInCritical)
@@ -193,12 +318,52 @@ public sealed class MeasurableValueEntity : INotifyPropertyChanged
         }
         else
         {
-            var isLowWarning = LowWarningThreshold.HasValue && value <= LowWarningThreshold.Value;
-            var isHighWarning = HighWarningThreshold.HasValue && value >= HighWarningThreshold.Value;
+            var isLowWarning = value <= LowWarningThreshold;
+            var isHighWarning = value >= HighWarningThreshold;
             IsInWarning = isLowWarning || isHighWarning;
         }
     }
 
+    #endregion
+
+    #region Property Changed Helpers
+
+    /// <summary>
+    /// Compares field value with incoming value, updates field if changed, and raises <see cref="PropertyChanged"/>.
+    /// </summary>
+    /// <typeparam name="T">Type of the target property.</typeparam>
+    /// <param name="field">Reference to the backing field.</param>
+    /// <param name="value">New value to set.</param>
+    /// <param name="propertyName">Auto-populated property name from caller.</param>
+    /// <returns>True if value changed and notification was fired; otherwise false.</returns>
+    private bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+        {
+            return false;
+        }
+
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
+
+    /// <summary>
+    /// Raises the <see cref="PropertyChanged"/> event for binding sync.
+    /// </summary>
+    /// <param name="propertyName">Name of the changed property.</param>
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    /// <summary>
+    /// Parses a hexadecimal color code into a frozen <see cref="Brush"/>, returning fallback on failure.
+    /// </summary>
     private static Brush ParseBrushOrDefault(string? hexColor, Brush fallback)
     {
         if (string.IsNullOrWhiteSpace(hexColor))
@@ -211,7 +376,7 @@ public sealed class MeasurableValueEntity : INotifyPropertyChanged
             if (ColorConverter.ConvertFromString(hexColor) is Color color)
             {
                 var brush = new SolidColorBrush(color);
-                brush.Freeze();
+                if (brush.CanFreeze) brush.Freeze();
                 return brush;
             }
         }
@@ -223,15 +388,27 @@ public sealed class MeasurableValueEntity : INotifyPropertyChanged
         return fallback;
     }
 
-    private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    /// <summary>
+    /// Ensures brushes are frozen and safe across rendering and background worker threads.
+    /// </summary>
+    private static Brush FreezeOrFallback(Brush? brush, Brush fallback)
     {
-        if (EqualityComparer<T>.Default.Equals(field, value))
+        var target = brush ?? fallback;
+
+        if (target.IsFrozen)
         {
-            return false;
+            return target;
         }
 
-        field = value;
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        return true;
+        if (target.CanFreeze)
+        {
+            var cloned = target.Clone();
+            cloned.Freeze();
+            return cloned;
+        }
+
+        return fallback;
     }
+
+    #endregion
 }

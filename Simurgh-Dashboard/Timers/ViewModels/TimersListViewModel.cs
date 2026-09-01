@@ -6,15 +6,15 @@ using SimurghDashboard.Timers.Models;
 
 namespace SimurghDashboard.Timers.ViewModels;
 
-public sealed partial class DigitalTimersListViewModel : ObservableObject, IDisposable
+public sealed partial class TimersListViewModel : ObservableObject, IDisposable
 {
     private readonly ITimerStore _timerStore;
 
     [ObservableProperty]
-    private ImmutableArray<DigitalTimerViewModel> _timers =
-        ImmutableArray<DigitalTimerViewModel>.Empty;
+    private ImmutableArray<TimerViewModel> _timers =
+        ImmutableArray<TimerViewModel>.Empty;
 
-    public DigitalTimersListViewModel(ITimerStore timerStore)
+    public TimersListViewModel(ITimerStore timerStore)
     {
         ArgumentNullException.ThrowIfNull(timerStore);
 
@@ -33,12 +33,12 @@ public sealed partial class DigitalTimersListViewModel : ObservableObject, IDisp
 
     private void RebuildTimers()
     {
-        var builder = ImmutableArray.CreateBuilder<DigitalTimerViewModel>(
-            ((IReadOnlyCollection<TimerModel>)_timerStore).Count);
+        var builder = ImmutableArray.CreateBuilder<TimerViewModel>(
+            ((IReadOnlyCollection<TimerEntity>)_timerStore).Count);
 
         foreach (var timerItem in _timerStore)
         {
-            builder.Add(new DigitalTimerViewModel(timerItem));
+            builder.Add(new TimerViewModel(timerItem));
         }
 
         Timers = builder.MoveToImmutable();

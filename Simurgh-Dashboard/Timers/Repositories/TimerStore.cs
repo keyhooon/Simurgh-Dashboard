@@ -9,14 +9,14 @@ namespace SimurghDashboard.Timers.Repositories;
 /// <summary>
 /// Specialized ObservableCollection implementation that supports bulk inserts without firing redundant collection resets.
 /// </summary>
-public sealed class TimerStore : ObservableCollection<TimerModel>, ITimerStore
+public sealed class TimerStore : ObservableCollection<TimerEntity>, ITimerStore
 {
     private bool _suppressNotification;
 
     /// <summary>
     /// Appends a collection of timer models. Suppresses notifications per item and fires a single Reset notification at completion.
     /// </summary>
-    public void AddRange(IEnumerable<TimerModel> items)
+    public void AddRange(IEnumerable<TimerEntity> items)
     {
         ArgumentNullException.ThrowIfNull(items);
 
@@ -41,7 +41,7 @@ public sealed class TimerStore : ObservableCollection<TimerModel>, ITimerStore
     /// <summary>
     /// Finds a timer item by matching the identifier using strict ordinal comparison.
     /// </summary>
-    public TimerModel? FindById(string id)
+    public TimerEntity? FindById(string id)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -84,7 +84,7 @@ public sealed class TimerStore : ObservableCollection<TimerModel>, ITimerStore
     /// <summary>
     /// Atomically replaces the current collection with the given batch of timers.
     /// </summary>
-    public void Reset(IEnumerable<TimerModel> items)
+    public void Reset(IEnumerable<TimerEntity> items)
     {
         ArgumentNullException.ThrowIfNull(items);
 

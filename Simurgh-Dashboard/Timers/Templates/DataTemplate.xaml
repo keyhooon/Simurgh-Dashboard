@@ -13,21 +13,13 @@
     xmlns:views1="clr-namespace:SimurghDashboard.Sensors.Views"
     xmlns:views2="clr-namespace:SimurghDashboard.RssFeed.Views">
 
-    <!--
-        Implicit DataTemplates (No x:Key):
-        WPF's presentation engine automatically uses these templates whenever it encounters
-        the specified ViewModel type in the visual tree (e.g., assigned to a ContentControl.Content).
-        This forms the backbone of View-Model decoupling in our MVVM architecture.
-    -->
-
-    <!--  ============================================================  -->
-
     <DataTemplate DataType="{x:Type viewmodels:TimerViewModel}">
         <controls1:DigitalTimerControl
             Title="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             Margin="-20"
             HorizontalAlignment="Center"
             VerticalAlignment="Stretch"
+            Action="{Binding CurrentAction, Mode=OneWay}"
             Direction="{Binding Direction, Mode=TwoWay}"
             Id="{Binding Id, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             IsWarning="{Binding IsWarning, Mode=OneWayToSource}"
@@ -41,39 +33,9 @@
             WarningThreshold="{Binding WarningThreshold, Mode=TwoWay}" />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type viewModels:SensorsRootViewModel}">
-        <views1:SensorsRootView VerticalAlignment="Stretch" />
-    </DataTemplate>
-
-
-    <DataTemplate DataType="{x:Type viewmodels1:DigitalClockViewModel}">
-
-        <controls3:DigitalClockControl
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            DateBrush="{Binding DateBrush}"
-            DigitBrush="{Binding DigitBrush}"
-            PlaceholderBrush="{Binding PlaceholderBrush}"
-            ShowSeconds="{Binding ShowSeconds}"
-            WeatherState="{Binding WeatherState}" />
-
-    </DataTemplate>
-
-    <!--
-        =============================================================================
-        NEWLY ADDED TEMPLATES: Mapping the Parent ViewModels to their Collection Views
-        =============================================================================
-    -->
-
     <DataTemplate DataType="{x:Type viewmodels:TimersListViewModel}">
         <views:DigitalTimersListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type viewModels1:TickerViewModel}">
-        <views2:TickerView
-            Height="72"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch" />
-    </DataTemplate>
 
 </ResourceDictionary>

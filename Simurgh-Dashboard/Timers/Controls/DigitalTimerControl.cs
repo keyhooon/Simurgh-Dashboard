@@ -366,6 +366,10 @@ public sealed class DigitalTimerControl : Control
 
     #region Dependency Properties - Identification & Metadata
 
+
+
+
+
     public string Id
     {
         get => (string)GetValue(IdProperty);

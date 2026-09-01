@@ -27,7 +27,7 @@ public partial class MainViewModel : ObservableObject
     private SensorsRootViewModel _digitalSensorsListViewModel;
 
     [ObservableProperty]
-    private DigitalTimersListViewModel _digitalTimersListViewModel;
+    private TimersListViewModel _digitalTimersListViewModel;
 
     [ObservableProperty]
     private TickerViewModel _tickerViewModel;
@@ -73,7 +73,7 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel(
         DigitalClockViewModel clock,
         IOptionsMonitor<KioskDisplayOptions> optionsMonitor,
-        DigitalTimersListViewModel timers,
+        TimersListViewModel timers,
         SensorsRootViewModel sensors,
         TickerViewModel tickerViewModel)
     {

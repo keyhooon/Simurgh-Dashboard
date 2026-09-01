@@ -145,7 +145,7 @@ namespace SimurghDashboard
             // -------------------------------------------------------------------------
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<DigitalClockViewModel>();
-            services.AddSingleton<DigitalTimersListViewModel>();
+            services.AddSingleton<TimersListViewModel>();
 
             services.AddSingleton<TickerViewModel>();
         }
