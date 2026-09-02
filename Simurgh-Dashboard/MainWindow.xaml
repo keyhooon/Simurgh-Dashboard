@@ -22,6 +22,7 @@
                 <ResourceDictionary Source="/SimurghDashboard;component/RssFeed/Templates/DataTemplate.xaml" />
                 <ResourceDictionary Source="/SimurghDashboard;component/Timers/Templates/DataTemplate.xaml" />
                 <ResourceDictionary Source="/SimurghDashboard;component/Sensors/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/SimurghDashboard;component/Patient/Templates/DataTemplate.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
@@ -93,10 +94,17 @@
             ============================================================================
             Renders Anesthesia, Tourniquet, and surgical procedure stopwatches.
         -->
-        <ContentControl
+        <controls:WidgetFrame
             Grid.Row="1"
             Grid.Column="1"
-            Margin="15" />
+            Margin="15"
+            HorizontalAlignment="Stretch"
+            FrameVariant="RoundedSunkenLow">
+            <ContentControl
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Content="{Binding PatientDemographicViewModel}"  />
+        </controls:WidgetFrame>
         <controls:WidgetFrame
             Grid.Row="1"
             Grid.Column="0"

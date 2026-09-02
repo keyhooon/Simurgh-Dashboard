@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Windows.Data;
+﻿using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SimurghDashboard.RssFeed.Contracts;

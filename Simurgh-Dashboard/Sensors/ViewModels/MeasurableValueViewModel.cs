@@ -2,7 +2,6 @@
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using SimurghDashboard.Sensors.Models;
-using SimurghDashboard.Sensors.Options;
 
 namespace SimurghDashboard.Sensors.ViewModels;
 

@@ -10,6 +10,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Sensors\Views\**" />
+    <Compile Remove="Timers\Repositories\**" />
+    <Compile Remove="Timers\Views\**" />
+    <EmbeddedResource Remove="Sensors\Views\**" />
+    <EmbeddedResource Remove="Timers\Repositories\**" />
+    <EmbeddedResource Remove="Timers\Views\**" />
+    <None Remove="Sensors\Views\**" />
+    <None Remove="Timers\Repositories\**" />
+    <None Remove="Timers\Views\**" />
+    <Page Remove="Sensors\Views\**" />
+    <Page Remove="Timers\Repositories\**" />
+    <Page Remove="Timers\Views\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Core\Fonts\dseg7-classic-latin-300-italic.ttf" />
     <None Remove="Core\Fonts\dseg7-classic-latin-300-normal.ttf" />
     <None Remove="Core\Fonts\dseg7-classic-latin-400-italic.ttf" />
@@ -125,12 +140,6 @@
       <Generator></Generator>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Sensors\Views\" />
-    <Folder Include="Timers\Repositories\" />
-    <Folder Include="Timers\Views\" />
   </ItemGroup>
 
 </Project>

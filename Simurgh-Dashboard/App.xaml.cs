@@ -9,10 +9,10 @@ using System.Windows.Threading;
 using SimurghDashboard.Clock.Options;
 using SimurghDashboard.Clock.Services.Weather;
 using SimurghDashboard.Clock.ViewModels;
+using SimurghDashboard.Patient.Services;
 using SimurghDashboard.RssFeed.Services;
 using SimurghDashboard.RssFeed.ViewModels;
 using SimurghDashboard.Sensors.Services;
-using SimurghDashboard.Sensors.ViewModels;
 using SimurghDashboard.Timers.Services;
 using SimurghDashboard.Timers.ViewModels;
 
@@ -134,10 +134,7 @@ namespace SimurghDashboard
             services.AddLocalNotificationService();
             services.AddWeatherServices(configuration);
             services.AddTimerWorkerServices(configuration);
-
-            // -------------------------------------------------------------------------
-            // SENSOR WORKER SERVICES (BackgroundService + Store + Hot-Reload)
-            // -------------------------------------------------------------------------
+            services.AddPatientDemographics(configuration);
             services.AddSensorSubsystem(configuration);
 
             // -------------------------------------------------------------------------

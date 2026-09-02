@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using SimurghDashboard.Timers.Contracts;
 
 namespace SimurghDashboard.Timers.Services;

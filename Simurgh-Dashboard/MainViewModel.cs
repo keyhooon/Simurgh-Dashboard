@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using SimurghDashboard.Clock.ViewModels;
 using SimurghDashboard.Core.Infrastructures.Native;
+using SimurghDashboard.Patient.ViewModels;
 using SimurghDashboard.RssFeed.ViewModels;
 using SimurghDashboard.Sensors.ViewModels;
 using SimurghDashboard.Timers.ViewModels;
@@ -17,9 +18,16 @@ namespace SimurghDashboard;
 /// </summary>
 public partial class MainViewModel : ObservableObject
 {
+
+
     // ========================================================================
     // Sub-System ViewModels (Injected via DI)
     // ========================================================================
+
+    [ObservableProperty] 
+    private PatientDemographicViewModel _patientDemographicViewModel;
+
+
     [ObservableProperty]
     private DigitalClockViewModel _digitalClockViewModel;
 
@@ -75,8 +83,10 @@ public partial class MainViewModel : ObservableObject
         IOptionsMonitor<KioskDisplayOptions> optionsMonitor,
         TimersListViewModel timers,
         SensorsRootViewModel sensors,
-        TickerViewModel tickerViewModel)
+        TickerViewModel tickerViewModel,
+        PatientDemographicViewModel patientDemographicViewModel)
     {
+        _patientDemographicViewModel = patientDemographicViewModel;
         _digitalClockViewModel = clock;
         _digitalTimersListViewModel = timers;
         _digitalSensorsListViewModel = sensors;

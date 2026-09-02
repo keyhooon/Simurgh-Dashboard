@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 using CommunityToolkit.Mvvm.Input;
 using SimurghDashboard.Timers.Contracts;
 using SimurghDashboard.Timers.Controls.Timers;
