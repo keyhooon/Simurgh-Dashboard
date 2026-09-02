@@ -4,7 +4,7 @@
 /// Individual timer persistence model matching appsettings payload.
 /// Supports per-timer custom styling overrides.
 /// </summary>
-public sealed class TimerConfigItem
+public sealed class TimerOptions
 {
     public string Id { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;

@@ -8,13 +8,13 @@ namespace SimurghDashboard.Timers.ViewModels;
 
 public sealed partial class TimersListViewModel : ObservableObject, IDisposable
 {
-    private readonly ITimerStore _timerStore;
+    private readonly ITimersAccessor _timerStore;
 
     [ObservableProperty]
     private ImmutableArray<TimerViewModel> _timers =
         ImmutableArray<TimerViewModel>.Empty;
 
-    public TimersListViewModel(ITimerStore timerStore)
+    public TimersListViewModel(ITimersAccessor timerStore)
     {
         ArgumentNullException.ThrowIfNull(timerStore);
 

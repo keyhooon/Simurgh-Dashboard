@@ -3,23 +3,16 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls1="clr-namespace:SimurghDashboard.Timers.Controls"
-    xmlns:controls2="clr-namespace:SimurghDashboard.Sensors.Controls"
-    xmlns:controls3="clr-namespace:SimurghDashboard.Clock.Controls"
-    xmlns:viewModels="clr-namespace:SimurghDashboard.Sensors.ViewModels"
-    xmlns:viewModels1="clr-namespace:SimurghDashboard.RssFeed.ViewModels"
-    xmlns:viewmodels="clr-namespace:SimurghDashboard.Timers.ViewModels"
-    xmlns:viewmodels1="clr-namespace:SimurghDashboard.Clock.ViewModels"
-    xmlns:views="clr-namespace:SimurghDashboard.Timers.Views"
-    xmlns:views1="clr-namespace:SimurghDashboard.Sensors.Views"
-    xmlns:views2="clr-namespace:SimurghDashboard.RssFeed.Views">
+    xmlns:viewmodels="clr-namespace:SimurghDashboard.Timers.ViewModels">
 
     <DataTemplate DataType="{x:Type viewmodels:TimerViewModel}">
         <controls1:DigitalTimerControl
             Title="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             Margin="-20"
-            HorizontalAlignment="Center"
+            HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             Action="{Binding CurrentAction, Mode=OneWay}"
+            DigitBrush="{Binding DigitBrush, Mode=TwoWay}"
             Direction="{Binding Direction, Mode=TwoWay}"
             Id="{Binding Id, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             IsWarning="{Binding IsWarning, Mode=OneWayToSource}"
@@ -34,7 +27,25 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewmodels:TimersListViewModel}">
-        <views:DigitalTimersListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        <ItemsControl
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            ItemsSource="{Binding Timers}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Orientation="Vertical" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Margin" Value="15" />
+                    <Setter Property="HorizontalAlignment" Value="Stretch" />
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+        </ItemsControl>
     </DataTemplate>
 
 

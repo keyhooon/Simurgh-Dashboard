@@ -1,9 +1,7 @@
 ﻿<Application
     x:Class="SimurghDashboard.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:http="clr-namespace:System.Net.Http;assembly=System.Net.Http"
-    xmlns:simurghDashboard="clr-namespace:SimurghDashboard">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

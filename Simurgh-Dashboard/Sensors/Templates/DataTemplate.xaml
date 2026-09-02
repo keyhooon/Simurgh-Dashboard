@@ -1,0 +1,38 @@
+﻿<!--  1. SimurghDashboard/Resources/DataTemplates.xaml  -->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls2="clr-namespace:SimurghDashboard.Sensors.Controls"
+    xmlns:viewModels="clr-namespace:SimurghDashboard.Sensors.ViewModels">
+
+    <!--  Implicit DataTemplate connecting SensorViewModel directly to the SensorControl  -->
+    <DataTemplate DataType="{x:Type viewModels:SensorViewModel}">
+        <controls2:SensorControl
+            HeaderText="{Binding Title}"
+            IsStateVisible="False"
+            ItemsSource="{Binding MeasurableValues}"
+            SlotIndex="{Binding Index}"
+            State="{Binding State}" />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewModels:SensorsRootViewModel}">
+        <ItemsControl ItemsSource="{Binding Sensors}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Orientation="Vertical" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Margin" Value="-5" />
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+        </ItemsControl>
+    </DataTemplate>
+
+
+</ResourceDictionary>

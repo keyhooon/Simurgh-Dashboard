@@ -45,7 +45,7 @@
         <Setter Property="HeaderIconSize" Value="16" />
 
         <Setter Property="HeaderPadding" Value="14,10" />
-        <Setter Property="ContentPadding" Value="16" />
+        <Setter Property="ContentPadding" Value="10" />
         <Setter Property="FooterPadding" Value="12,8" />
 
         <Setter Property="CornerRadius" Value="5" />
@@ -77,7 +77,7 @@
 
                         <local1:NineSliceBorder
                             x:Name="PART_Frame"
-                            Margin="-15"
+                            Margin="-25"
                             IsHitTestVisible="False"
                             RenderOptions.BitmapScalingMode="Fant"
                             SliceThickness="50,50,50,50"
@@ -145,7 +145,7 @@
 
                             <Border
                                 Grid.Row="1"
-                                Margin="16,0"
+                                Margin="0,0"
                                 Padding="{TemplateBinding ContentPadding}"
                                 Background="Transparent">
 

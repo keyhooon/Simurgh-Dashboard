@@ -4,7 +4,7 @@
 /// Root configuration schema mapped directly from appsettings.json.
 /// Includes global defaults for brushes and timing properties.
 /// </summary>
-public sealed class TimerSettingsOptions
+public sealed class TimersOptions
 {
     public const string SectionName = "TimerSettings";
 
@@ -16,5 +16,5 @@ public sealed class TimerSettingsOptions
     public string DefaultPlaceholderBrush { get; set; } = "#3300E5FF";
     public string DefaultWarningBrush { get; set; } = "#FF1744";
 
-    public List<TimerConfigItem> Timers { get; set; } = [];
+    public List<TimerOptions> Timers { get; set; } = [];
 }

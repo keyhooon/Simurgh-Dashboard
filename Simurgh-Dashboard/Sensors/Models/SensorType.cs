@@ -1,184 +1,142 @@
 ﻿using System.ComponentModel;
-using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 
 namespace SimurghDashboard.Sensors.Models;
 
 /// <summary>
-/// Categorizes telemetry sensors, hardware peripherals, environmental probes,
-/// and medical-grade monitoring instrumentation across the system.
+/// Defines the complete telemetry transducer and biomedical sensor taxonomy.
+/// Encoded as an unsigned 16-bit integer (ushort) partitioned into deterministic clinical and physical sub-domains.
 /// </summary>
-[DataContract]
-[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum SensorType : ushort
 {
-    /// <summary>
-    /// Unspecified or uninitialized sensor category.
-    /// </summary>
-    [EnumMember(Value = "Unknown")]
-    [Description("Unknown")]
+    // =========================================================================
+    // 0x0000 - 0x00FF: SYSTEM & GENERIC TRANSDUCERS (0 - 255)
+    // =========================================================================
+
+    [Description("Unknown / Unmapped Sensor")]
     Unknown = 0,
 
-    // ==========================================
-    // Environmental & Climate Telemetry
-    // ==========================================
+    [Description("Generic Transducer")]
+    Generic = 1,
 
-    /// <summary>
-    /// Ambient or surface temperature sensor (Celsius/Fahrenheit/Kelvin).
-    /// </summary>
-    [EnumMember(Value = "Temperature")]
-    [Description("Temperature Sensor")]
+    // =========================================================================
+    // 0x0100 - 0x01FF: ENVIRONMENTAL & HVAC CLIMATE TELEMETRY (100 - 199)
+    // =========================================================================
+
+    [Description("Ambient Temperature (ISO 7000-0534)")]
     Temperature = 100,
 
-    /// <summary>
-    /// Relative humidity (RH%) sensor.
-    /// </summary>
-    [EnumMember(Value = "Humidity")]
-    [Description("Humidity Sensor")]
+    [Description("Relative Humidity")]
     Humidity = 101,
 
-    /// <summary>
-    /// Atmospheric or enclosed room differential pressure transducer.
-    /// </summary>
-    [EnumMember(Value = "Pressure")]
-    [Description("Pressure Transducer")]
+    [Description("Atmospheric / Differential Static Pressure (ISO 7000-1141)")]
     Pressure = 102,
 
-    /// <summary>
-    /// Ambient light, lux level, or ultraviolet radiation monitor.
-    /// </summary>
-    [EnumMember(Value = "Illuminance")]
-    [Description("Illuminance / Light Sensor")]
+    [Description("Ambient / Surgical Illuminance Lux")]
     Illuminance = 103,
 
-    /// <summary>
-    /// Total Volatile Organic Compounds (TVOC) and indoor air quality (IAQ) index probe.
-    /// </summary>
-    [EnumMember(Value = "AirQuality")]
-    [Description("Air Quality / IAQ Sensor")]
+    [Description("HVAC Air Cleanliness / Particle Count (ISO 14644)")]
     AirQuality = 104,
 
-    /// <summary>
-    /// Carbon Dioxide (CO2) NDIR concentration monitor.
-    /// </summary>
-    [EnumMember(Value = "CarbonDioxide")]
-    [Description("CO2 Sensor")]
+    [Description("NDIR Carbon Dioxide Gas (CO2)")]
     CarbonDioxide = 105,
 
-    // ==========================================
-    // Medical & Life-Support Instrumentation
-    // ==========================================
+    [Description("Volatile Organic Compounds (VOC)")]
+    TotalVolatileOrganicCompounds = 106,
 
-    /// <summary>
-    /// Pulse oximeter photoplethysmogram measuring oxygen saturation (SpO2).
-    /// </summary>
-    [EnumMember(Value = "PulseOximetry")]
-    [Description("Pulse Oximetry (SpO2)")]
+    [Description("Differential Room Overpressure / Cascade Barrier")]
+    DifferentialPressure = 107,
+
+    // =========================================================================
+    // 0x0200 - 0x02FF: MEDICAL, LIFE-SUPPORT & PHYSIOLOGICAL (200 - 299)
+    // (IEC 60601-1-8 / ISO 80601 / IEC TR 60878)
+    // =========================================================================
+
+    [Description("Pulse Oximetry Plethysmograph (SpO2 - ISO 80601-2-61)")]
     PulseOximetry = 200,
 
-    /// <summary>
-    /// Electrocardiogram (ECG) telemetry lead sensor for cardiac electrical activity.
-    /// </summary>
-    [EnumMember(Value = "Ecg")]
-    [Description("Electrocardiogram (ECG)")]
+    [Description("Electrocardiogram Diagnostic Lead (ECG - IEC 60601-2-27)")]
     Ecg = 201,
 
-    /// <summary>
-    /// Invasive or non-invasive arterial blood pressure transducer.
-    /// </summary>
-    [EnumMember(Value = "BloodPressure")]
-    [Description("Blood Pressure Sensor")]
+    [Description("Non-Invasive Blood Pressure (NIBP - ISO 7000-2443)")]
     BloodPressure = 202,
 
-    /// <summary>
-    /// Capnography infrared absorption sensor measuring end-tidal CO2 (EtCO2).
-    /// </summary>
-    [EnumMember(Value = "Capnography")]
-    [Description("Capnography (EtCO2)")]
+    [Description("Expired Carbon Dioxide Capnography (EtCO2 - ISO 80601-2-55)")]
     Capnography = 203,
 
-    /// <summary>
-    /// Medical gas supply line pressure monitor (Oxygen, Nitrous Oxide, Vacuum, Medical Air).
-    /// </summary>
-    [EnumMember(Value = "MedicalGasPressure")]
-    [Description("Medical Gas Pressure")]
+    [Description("Medical Gas Pipeline Supply Pressure (ISO 7396-1)")]
     MedicalGasPressure = 204,
 
-    /// <summary>
-    /// Anesthetic agent analyzer for volatile vapor detection and concentration monitoring.
-    /// </summary>
-    [EnumMember(Value = "AnestheticAgent")]
-    [Description("Anesthetic Agent Analyzer")]
+    [Description("Anesthetic Agent Vaporizer Concentration (ISO 80601-2-13)")]
     AnestheticAgent = 205,
 
-    // ==========================================
-    // Kinematic, Spatial & Physical Transducers
-    // ==========================================
+    [Description("Medical Oxygen Delivery (O2)")]
+    MedicalGasO2 = 206,
 
-    /// <summary>
-    /// Passive Infrared (PIR) or microwave Doppler occupancy and presence detector.
-    /// </summary>
-    [EnumMember(Value = "Presence")]
-    [Description("Presence / Motion Detector")]
+    [Description("Carbon Monoxide Gas (CO)")]
+    MedicalGasCO = 207,
+
+    [Description("Instrument Air / High Pressure (10 BAR)")]
+    MedicalGas10Bar = 208,
+
+    [Description("Nitrous Oxide Anaesthetic Gas (N2O)")]
+    MedicalGasN2O = 209,
+
+    [Description("Medical Vacuum / Suction Pipeline (ISO 7396-1)")]
+    MedicalVacuum = 210,
+
+    // =========================================================================
+    // 0x0300 - 0x03FF: KINEMATIC, SPATIAL & FLUID DYNAMICS (300 - 399)
+    // =========================================================================
+
+    [Description("Passive Infrared Presence / Motion")]
     Presence = 300,
 
-    /// <summary>
-    /// 3-Axis accelerometer and vibration monitor for mechanical resonance and stability.
-    /// </summary>
-    [EnumMember(Value = "Vibration")]
-    [Description("Vibration / Accelerometer")]
+    [Description("3-Axis Harmonic Vibration / Accelerometer")]
     Vibration = 301,
 
-    /// <summary>
-    /// Optical or magnetic rotary/linear position encoder.
-    /// </summary>
-    [EnumMember(Value = "PositionEncoder")]
-    [Description("Position / Displacement Encoder")]
+    [Description("Rotary / Optical Position Encoder")]
     PositionEncoder = 302,
 
-    /// <summary>
-    /// Strain gauge load cell measuring weight, tension, or mechanical force.
-    /// </summary>
-    [EnumMember(Value = "LoadCell")]
-    [Description("Load Cell / Force Transducer")]
+    [Description("Strain Gauge Force / Load Cell")]
     LoadCell = 303,
 
-    /// <summary>
-    /// Magnetic hall-effect or optical proximity limit switch for gantry/door closure.
-    /// </summary>
-    [EnumMember(Value = "Proximity")]
-    [Description("Proximity / Limit Switch")]
+    [Description("Inductive / Optical Limit Proximity Sensor")]
     Proximity = 304,
 
-    // ==========================================
-    // Electrical, Power & Thermal Diagnostics
-    // ==========================================
+    [Description("Volumetric / Mass Flow Rate Transducer (ISO 5167)")]
+    FlowRate = 305,
 
-    /// <summary>
-    /// Voltage monitoring probe (AC mains or DC rail telemetry).
-    /// </summary>
-    [EnumMember(Value = "Voltage")]
-    [Description("Voltage Telemetry")]
+    // =========================================================================
+    // 0x0400 - 0x04FF: ELECTRICAL POWER & MEDICAL SAFETY DIAGNOSTICS (400 - 499)
+    // (IEC 60417 / IEC 62353 / IEC 60601-1)
+    // =========================================================================
+
+    [Description("AC/DC Voltage Hazard (IEC 60417-5036)")]
     Voltage = 400,
 
-    /// <summary>
-    /// Current shunt or Hall-effect current transducer (Amperage telemetry).
-    /// </summary>
-    [EnumMember(Value = "Current")]
-    [Description("Current Telemetry")]
+    [Description("Primary / Secondary Load Current")]
     Current = 401,
 
-    /// <summary>
-    /// Active, reactive, or apparent power / energy consumption meter (Watts/Joules).
-    /// </summary>
-    [EnumMember(Value = "Power")]
-    [Description("Power / Energy Meter")]
+    [Description("Active / Apparent Electric Power")]
     Power = 402,
 
-    /// <summary>
-    /// Radiation dosimetry ionization chamber or solid-state detector (e.g., LINAC telemetry).
-    /// </summary>
-    [EnumMember(Value = "RadiationDosimetry")]
-    [Description("Radiation Dosimeter")]
-    RadiationDosimetry = 500
+    [Description("Medical Earth / Enclosure / Patient Leakage Current (IEC 62353)")]
+    LeakageCurrent = 403,
+
+    [Description("Dielectric Barrier Insulation Resistance Megohmmeter (IEC 60601-1)")]
+    InsulationResistance = 404,
+
+    [Description("Line Isolation Monitor (LIM / Isolated Power System IT-Network)")]
+    LineIsolationMonitor = 405,
+
+    // =========================================================================
+    // 0x0500 - 0x05FF: IONIZING RADIATION & NUCLEAR MEDICINE (500 - 599)
+    // (ISO 361 / ISO 7010-W003)
+    // =========================================================================
+
+    [Description("Ionizing Radiation Dosimetry Rate (ISO 361)")]
+    RadiationDosimetry = 500,
+
+    [Description("Dose Area Product Meter (DAP / Kerma-Area Product)")]
+    DoseAreaProduct = 501
 }

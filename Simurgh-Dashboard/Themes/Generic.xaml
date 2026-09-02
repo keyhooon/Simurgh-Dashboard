@@ -12,5 +12,6 @@
         <ResourceDictionary Source="/SimurghDashboard;component/Clock/Themes/WeatherBadgeControl.xaml" />
         <ResourceDictionary Source="/SimurghDashboard;component/Sensors/Themes/MeasurableValueControl.xaml" />
         <ResourceDictionary Source="/SimurghDashboard;component/Sensors/Themes/SensorControl.xaml" />
+        <ResourceDictionary Source="/SimurghDashboard;component/RssFeed/Themes/TickerTemplates.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

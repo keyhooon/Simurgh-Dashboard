@@ -12,7 +12,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/DataTemplates/TickerTemplates.xaml" />
+                <ResourceDictionary Source="/RssFeed/Themes/TickerTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -28,7 +28,7 @@
 
         <controls1:DrawingMarqueeControl
             Height="42"
-            Margin="5"
+            Margin="15"
             DefaultItemBackground="#CC000000"
             Direction="LeftToRight"
             FontFamily="b titr"

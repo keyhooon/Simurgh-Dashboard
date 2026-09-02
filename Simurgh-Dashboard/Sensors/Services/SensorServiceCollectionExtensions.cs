@@ -42,10 +42,6 @@ public static class SensorServiceCollectionExtensions
         // 2. Core Accessor Layer (Thread-Safe Single Instance)
         services.TryAddSingleton<ISensorAccessor, SensorAccessor>();
 
-        // 3. Operational Ingestion Service & Background Workers
-        services.TryAddSingleton<ISensorService, SensorService>();
-        services.AddHostedService(sp => (SensorService)sp.GetRequiredService<ISensorService>());
-
         // 4. MVVM Presentation Layer
         // Root ViewModel as Singleton for primary dashboard life-cycle
         services.TryAddSingleton<SensorsRootViewModel>();
@@ -79,9 +75,6 @@ public static class SensorServiceCollectionExtensions
         // 2. Core Accessor Layer
         services.TryAddSingleton<ISensorAccessor, SensorAccessor>();
 
-        // 3. Operational Ingestion Service & Background Workers
-        services.TryAddSingleton<ISensorService, SensorService>();
-        services.AddHostedService(sp => (SensorService)sp.GetRequiredService<ISensorService>());
 
         // 4. MVVM Presentation Layer
         services.TryAddSingleton<SensorsRootViewModel>();

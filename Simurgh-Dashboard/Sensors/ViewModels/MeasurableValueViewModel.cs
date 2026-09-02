@@ -63,6 +63,9 @@ public sealed partial class MeasurableValueViewModel : ObservableObject, IDispos
     private int _index;
 
     [ObservableProperty]
+    private string _label = string.Empty;
+
+    [ObservableProperty]
     private SensorType _type = SensorType.Temperature;
 
     [ObservableProperty]
@@ -146,6 +149,12 @@ public sealed partial class MeasurableValueViewModel : ObservableObject, IDispos
     {
         if (!_isSyncingFromModel && _model.Index != value)
             _model.Index = value;
+    }
+
+    partial void OnLabelChanged(string value)
+    {
+        if (!_isSyncingFromModel && _model.Label != value)
+            _model.Label = value;
     }
 
     partial void OnTypeChanged(SensorType value)
@@ -261,6 +270,9 @@ public sealed partial class MeasurableValueViewModel : ObservableObject, IDispos
                 case nameof(MeasurableValueEntity.Index):
                     Index = _model.Index;
                     break;
+                case nameof(MeasurableValueEntity.Label):
+                    Label = _model.Label;
+                    break;
                 case nameof(MeasurableValueEntity.Type):
                     Type = _model.Type;
                     break;
@@ -333,6 +345,7 @@ public sealed partial class MeasurableValueViewModel : ObservableObject, IDispos
         try
         {
             Index = _model.Index;
+            Label = _model.Label;
             Type = _model.Type;
             Unit = _model.Unit;
             ValueFormat = _model.ValueFormat;

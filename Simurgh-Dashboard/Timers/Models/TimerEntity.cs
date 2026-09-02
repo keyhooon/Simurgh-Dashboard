@@ -1,7 +1,8 @@
-﻿using System.ComponentModel;
+﻿using SimurghDashboard.Timers.Controls.Timers;
+using SimurghDashboard.Timers.Options;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
-using SimurghDashboard.Timers.Controls.Timers;
 
 namespace SimurghDashboard.Timers.Models;
 
@@ -18,6 +19,7 @@ public sealed class TimerEntity : INotifyPropertyChanged
     private static readonly SolidColorBrush DefaultDigitBrush = (SolidColorBrush)new BrushConverter().ConvertFromInvariantString("#00E5FF")!;
     private static readonly SolidColorBrush DefaultPlaceholderBrush = (SolidColorBrush)new BrushConverter().ConvertFromInvariantString("#1A2634")!;
     private static readonly SolidColorBrush DefaultWarningBrush = (SolidColorBrush)new BrushConverter().ConvertFromInvariantString("#FF1744")!;
+    private static readonly BrushConverter SharedBrushConverter = new BrushConverter();
 
     static TimerEntity()
     {
@@ -209,6 +211,16 @@ public sealed class TimerEntity : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Initializes a new instance of the TimerEntity class based on a configuration payload.
+    /// </summary>
+    /// <param name="options">The deserialized configuration options.</param>
+    public TimerEntity(TimerOptions options)
+    {
+        ApplyConfiguration(options);
+    }
+
+
+    /// <summary>
     /// Full parameterized constructor for domain instantiation.
     /// </summary>
     public TimerEntity(
@@ -236,6 +248,50 @@ public sealed class TimerEntity : INotifyPropertyChanged
         _digitBrush = FreezeOrFallback(digitBrush, DefaultDigitBrush);
         _placeholderBrush = FreezeOrFallback(placeholderBrush, DefaultPlaceholderBrush);
         _warningBrush = FreezeOrFallback(warningBrush, DefaultWarningBrush);
+    }
+
+    #endregion
+
+
+    #region Configuration Synchronization
+
+    /// <summary>
+    /// Synchronizes domain properties with an incoming options payload.
+    /// Executes in-place property mutations to maintain WPF/MVVM binding references.
+    /// Safely parses strings to target domain enumerations and frozen brushes.
+    /// </summary>
+    /// <param name="options">Incoming configuration payload.</param>
+    public void ApplyConfiguration(TimerOptions? options)
+    {
+        if (options is null)
+        {
+            return;
+        }
+
+        Id = string.IsNullOrWhiteSpace(options.Id) ? Guid.NewGuid().ToString("N") : options.Id;
+        Title = options.Title ?? string.Empty;
+        StartTime = options.StartTime;
+        TargetTime = options.TargetTime;
+
+        // Gracefully handle direction parsing with a fallback to CountDown (as specified in TimerOptions default)
+        if (Enum.TryParse<TimerDirection>(options.Direction, ignoreCase: true, out var parsedDirection))
+        {
+            Direction = parsedDirection;
+        }
+
+        WarningThreshold = options.WarningThresholdSeconds > 0
+            ? TimeSpan.FromSeconds(options.WarningThresholdSeconds)
+            : DefaultWarningThreshold;
+
+        if (options.ShowSeconds.HasValue)
+        {
+            ShowSeconds = options.ShowSeconds.Value;
+        }
+
+        // Parse and apply brushes safely. The property setters automatically handle FreezeOrFallback.
+        DigitBrush = TryParseBrush(options.DigitBrush, DigitBrush);
+        PlaceholderBrush = TryParseBrush(options.PlaceholderBrush, PlaceholderBrush);
+        WarningBrush = TryParseBrush(options.WarningBrush, WarningBrush);
     }
 
     #endregion
@@ -274,6 +330,37 @@ public sealed class TimerEntity : INotifyPropertyChanged
     #endregion
 
     #region Helper Methods
+
+
+    /// <summary>
+    /// Attempts to parse a hex string into a SolidColorBrush. Returns fallback if parsing fails.
+    /// </summary>
+    private static Brush TryParseBrush(string? hexCode, Brush currentFallback)
+    {
+        if (string.IsNullOrWhiteSpace(hexCode))
+        {
+            return currentFallback;
+        }
+
+        try
+        {
+            if (SharedBrushConverter.ConvertFromInvariantString(hexCode) is Brush parsedBrush)
+            {
+                return parsedBrush;
+            }
+        }
+        catch (FormatException)
+        {
+            // Swallow invalid hex formats and retain the existing brush state to prevent application crashes
+        }
+        catch (NotSupportedException)
+        {
+            // Swallow unsupported conversions
+        }
+
+        return currentFallback;
+    }
+
 
     /// <summary>
     /// Ensures brushes are frozen and safe across rendering and background worker threads.

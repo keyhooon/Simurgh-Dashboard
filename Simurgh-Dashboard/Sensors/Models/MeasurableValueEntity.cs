@@ -32,6 +32,7 @@ public sealed class MeasurableValueEntity : INotifyPropertyChanged
     #region Backing Fields
 
     private int _index;
+    private string _label;
     private SensorType _type = SensorType.Temperature;
     private string _unit = string.Empty;
     private string _valueFormat = DefaultValueFormat;
@@ -70,9 +71,17 @@ public sealed class MeasurableValueEntity : INotifyPropertyChanged
         set => SetProperty(ref _index, value);
     }
 
+
     #endregion
 
     #region 2. Configuration State
+
+    public string Label
+    {
+        get => _label;
+        set => SetProperty(ref _label, value);
+    }
+
 
     /// <summary>
     /// Sensor category / physical metric classification.
@@ -211,6 +220,8 @@ public sealed class MeasurableValueEntity : INotifyPropertyChanged
         get => _lastUpdated;
         set => SetProperty(ref _lastUpdated, value);
     }
+
+
 
     #endregion
 

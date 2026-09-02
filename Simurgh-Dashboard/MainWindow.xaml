@@ -18,9 +18,10 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/SimurghDashboard;component/DataTemplates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/SimurghDashboard;component/Clock/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/SimurghDashboard;component/RssFeed/Templates/DataTemplate.xaml" />
                 <ResourceDictionary Source="/SimurghDashboard;component/Timers/Templates/DataTemplate.xaml" />
-
+                <ResourceDictionary Source="/SimurghDashboard;component/Sensors/Templates/DataTemplate.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
@@ -49,10 +50,10 @@
         A multi-column proportional grid ensuring responsive scaling across high-DPI
         and standard medical grade panels.
     -->
-    <Grid Margin="5">
+    <Grid>
         <Grid.ColumnDefinitions>
             <!--  Left main content area (Timers)  -->
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="2*" />
             <!--  Center gutter  -->
             <ColumnDefinition Width="1*" />
 
@@ -62,6 +63,7 @@
             <!--  Top Header (Clock/Weather/OR Metadata)  -->
             <RowDefinition Height="Auto" />
             <!--  Middle Body (Operational Timers and Real-time Sensors)  -->
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <!--  Bottom Footer (Medical News RSS Ticker)  -->
             <RowDefinition Height="Auto" />
@@ -77,7 +79,7 @@
             Grid.Row="0"
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            HorizontalAlignment="Center"
+            Margin="15"
             FrameVariant="RoundedSunkenLow">
             <ContentControl
                 HorizontalAlignment="Stretch"
@@ -93,20 +95,35 @@
         -->
         <ContentControl
             Grid.Row="1"
+            Grid.Column="1"
+            Margin="15" />
+        <controls:WidgetFrame
+            Grid.Row="1"
             Grid.Column="0"
-            Content="{Binding DigitalTimersListViewModel}" />
-
+            Margin="15"
+            HorizontalAlignment="Stretch"
+            FrameVariant="RoundedSunkenLow">
+            <ContentControl
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Content="{Binding DigitalTimersListViewModel}" />
+        </controls:WidgetFrame>
         <!--
             ============================================================================
             3. DIGITAL SENSORS TELEMETRY LIST (Middle Right)
             ============================================================================
             Ingests and displays environmental, medical gas, and OR hardware parameters.
         -->
-        <ContentControl
-            Grid.Row="1"
-            Grid.Column="1"
-            VerticalAlignment="Stretch"
-            Content="{Binding DigitalSensorsListViewModel}" />
+        <controls:WidgetFrame
+            Grid.Row="2"
+            Grid.ColumnSpan="2"
+            Margin="15"
+            VerticalAlignment="Stretch">
+            <ContentControl
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Content="{Binding DigitalSensorsListViewModel}" />
+        </controls:WidgetFrame>
 
         <!--
             ============================================================================
@@ -115,9 +132,10 @@
             Spans all 5 columns for marquee broadcasts and medical RSS alerts.
         -->
         <controls:WidgetFrame
-            Grid.Row="2"
+            Grid.Row="3"
             Grid.Column="0"
             Grid.ColumnSpan="2"
+            Margin="15"
             FrameVariant="RoundedSunkenLow">
             <ContentControl Content="{Binding TickerViewModel}" />
         </controls:WidgetFrame>

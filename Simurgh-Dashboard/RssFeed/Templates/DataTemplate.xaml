@@ -1,0 +1,17 @@
+﻿<!--  1. SimurghDashboard/Resources/DataTemplates.xaml  -->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:viewModels1="clr-namespace:SimurghDashboard.RssFeed.ViewModels"
+    xmlns:views2="clr-namespace:SimurghDashboard.RssFeed.Views">
+
+
+
+    <DataTemplate DataType="{x:Type viewModels1:TickerViewModel}">
+        <views2:TickerView
+            Height="72"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch" />
+    </DataTemplate>
+
+</ResourceDictionary>

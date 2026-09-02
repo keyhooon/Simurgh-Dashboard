@@ -9,18 +9,18 @@ using SimurghDashboard.Timers.Models;
 namespace SimurghDashboard.Timers.Services
 {
     /// <summary>
-    /// Service orchestrating and dispatching commands across timer entities managed within <see cref="ITimerStore"/>.
+    /// Service orchestrating and dispatching commands across timer entities managed within <see cref="ITimersAccessor"/>.
     /// Maintains pause snapshots and configured durations per timer ID to handle timeline shifts and resets.
     /// </summary>
-    public class TimerControllerService
+    public class TimerControllerService :ITimerControllerService
     {
-        private readonly ITimerStore _timerStore;
+        private readonly ITimersAccessor _timerStore;
 
         // Thread-safe tracking of pause snapshots and base durations keyed by Timer Id
         private readonly ConcurrentDictionary<int, DateTime> _pauseTimestamps = new();
         private readonly ConcurrentDictionary<int, TimeSpan> _configuredDurations = new();
 
-        public TimerControllerService(ITimerStore timerStore)
+        public TimerControllerService(ITimersAccessor timerStore)
         {
             _timerStore = timerStore ?? throw new ArgumentNullException(nameof(timerStore));
 

@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SimurghDashboard.Timers.Contracts;
 using SimurghDashboard.Timers.Options;
-using SimurghDashboard.Timers.Repositories;
 
 namespace SimurghDashboard.Timers.Services;
 
@@ -25,21 +24,14 @@ public static class TimerServiceCollectionExtensions
         IConfiguration configuration)
     {
         // Bind and enable dynamic change tracking (hot-reloading) via IOptionsMonitor<TimerSettingsOptions>
-        services.Configure<TimerSettingsOptions>(
-            configuration.GetSection(TimerSettingsOptions.SectionName));
-
-        // Register the singleton implementation instance
-        services.AddSingleton<TimerConfigurationService>();
+        services.Configure<TimersOptions>(
+            configuration.GetSection(TimersOptions.SectionName));
 
 
-        services.AddSingleton<ITimerStore, TimerStore>();
+        services.AddSingleton<ITimersAccessor, TimersAccessor>();
+        services.AddSingleton<ITimerControllerService, TimerControllerService>();
         // Expose ITimerConfigurationService resolved directly from the singleton instance
-        services.AddSingleton<ITimerConfigurationService>(sp =>
-            sp.GetRequiredService<TimerConfigurationService>());
 
-        // Register the same singleton instance as a long-running Hosted/Worker Service in the Host pipeline
-        services.AddHostedService(sp =>
-            sp.GetRequiredService<TimerConfigurationService>());
 
         return services;
     }

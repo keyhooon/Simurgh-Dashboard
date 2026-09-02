@@ -510,6 +510,23 @@ public sealed class DigitalTimerControl : Control
                 FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                 OnStateChangedCallback));
 
+    public bool IsStateVisible
+    {
+        get => (bool)GetValue(IsStateVisibleProperty);
+        set => SetValue(IsStateVisibleProperty, value);
+    }
+
+    public static readonly DependencyProperty IsStateVisibleProperty =
+        DependencyProperty.Register(
+            nameof(IsStateVisible),
+            typeof(bool),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(
+                false,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                OnStateChangedCallback));
+
+
     public string TimeText
     {
         get => (string)GetValue(TimeTextProperty);

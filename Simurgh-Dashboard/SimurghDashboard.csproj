@@ -128,7 +128,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="RssFeed\Themes\" />
+    <Folder Include="Sensors\Views\" />
+    <Folder Include="Timers\Repositories\" />
+    <Folder Include="Timers\Views\" />
   </ItemGroup>
 
 </Project>

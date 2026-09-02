@@ -107,6 +107,23 @@ public class SensorControl : Control
         set => SetValue(ItemTemplateSelectorProperty, value);
     }
 
+    public static readonly DependencyProperty IsStateVisibleProperty =
+        DependencyProperty.Register(
+            nameof(IsStateVisible),
+            typeof(bool),
+            typeof(SensorControl),
+            new PropertyMetadata(true));
+
+    /// <summary>
+    /// Gets or sets whether the bottom operational state footer is visible.
+    /// Default is true.
+    /// </summary>
+    public bool IsStateVisible
+    {
+        get => (bool)GetValue(IsStateVisibleProperty);
+        set => SetValue(IsStateVisibleProperty, value);
+    }
+
     public static readonly DependencyProperty ItemsPanelProperty =
         DependencyProperty.Register(
             nameof(ItemsPanel),
