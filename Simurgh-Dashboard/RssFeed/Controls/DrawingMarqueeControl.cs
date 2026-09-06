@@ -335,18 +335,12 @@ public class DrawingMarqueeControl : FrameworkElement
             ? 0
             : availableSize.Width;
 
-        Log(
-            $"MeasureOverride | Available={availableSize.Width:F1}x{availableSize.Height:F1}, " +
-            $"Desired={desiredWidth:F1}x{desiredHeight:F1}");
 
         return new Size(desiredWidth, desiredHeight);
     }
 
     protected override Size ArrangeOverride(Size finalSize)
     {
-        Log(
-            $"ArrangeOverride | Final={finalSize.Width:F1}x{finalSize.Height:F1}, " +
-            $"Actual={ActualWidth:F1}x{ActualHeight:F1}, Dirty={_layoutDirty}");
 
         RebuildDrawingIfRequired();
 
@@ -361,9 +355,6 @@ public class DrawingMarqueeControl : FrameworkElement
     {
         _isLoaded = true;
 
-        Log(
-            $"Loaded | Actual={ActualWidth:F1}x{ActualHeight:F1}, " +
-            $"Visible={IsVisible}, ItemsSource={ItemsSource?.GetType().FullName ?? "<null>"}");
 
         AttachCollection(ItemsSource);
         MarkLayoutDirty();
@@ -372,7 +363,6 @@ public class DrawingMarqueeControl : FrameworkElement
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        Log("Unloaded");
 
         _isLoaded = false;
 
@@ -382,11 +372,8 @@ public class DrawingMarqueeControl : FrameworkElement
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        Log(
-            $"SizeChanged | Previous={e.PreviousSize.Width:F1}x{e.PreviousSize.Height:F1}, " +
-            $"New={e.NewSize.Width:F1}x{e.NewSize.Height:F1}");
 
-        if (!e.WidthChanged && !e.HeightChanged)
+        if (e is { WidthChanged: false, HeightChanged: false })
         {
             return;
         }
@@ -396,7 +383,6 @@ public class DrawingMarqueeControl : FrameworkElement
 
     private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        Log($"IsVisibleChanged | Old={e.OldValue}, New={e.NewValue}");
 
         _lastFrameTime = TimeSpan.Zero;
         RefreshRenderingSubscription();
@@ -412,9 +398,6 @@ public class DrawingMarqueeControl : FrameworkElement
     {
         var control = (DrawingMarqueeControl)d;
 
-        control.Log(
-            $"VisualPropertyChanged | Property={e.Property.Name}, " +
-            $"Old={e.OldValue ?? "<null>"}, New={e.NewValue ?? "<null>"}");
 
         if (e.Property == ItemsSourceProperty)
         {
@@ -491,16 +474,12 @@ public class DrawingMarqueeControl : FrameworkElement
     {
         if (source is not INotifyCollectionChanged collection)
         {
-            Log(
-                $"AttachCollection skipped | Source={source?.GetType().FullName ?? "<null>"}, " +
-                $"ImplementsINotifyCollectionChanged=False");
 
             return;
         }
 
         if (ReferenceEquals(_observedCollection, collection))
         {
-            Log("AttachCollection skipped | Already attached");
             return;
         }
 
@@ -509,7 +488,6 @@ public class DrawingMarqueeControl : FrameworkElement
         _observedCollection = collection;
         _observedCollection.CollectionChanged += OnCollectionChanged;
 
-        Log($"Collection attached | Type={source?.GetType().FullName}");
     }
 
     private void DetachCollection()
@@ -522,21 +500,15 @@ public class DrawingMarqueeControl : FrameworkElement
         _observedCollection.CollectionChanged -= OnCollectionChanged;
         _observedCollection = null;
 
-        Log("Collection detached");
     }
 
     private void OnCollectionChanged(
         object? sender,
         NotifyCollectionChangedEventArgs e)
     {
-        Log(
-            $"CollectionChanged | Action={e.Action}, " +
-            $"NewItems={e.NewItems?.Count ?? 0}, OldItems={e.OldItems?.Count ?? 0}, " +
-            $"Thread={Environment.CurrentManagedThreadId}");
 
         if (!Dispatcher.CheckAccess())
         {
-            Log("CollectionChanged marshaled to Dispatcher");
 
             Dispatcher.BeginInvoke(
                 new Action(() => OnCollectionChanged(sender, e)));
@@ -555,7 +527,6 @@ public class DrawingMarqueeControl : FrameworkElement
     {
         _layoutDirty = true;
 
-        Log("Layout marked dirty");
 
         InvalidateMeasure();
         InvalidateArrange();
@@ -572,9 +543,6 @@ public class DrawingMarqueeControl : FrameworkElement
         _layoutDirty = false;
         _layoutItems.Clear();
         _cycleLength = 0;
-        Log(
-            $"Rebuild started | Actual={ActualWidth:F1}x{ActualHeight:F1}, " +
-            $"ItemsSource={ItemsSource?.GetType().FullName ?? "<null>"}");
 
         if (ActualWidth <= 0 || ActualHeight <= 0)
         {
@@ -588,7 +556,6 @@ public class DrawingMarqueeControl : FrameworkElement
         {
             if (ItemsSource is ICollection<IMarqueeDrawItem> directCollection)
             {
-                Log($"ItemsSource supports ICollection<IMarqueeDrawItem> | Count={directCollection.Count}");
 
                 lock (directCollection)
                 {
@@ -599,7 +566,6 @@ public class DrawingMarqueeControl : FrameworkElement
             }
             else
             {
-                Log("ItemsSource does not support ICollection<IMarqueeDrawItem>; using OfType<IMarqueeDrawItem>");
 
                 items = ItemsSource?
                     .OfType<IMarqueeDrawItem>()
@@ -609,19 +575,14 @@ public class DrawingMarqueeControl : FrameworkElement
         }
         catch (Exception exception)
         {
-            Log($"ItemsSource enumeration failed | {exception}");
 
             ClearVisual();
             return;
         }
 
-        Log($"Items snapshot created | ValidItemCount={items.Count}");
 
         if (items.Count == 0)
         {
-            Log(
-                "Rebuild aborted | No valid IMarqueeDrawItem found. " +
-                "Verify that every model implements the exact SimurghDashboard.Controls.IMarqueeDrawItem interface.");
 
             ClearVisual();
             return;
@@ -629,9 +590,6 @@ public class DrawingMarqueeControl : FrameworkElement
 
         var dpi = VisualTreeHelper.GetDpi(this);
 
-        Log(
-            $"DPI={dpi.DpiScaleX:F2}x{dpi.DpiScaleY:F2}, " +
-            $"PixelsPerDip={dpi.PixelsPerDip:F2}, Font={FontFamily.Source}, FontSize={FontSize:F1}");
 
         var typeface = new Typeface(
             FontFamily,
@@ -667,16 +625,11 @@ public class DrawingMarqueeControl : FrameworkElement
                     itemX,
                     itemWidth));
 
-                Log(
-                    $"Item added | Text=\"{item.Text}\", " +
-                    $"Offset={itemX:F1}, TextWidth={text.WidthIncludingTrailingWhitespace:F1}, " +
-                    $"ItemWidth={itemWidth:F1}");
 
                 itemX += itemWidth + ItemSpacing + SeparatorWidth;
             }
             catch (Exception exception)
             {
-                Log($"Item drawing layout failed | Text=\"{item.Text}\" | {exception}");
             }
         }
 
@@ -933,7 +886,6 @@ public class DrawingMarqueeControl : FrameworkElement
 
     private void NotifyItemRolledOver(IMarqueeDrawItem item)
     {
-        Log($"ItemRolledOver | Text=\"{item.Text}\"");
 
         // 1. Raise Routed Event
         RaiseEvent(new MarqueeItemRolledOverEventArgs(ItemRolledOverEvent, this, item));
@@ -1004,17 +956,6 @@ public class DrawingMarqueeControl : FrameworkElement
 
     #region Helpers & Diagnostics
 
-    private void Log(string message)
-    {
-        if (!EnableDiagnostics)
-        {
-            return;
-        }
-
-        Debug.WriteLine(
-            $"{DiagnosticPrefix} [{DateTime.Now:HH:mm:ss.fff}] " +
-            $"Control={GetHashCode():X8} | {message}");
-    }
 
     /// <summary>
     /// Ensures the brush is frozen for thread safety and optimal Direct3D/MIL rendering pipeline performance.

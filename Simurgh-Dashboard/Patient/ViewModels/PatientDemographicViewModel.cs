@@ -188,6 +188,7 @@ namespace SimurghDashboard.Patient.ViewModels
                 case nameof(PatientDemographicEntity.PatientDemographic):
                     Payload = _accessor.CurrentEntity.PatientDemographic;
                     NotifyDemographicAccessors();
+                    NotifyVisibilityProperties();
                     break;
 
                 case nameof(PatientDemographicEntity.PrimaryBrush):
@@ -301,6 +302,15 @@ namespace SimurghDashboard.Patient.ViewModels
             OnPropertyChanged(nameof(HasDemographicVisibility));
             OnPropertyChanged(nameof(HasProcedureVisibility));
             OnPropertyChanged(nameof(IsAnyPropertyVisible));
+
+            OnPropertyChanged(nameof(IsPatientIdVisible));
+            OnPropertyChanged(nameof(IsFullNameVisible));
+            OnPropertyChanged(nameof(IsDateOfBirthVisible)); 
+            OnPropertyChanged(nameof(IsAgeVisible)); 
+            OnPropertyChanged(nameof(IsSexVisible));
+            OnPropertyChanged(nameof(IsProcedureVisible));
+            OnPropertyChanged(nameof(IsPhysicianVisible));
+            OnPropertyChanged(nameof(IsAccessionNumberVisible));
         }
 
         #endregion

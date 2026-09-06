@@ -1,5 +1,6 @@
 ﻿using SimurghDashboard.Patient.Options;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
 
@@ -419,18 +420,78 @@ namespace SimurghDashboard.Patient.Models
 
         #region Computed Read-Only Presentation Metrics
 
-        public string FormattedAge => Age.HasValue ? $"{Age.Value} Yrs" : "--";
+
 
         public string SexBadge => Sex switch
         {
-            BiologicalSex.Male => "M",
-            BiologicalSex.Female => "F",
-            BiologicalSex.Other => "O",
+            BiologicalSex.Male => "Male",
+            BiologicalSex.Female => "Female",
+            BiologicalSex.Other => "Other",
             _ => "Unknown"
         };
 
+
+        private static readonly CultureInfo PersianCulture = new("fa-IR")
+        {
+            DateTimeFormat =
+            {
+                Calendar = new PersianCalendar()
+            }
+        };
+
+        // Evaluates dynamic clinical age units (Days, Months, Years) based on birth date delta
+        public string FormattedAge
+        {
+            get
+            {
+                if (!DateOfBirth.HasValue)
+                    return Age.HasValue ? $"{Age.Value} سال" : "--";
+
+                DateTime birthDate = DateOfBirth.Value.Date;
+                DateTime today = DateTime.Today;
+
+                if (birthDate > today)
+                    return "--";
+
+                // Calculate absolute calendar year and month differences
+                int years = today.Year - birthDate.Year;
+                int months = today.Month - birthDate.Month;
+                int days = today.Day - birthDate.Day;
+
+                // Adjust for partial days in the target month
+                if (days < 0)
+                {
+                    months--;
+                    days += DateTime.DaysInMonth(
+                        today.Month == 1 ? today.Year - 1 : today.Year,
+                        today.Month == 1 ? 12 : today.Month - 1);
+                }
+
+                // Adjust for partial months across calendar years
+                if (months < 0)
+                {
+                    years--;
+                    months += 12;
+                }
+
+                // Clinical pediatrics tier: < 1 month -> display days
+                if (years == 0 && months == 0)
+                    return $"{Math.Max(days, 0)} روز";
+
+                // Infant / Toddler tier: < 1 year -> display elapsed months
+                if (years == 0)
+                    return $"{months} ماه";
+
+                // Child / Adult tier: >= 1 year -> display total completed years
+                return $"{years} سال";
+            }
+        }
+
         public string FormattedDateOfBirth =>
-            DateOfBirth.HasValue ? DateOfBirth.Value.ToString("yyyy-MM-dd") : "--";
+            DateOfBirth.HasValue
+                // "d MMMM yyyy" formats directly to: "۱۶ شهریور ۱۴۰۵" / "16 شهریور 1405"
+                ? DateOfBirth.Value.ToString("d MMMM yyyy", PersianCulture)
+                : "--";
 
         public string ProcedureDisplay =>
             string.IsNullOrWhiteSpace(ScheduledProcedureDescription) ? "--" : ScheduledProcedureDescription;

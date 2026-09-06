@@ -48,7 +48,7 @@ public readonly record struct SensorIndexParams(
 /// and configuration updates across sensor entities exposed by <see cref="ISensorAccessor"/>.
 /// Subscribes to collection updates and property changes to maintain command validity.
 /// </summary>
-public sealed class SensorControllerService : IDisposable
+public sealed class SensorControllerService : ISensorControllerService, IDisposable
 {
     private readonly ISensorAccessor _sensorAccessor;
     private readonly ConcurrentDictionary<int, PropertyChangedEventHandler> _propertySubscriptions = new();

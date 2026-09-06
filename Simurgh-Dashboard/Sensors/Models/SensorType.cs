@@ -137,6 +137,6 @@ public enum SensorType : ushort
     [Description("Ionizing Radiation Dosimetry Rate (ISO 361)")]
     RadiationDosimetry = 500,
 
-    [Description("Dose Area Product Meter (DAP / Kerma-Area Product)")]
-    DoseAreaProduct = 501
+
+
 }

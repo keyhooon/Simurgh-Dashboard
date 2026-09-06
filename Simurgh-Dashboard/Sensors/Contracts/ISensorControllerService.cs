@@ -1,8 +1,9 @@
 namespace SimurghDashboard.Sensors.Contracts;
 
-using System;
 using CommunityToolkit.Mvvm.Input;
+using SimurghDashboard.Core.Ipc;
 using SimurghDashboard.Sensors.Services;
+using System;
 
 /// <summary>
 /// Defines the central domain controller contract for orchestrating state transitions, 
@@ -17,6 +18,8 @@ using SimurghDashboard.Sensors.Services;
 ///   allows for highly decoupled execution tracking, which is excellent for medical-grade 
 ///   software dashboards where audit trails and strict state validation are required.
 /// </summary>
+
+[RpcController("sensor")]
 public interface ISensorControllerService : IDisposable
 {
     /// <summary>

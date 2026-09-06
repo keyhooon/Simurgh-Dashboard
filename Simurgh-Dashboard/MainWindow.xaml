@@ -103,7 +103,7 @@
             <ContentControl
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                Content="{Binding PatientDemographicViewModel}"  />
+                Content="{Binding PatientDemographicViewModel}" />
         </controls:WidgetFrame>
         <controls:WidgetFrame
             Grid.Row="1"
@@ -126,7 +126,8 @@
             Grid.Row="2"
             Grid.ColumnSpan="2"
             Margin="15"
-            VerticalAlignment="Stretch">
+            VerticalAlignment="Stretch"
+            FrameVariant="RoundedSunkenLow">
             <ContentControl
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
@@ -140,7 +141,7 @@
             Spans all 5 columns for marquee broadcasts and medical RSS alerts.
         -->
         <controls:WidgetFrame
-            Grid.Row="3"
+            Grid.Row="4"
             Grid.Column="0"
             Grid.ColumnSpan="2"
             Margin="15"

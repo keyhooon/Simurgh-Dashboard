@@ -9,6 +9,7 @@ using System.Windows.Threading;
 using SimurghDashboard.Clock.Options;
 using SimurghDashboard.Clock.Services.Weather;
 using SimurghDashboard.Clock.ViewModels;
+using SimurghDashboard.Core.Ipc;
 using SimurghDashboard.Patient.Services;
 using SimurghDashboard.RssFeed.Services;
 using SimurghDashboard.RssFeed.ViewModels;
@@ -136,6 +137,7 @@ namespace SimurghDashboard
             services.AddTimerWorkerServices(configuration);
             services.AddPatientDemographics(configuration);
             services.AddSensorSubsystem(configuration);
+            services.AddSimurghIpcServer();
 
             // -------------------------------------------------------------------------
             // VIEWMODELS (Stateful Singletons for Kiosk Lifecycle)

@@ -1,9 +1,9 @@
-﻿using System.Globalization;
+﻿using SimurghDashboard.Sensors.Models;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
 using System.Windows.Media;
-using SimurghDashboard.Sensors.Models;
 
 namespace SimurghDashboard.Core.Infrastructures.Converters;
 
@@ -95,7 +95,6 @@ public sealed class SensorIconConverter : MarkupExtension, IValueConverter
             // IONIZING RADIATION & NUCLEAR MEDICINE (500 - 599)
             // =========================================================================
             SensorType.RadiationDosimetry => "IconRadiationDosimetry",
-            SensorType.DoseAreaProduct => "IconDoseAreaProduct",
 
             // Default fallback for any undefined enum states
             _ => "IconSensor"

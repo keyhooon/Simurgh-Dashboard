@@ -29,7 +29,7 @@
         <controls1:DrawingMarqueeControl
             Height="42"
             Margin="15"
-            DefaultItemBackground="#CC000000"
+            DefaultItemBackground="#CC000001"
             Direction="LeftToRight"
             FontFamily="b titr"
             FontSize="20"
@@ -38,7 +38,7 @@
             ItemPadding="18,0,18,0"
             ItemRolledOverCommand="{Binding ItemFinishedCommand}"
             ItemSpacing="70"
-            ItemsSource="{Binding TickerStore}"
+            ItemsSource="{Binding TickerStore }"
             ScrollSpeed="70"
             SeparatorBrush="#33FFFFFF"
             SeparatorHeightRatio="0.42"

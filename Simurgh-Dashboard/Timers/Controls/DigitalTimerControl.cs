@@ -483,7 +483,7 @@ public sealed class DigitalTimerControl : Control
 
     private static void OnTimingConfigurationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is DigitalTimerControl control && control.IsLoaded)
+        if (d is DigitalTimerControl { IsLoaded: true } control)
         {
             control.EvaluateAutoState();
             control.UpdateTimer();

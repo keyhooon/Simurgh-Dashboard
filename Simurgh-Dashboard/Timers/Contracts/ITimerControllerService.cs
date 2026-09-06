@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using SimurghDashboard.Core.Ipc;
 using SimurghDashboard.Timers.Services;
 
 namespace SimurghDashboard.Timers.Contracts
@@ -7,6 +8,7 @@ namespace SimurghDashboard.Timers.Contracts
     /// Defines the contract for orchestrating and dispatching commands across timer entities.
     /// Acts as the domain controller interface for decoupled command execution in the MVVM architecture.
     /// </summary>
+    [RpcController("timer")]
     public interface ITimerControllerService
     {
         /// <summary>
