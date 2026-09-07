@@ -277,6 +277,11 @@ namespace SimurghDashboard.Patient.ViewModels
         /// </summary>
         private void NotifyDemographicAccessors()
         {
+            System.Diagnostics.Debug.WriteLine(
+                $"Demographics notification: " +
+                $"VM={System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this)}, " +
+                $"FullName='{Payload.FullName}', " +
+                $"UIThread={System.Windows.Application.Current?.Dispatcher.CheckAccess()}");
             OnPropertyChanged(nameof(PatientId));
             OnPropertyChanged(nameof(FullName));
             OnPropertyChanged(nameof(DateOfBirth));

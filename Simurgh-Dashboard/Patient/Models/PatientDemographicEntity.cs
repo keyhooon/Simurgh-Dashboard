@@ -400,6 +400,15 @@ namespace SimurghDashboard.Patient.Models
         public string PerformedPhysician { get; init; } = string.Empty;
         public string AccessionNumber { get; init; } = string.Empty;
 
+        public string SpecialNeeds { get; set; } = string.Empty;
+
+        public string MedicalAlert { get; set; } = string.Empty;
+
+        public string PatientComment { get; set; } = string.Empty;
+
+        public string ContrastAllergies { get; set; } = string.Empty;
+
+
         /// <summary>
         /// Canonical empty record for safe initialization without null checks.
         /// </summary>

@@ -4,6 +4,7 @@
     xmlns:behaviors1="clr-namespace:SimurghDashboard.Core.Infrastructures.Behaviors"
     xmlns:controls2="clr-namespace:SimurghDashboard.Core.Controls"
     xmlns:converters="clr-namespace:SimurghDashboard.Core.Infrastructures.Converters"
+    xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
     xmlns:vm="clr-namespace:SimurghDashboard.Patient.ViewModels">
 
     <!--  Merged Theme Resource Dictionaries  -->
@@ -52,25 +53,34 @@
                 <!--  Primary Identifier: Full Name  -->
                 <!--  Two-line cap via height clip + LineHeight, single newline feed truncation  -->
                 <!--  MaxLines-enabled TextBlock consuming custom truncation behavior  -->
-                <Path
-                    Grid.Row="0"
-                    Width="36"
-                    Height="36"
-                    HorizontalAlignment="left"
-                    Data="{Binding Sex, Converter={converters:PatientSexIconConverter}}"
-                    Fill="{Binding PrimaryBrush}"
-                    Stretch="Uniform"
-                    Visibility="{Binding IsSexVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                <TextBlock
-                    Grid.Row="0"
-                    HorizontalAlignment="Right"
-                    FontFamily="{StaticResource FontFamilyApp}"
-                    FontSize="32"
-                    FontWeight="ExtraBold"
-                    Foreground="{Binding PrimaryBrush}"
-                    Text="{Binding PatientId, FallbackValue='--'}"
-                    TextTrimming="CharacterEllipsis"
-                    Visibility="{Binding IsPatientIdVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Path
+                        Grid.Row="0"
+                        Width="36"
+                        Height="36"
+                        HorizontalAlignment="left"
+                        Data="{Binding Sex, Converter={converters:PatientSexIconConverter}}"
+                        Fill="{Binding PrimaryBrush}"
+                        Stretch="Uniform"
+                        Visibility="{Binding IsSexVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="5"
+                        HorizontalAlignment="Right"
+                        FontFamily="{StaticResource FontFamilyApp}"
+                        FontSize="32"
+                        FontWeight="ExtraBold"
+                        Foreground="{Binding PrimaryBrush}"
+                        Text="{Binding PatientId, FallbackValue='--'}"
+                        TextTrimming="CharacterEllipsis"
+                        Visibility="{Binding IsPatientIdVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                </Grid>
                 <TextBlock
                     Grid.Row="1"
                     Margin="3"
@@ -83,9 +93,11 @@
                     Foreground="{Binding PrimaryBrush}"
                     LineHeight="44"
                     LineStackingStrategy="BlockLineHeight"
-                    Text="{Binding FullName, FallbackValue='--'}"
+                    Text="{Binding FullName, Mode=OneWay, FallbackValue='--'}"
+                    TextTrimming="CharacterEllipsis"
                     TextWrapping="Wrap"
                     Visibility="{Binding IsFullNameVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
 
                 <!--  Date of Birth (Secondary Context)  -->
                 <!--<TextBlock
@@ -105,6 +117,7 @@
                 <TextBlock
                     Grid.Row="2"
                     HorizontalAlignment="Left"
+                    Background="Aqua"
                     FlowDirection="RightToLeft"
                     FontFamily="{StaticResource FontFamilyApp}"
                     FontSize="32"

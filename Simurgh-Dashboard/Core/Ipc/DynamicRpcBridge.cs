@@ -167,40 +167,22 @@ public sealed class DynamicRpcBridge
     }
     #region Explicit RPC Targets
 
-    public sealed class VoidEndpointTarget
+    public sealed class VoidEndpointTarget(DynamicRpcBridge bridge, RpcEndpoint endpoint)
     {
-        private readonly DynamicRpcBridge _bridge;
-        private readonly RpcEndpoint _endpoint;
-
-        public VoidEndpointTarget(DynamicRpcBridge bridge, RpcEndpoint endpoint)
-        {
-            _bridge = bridge;
-            _endpoint = endpoint;
-        }
-
         public Task<object?> ExecuteAsync() =>
-            _bridge.ExecuteCoreAsync(_endpoint, parameter: null, isCanExecute: false);
+            bridge.ExecuteCoreAsync(endpoint, parameter: null, isCanExecute: false);
 
         public Task<object?> CanExecuteAsync() =>
-            _bridge.ExecuteCoreAsync(_endpoint, parameter: null, isCanExecute: true);
+            bridge.ExecuteCoreAsync(endpoint, parameter: null, isCanExecute: true);
     }
 
-    public sealed class TypedEndpointTarget<T>
+    public sealed class TypedEndpointTarget<T>(DynamicRpcBridge bridge, RpcEndpoint endpoint)
     {
-        private readonly DynamicRpcBridge _bridge;
-        private readonly RpcEndpoint _endpoint;
-
-        public TypedEndpointTarget(DynamicRpcBridge bridge, RpcEndpoint endpoint)
-        {
-            _bridge = bridge;
-            _endpoint = endpoint;
-        }
-
         public Task<object?> ExecuteAsync(T parameter) =>
-            _bridge.ExecuteCoreAsync(_endpoint, parameter, isCanExecute: false);
+            bridge.ExecuteCoreAsync(endpoint, parameter, isCanExecute: false);
 
         public Task<object?> CanExecuteAsync(T parameter) =>
-            _bridge.ExecuteCoreAsync(_endpoint, parameter, isCanExecute: true);
+            bridge.ExecuteCoreAsync(endpoint, parameter, isCanExecute: true);
     }
 
     #endregion
@@ -210,25 +192,15 @@ public sealed class DynamicRpcBridge
 /// Hosted background service managing Named Pipe client connections and binding JSON-RPC dispatchers.
 /// Uses raw duplex stream binding to prevent buffer deadlock and pipe closure.
 /// </summary>
-public sealed class NamedPipeRpcServerHostedService : BackgroundService
+public sealed class NamedPipeRpcServerHostedService(
+    DynamicRpcBridge bridge,
+    ILogger<NamedPipeRpcServerHostedService> logger,
+    string pipeName = "SimurghDashboard_IPC")
+    : BackgroundService
 {
-    private readonly DynamicRpcBridge _bridge;
-    private readonly ILogger<NamedPipeRpcServerHostedService> _logger;
-    private readonly string _pipeName;
-
-    public NamedPipeRpcServerHostedService(
-        DynamicRpcBridge bridge,
-        ILogger<NamedPipeRpcServerHostedService> logger,
-        string pipeName = "SimurghDashboard_IPC")
-    {
-        _bridge = bridge;
-        _logger = logger;
-        _pipeName = pipeName;
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("NamedPipe IPC Server listening on pipe: \\\\.\\pipe\\{PipeName}", _pipeName);
+        logger.LogInformation("NamedPipe IPC Server listening on pipe: \\\\.\\pipe\\{PipeName}", pipeName);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -238,7 +210,7 @@ public sealed class NamedPipeRpcServerHostedService : BackgroundService
             {
                 // Create asynchronous full-duplex NamedPipe stream
                 serverStream = new NamedPipeServerStream(
-                    pipeName: _pipeName,
+                    pipeName: pipeName,
                     direction: PipeDirection.InOut,
                     maxNumberOfServerInstances: NamedPipeServerStream.MaxAllowedServerInstances,
                     transmissionMode: PipeTransmissionMode.Byte,
@@ -247,7 +219,7 @@ public sealed class NamedPipeRpcServerHostedService : BackgroundService
                 // Wait for an incoming client to connect
                 await serverStream.WaitForConnectionAsync(stoppingToken);
 
-                _logger.LogInformation("Incoming client connected to NamedPipe IPC.");
+                logger.LogInformation("Incoming client connected to NamedPipe IPC.");
 
                 // Process client session independently in background task to unblock listener loop
                 _ = ProcessClientSessionAsync(serverStream, stoppingToken);
@@ -259,7 +231,7 @@ public sealed class NamedPipeRpcServerHostedService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception encountered in NamedPipe listener loop.");
+                logger.LogError(ex, "Exception encountered in NamedPipe listener loop.");
                 serverStream?.Dispose();
                 await Task.Delay(500, stoppingToken);
             }
@@ -280,11 +252,11 @@ public sealed class NamedPipeRpcServerHostedService : BackgroundService
                 using var rpc = new JsonRpc(handler);
 
                 // Bind all discovered DynamicRpcBridge endpoints
-                _bridge.BindToRpc(rpc);
+                bridge.BindToRpc(rpc);
 
                 rpc.Disconnected += (s, e) =>
                 {
-                    _logger.LogInformation("IPC Client disconnected. Reason: {Reason}, Description: {Description}",
+                    logger.LogInformation("IPC Client disconnected. Reason: {Reason}, Description: {Description}",
                         e.Reason, e.Description);
                 };
 
@@ -303,7 +275,7 @@ public sealed class NamedPipeRpcServerHostedService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled error during IPC client session.");
+                logger.LogError(ex, "Unhandled error during IPC client session.");
             }
         }
     }
