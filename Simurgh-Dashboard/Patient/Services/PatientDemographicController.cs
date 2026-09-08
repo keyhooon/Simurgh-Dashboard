@@ -7,20 +7,20 @@ namespace SimurghDashboard.Patient.Services
     /// <summary>
     /// Service orchestrating and dispatching commands across patient demographic entity managed within <see cref="IPatientDemographicAccessor"/>.
     /// </summary>
-    public sealed class PatientDemographicControllerService : IPatientDemographicControllerService
+    public sealed class PatientDemographicController : IPatientDemographicController
     {
-        private readonly IPatientDemographicAccessor _demographicAccessor;
 
-        public PatientDemographicControllerService(IPatientDemographicAccessor demographicAccessor)
+        public PatientDemographicController()
         {
-            _demographicAccessor = demographicAccessor ?? throw new ArgumentNullException(nameof(demographicAccessor));
-
-            SetDemographicsCommand = new RelayCommand<PatientDemographicPayload>(ExecuteSetDemographics, CanExecuteSetDemographics);
+            PatientDemographicEntity = new PatientDemographicEntity();
+                        SetDemographicsCommand = new RelayCommand<PatientDemographicPayload>(ExecuteSetDemographics, CanExecuteSetDemographics);
             ResetCommand = new RelayCommand(ExecuteReset, CanExecuteReset);
         }
 
         #region Commands
 
+
+        public PatientDemographicEntity PatientDemographicEntity { get; }
         public IRelayCommand<PatientDemographicPayload> SetDemographicsCommand { get; }
         public IRelayCommand ResetCommand { get; }
 
@@ -31,13 +31,13 @@ namespace SimurghDashboard.Patient.Services
         private bool CanExecuteSetDemographics(PatientDemographicPayload? payload)
         {
             // Entity must exist and payload snapshot cannot be null
-            return _demographicAccessor.CurrentEntity != null && payload != null;
+            return !PatientDemographicEntity.HasValue;
         }
 
         private bool CanExecuteReset()
         {
             // Can only reset if current entity exists and is not already empty
-            return _demographicAccessor.CurrentEntity is { PatientDemographic.IsEmpty: false };
+            return PatientDemographicEntity.HasValue;
         }
 
         #endregion
@@ -51,7 +51,7 @@ namespace SimurghDashboard.Patient.Services
         {
             if (payload is null) return;
 
-            _demographicAccessor.UpdateDemographics(payload);
+            PatientDemographicEntity.UpdateDemographics(payload);
             NotifyCommandGuards();
         }
 
@@ -60,7 +60,7 @@ namespace SimurghDashboard.Patient.Services
         /// </summary>
         private void ExecuteReset()
         {
-            _demographicAccessor.Reset();
+            PatientDemographicEntity.Reset();
             NotifyCommandGuards();
         }
 

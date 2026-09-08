@@ -1,9 +1,8 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 
-namespace SimurghDashboard.Behaviors;
+namespace SimurghDashboard.Core.Infrastructures.Behaviors;
 
 /// <summary>
 /// Attached behavior providing smooth, continuous auto-scrolling for ScrollViewer 

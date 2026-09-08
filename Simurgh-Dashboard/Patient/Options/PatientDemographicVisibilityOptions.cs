@@ -17,4 +17,12 @@ public sealed class PatientDemographicVisibilityOptions
     public bool Physician { get; set; } = true;
 
     public bool AccessionNumber { get; set; } = true;
+
+    public bool SpecialNeeds { get; set; } = true;
+
+    public bool MedicalAlert { get; set; } = true;
+
+    public bool PatientComment { get; set; } = true;
+
+    public bool ContrastAllergies { get; set; } = true;
 }

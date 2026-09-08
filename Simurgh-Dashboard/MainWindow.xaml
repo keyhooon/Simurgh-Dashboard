@@ -64,8 +64,8 @@
             <!--  Top Header (Clock/Weather/OR Metadata)  -->
             <RowDefinition Height="Auto" />
             <!--  Middle Body (Operational Timers and Real-time Sensors)  -->
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <!--  Bottom Footer (Medical News RSS Ticker)  -->
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>

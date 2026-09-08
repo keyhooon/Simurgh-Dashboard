@@ -34,7 +34,9 @@ namespace SimurghDashboard.Patient.Services
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
-            services.AddSingleton<IPatientDemographicAccessor, PatientDemographicAccessor>();
+            services.AddSingleton<IPatientUiAccessor, PatientUiAccessor>();
+            services.AddSingleton<IPatientDemographicController, PatientDemographicController>();
+
             // Register the presentation ViewModel (can be Transient or Scoped depending on dashboard view lifecycle)
             services.AddTransient<PatientDemographicViewModel>();
 
@@ -56,7 +58,8 @@ namespace SimurghDashboard.Patient.Services
 
             services.Configure(configureOptions);
 
-            services.AddSingleton<IPatientDemographicAccessor, PatientDemographicAccessor>();
+            services.AddSingleton<IPatientUiAccessor, PatientUiAccessor>();
+            services.AddSingleton<IPatientDemographicController, PatientDemographicController>();
 
 
             services.AddTransient<PatientDemographicViewModel>();

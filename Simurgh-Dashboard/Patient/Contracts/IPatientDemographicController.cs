@@ -8,9 +8,12 @@ namespace SimurghDashboard.Patient.Contracts
     /// Service orchestrating and dispatching demographic mutations across <see cref="IPatientDemographicAccessor"/>.
     /// </summary>
     [RpcController("patient")]
-    public interface IPatientDemographicControllerService
+    public interface IPatientDemographicController
     {
+        PatientDemographicEntity PatientDemographicEntity { get; }
         IRelayCommand<PatientDemographicPayload> SetDemographicsCommand { get; }
         IRelayCommand ResetCommand { get; }
+
+        void NotifyCommandGuards();
     }
 }

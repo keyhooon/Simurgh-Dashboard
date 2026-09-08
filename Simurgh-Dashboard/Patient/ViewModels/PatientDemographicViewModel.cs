@@ -1,367 +1,408 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using SimurghDashboard.Patient.Contracts;
 using SimurghDashboard.Patient.Models;
 
-namespace SimurghDashboard.Patient.ViewModels
+namespace SimurghDashboard.Patient.ViewModels;
+
+/// <summary>
+/// Bridges the Patient Demographic Domain Model/Controller and the UI Presentation State.
+/// Coordinates data bindings, culture-aware formatting, clinical age categorization, and effective visibility.
+/// </summary>
+public sealed class PatientDemographicViewModel : ObservableObject, IDisposable
 {
-    /// <summary>
-    /// Read-only ViewModel projection driven by <see cref="IPatientDemographicAccessor"/>.
-    /// Maintains unidirectional data flow and exposes demographic data via an immutable payload snapshot.
-    /// Safely detaches event handlers upon disposal to prevent UI memory leaks.
-    /// </summary>
-    public sealed class PatientDemographicViewModel : ObservableObject, IDisposable
+    private const string MissingValue = "--";
+
+    private static readonly CultureInfo PersianCulture = CreatePersianCulture();
+
+    private static readonly string[] DemographicPropertyNames =
+    [
+        nameof(DemographicModel),
+        nameof(Payload),
+        nameof(HasPatient),
+        nameof(PatientId),
+        nameof(FullName),
+        nameof(DateOfBirth),
+        nameof(Age),
+        nameof(Sex),
+        nameof(ScheduledProcedureDescription),
+        nameof(PerformedPhysician),
+        nameof(AccessionNumber),
+        nameof(SpecialNeeds),
+        nameof(MedicalAlert),
+        nameof(PatientComment),
+        nameof(ContrastAllergies),
+        nameof(FormattedAge),
+        nameof(SexBadge),
+        nameof(FormattedDateOfBirth),
+        nameof(ProcedureDisplay),
+        nameof(PhysicianDisplay),
+        nameof(AccessionDisplay),
+        nameof(SpecialNeedsDisplay),
+        nameof(MedicalAlertDisplay),
+        nameof(PatientCommentDisplay),
+        nameof(ContrastAllergiesDisplay),
+        nameof(HasSpecialNeeds),
+        nameof(HasMedicalAlert),
+        nameof(HasPatientComment),
+        nameof(HasContrastAllergies),
+        nameof(HasClinicalInformation)
+    ];
+
+    private static readonly string[] VisibilityPropertyNames =
+    [
+        nameof(IsPatientIdVisible),
+        nameof(IsFullNameVisible),
+        nameof(IsDateOfBirthVisible),
+        nameof(IsAgeVisible),
+        nameof(IsSexVisible),
+        nameof(IsProcedureVisible),
+        nameof(IsPhysicianVisible),
+        nameof(IsAccessionNumberVisible),
+        nameof(IsSpecialNeedsVisible),
+        nameof(IsMedicalAlertVisible),
+        nameof(IsPatientCommentVisible),
+        nameof(IsContrastAllergiesVisible),
+        nameof(HasDemographicVisibility),
+        nameof(HasProcedureVisibility),
+        nameof(HasClinicalVisibility),
+        nameof(IsAnyPropertyVisible)
+    ];
+
+    private readonly IPatientDemographicController _controller;
+    private readonly IPatientUiAccessor _uiAccessor;
+    private readonly TimeProvider _timeProvider;
+    private bool _disposed;
+
+    public PatientDemographicViewModel(
+        IPatientDemographicController controller,
+        IPatientUiAccessor uiAccessor,
+        TimeProvider? timeProvider = null)
     {
-        private readonly IPatientDemographicAccessor _accessor;
-        private bool _disposedValue;
-
-        #region Backing Fields
-
-        private PatientDemographicPayload _payload = PatientDemographicPayload.Empty;
-
-        private Brush _primaryBrush = Brushes.DodgerBlue;
-        private Brush _secondaryBrush = Brushes.Gray;
-
-        private bool _isPatientIdVisible = true;
-        private bool _isFullNameVisible = true;
-        private bool _isDateOfBirthVisible = true;
-        private bool _isAgeVisible = true;
-        private bool _isSexVisible = true;
-        private bool _isProcedureVisible = true;
-        private bool _isPhysicianVisible = true;
-        private bool _isAccessionNumberVisible = true;
-
-        #endregion
-
-        #region Constructor & Initialization
-
-        public PatientDemographicViewModel(IPatientDemographicAccessor accessor)
-        {
-            ArgumentNullException.ThrowIfNull(accessor);
-            _accessor = accessor;
-
-            // Synchronize state snapshot from the current domain entity instance
-            SyncAllFromModel();
-
-            // Subscribe to reactive accessor notification events
-            _accessor.PropertyChanged += OnAccessorPropertyChanged;
-        }
-
-        #endregion
-
-        #region Domain Entity & Data Payload
-
-        /// <summary>
-        /// Gets the underlying demographic domain entity through the accessor.
-        /// </summary>
-        public PatientDemographicEntity Model => _accessor.CurrentEntity;
-
-        /// <summary>
-        /// Gets the aggregate read-only payload containing the current demographic fields.
-        /// </summary>
-        public PatientDemographicPayload Payload
-        {
-            get => _payload;
-            private set => SetProperty(ref _payload, value);
-        }
-
-        #endregion
-
-        #region Direct Demographic Forwarding Accessors
-
-        public string PatientId => Payload.PatientId;
-        public string FullName => Payload.FullName;
-        public DateTime? DateOfBirth => Payload.DateOfBirth;
-        public int? Age => Payload.Age;
-        public BiologicalSex Sex => Payload.Sex;
-        public string ScheduledProcedureDescription => Payload.ScheduledProcedureDescription;
-        public string PerformedPhysician => Payload.PerformedPhysician;
-        public string AccessionNumber => Payload.AccessionNumber;
-
-        public string FormattedAge => Payload.FormattedAge;
-        public string SexBadge => Payload.SexBadge;
-        public string FormattedDateOfBirth => Payload.FormattedDateOfBirth;
-        public string ProcedureDisplay => Payload.ProcedureDisplay;
-        public string PhysicianDisplay => Payload.PhysicianDisplay;
-        public string AccessionDisplay => Payload.AccessionDisplay;
-
-        #endregion
-
-        #region Theme and Brush Properties
-
-        public Brush PrimaryBrush
-        {
-            get => _primaryBrush;
-            private set => SetProperty(ref _primaryBrush, value);
-        }
-
-        public Brush SecondaryBrush
-        {
-            get => _secondaryBrush;
-            private set => SetProperty(ref _secondaryBrush, value);
-        }
-
-        #endregion
-
-        #region Visibility Properties
-
-        public bool IsPatientIdVisible
-        {
-            get => _isPatientIdVisible && !string.IsNullOrWhiteSpace(Payload.PatientId);
-            private set => SetProperty(ref _isPatientIdVisible, value);
-        }
-
-        public bool IsFullNameVisible
-        {
-            get => _isFullNameVisible && !string.IsNullOrWhiteSpace(Payload.FullName);
-            private set => SetProperty(ref _isFullNameVisible, value);
-        }
-
-        public bool IsDateOfBirthVisible
-        {
-            get => _isDateOfBirthVisible && Payload.DateOfBirth.HasValue;
-            private set => SetProperty(ref _isDateOfBirthVisible, value);
-        }
-
-        public bool IsAgeVisible
-        {
-            get => _isAgeVisible && Payload.Age.HasValue;
-            private set => SetProperty(ref _isAgeVisible, value);
-        }
-
-        public bool IsSexVisible
-        {
-            get => _isSexVisible && Payload.Sex != BiologicalSex.Unknown;
-            private set => SetProperty(ref _isSexVisible, value);
-        }
-
-        public bool IsProcedureVisible
-        {
-            get => _isProcedureVisible && !string.IsNullOrWhiteSpace(Payload.ScheduledProcedureDescription);
-            private set => SetProperty(ref _isProcedureVisible, value);
-        }
-
-        public bool IsPhysicianVisible
-        {
-            get => _isPhysicianVisible && !string.IsNullOrWhiteSpace(Payload.PerformedPhysician);
-            private set => SetProperty(ref _isPhysicianVisible, value);
-        }
-
-        public bool IsAccessionNumberVisible
-        {
-            get => _isAccessionNumberVisible && !string.IsNullOrWhiteSpace(Payload.AccessionNumber);
-            private set => SetProperty(ref _isAccessionNumberVisible, value);
-        }
-
-        #endregion
-
-        #region Visibility Group Properties
-
-        public bool HasDemographicVisibility =>
-            IsPatientIdVisible ||
-            IsFullNameVisible ||
-            IsDateOfBirthVisible ||
-            IsAgeVisible ||
-            IsSexVisible;
-
-        public bool HasProcedureVisibility =>
-            IsProcedureVisible ||
-            IsPhysicianVisible ||
-            IsAccessionNumberVisible;
-
-        public bool IsAnyPropertyVisible =>
-            HasDemographicVisibility ||
-            HasProcedureVisibility;
-
-        #endregion
-
-        #region State Synchronization
-
-        /// <summary>
-        /// Handles notifications forwarded from IPatientDemographicAccessor.
-        /// </summary>
-        private void OnAccessorPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            switch (e.PropertyName)
-            {
-                case nameof(PatientDemographicEntity.PatientDemographic):
-                    Payload = _accessor.CurrentEntity.PatientDemographic;
-                    NotifyDemographicAccessors();
-                    NotifyVisibilityProperties();
-                    break;
-
-                case nameof(PatientDemographicEntity.PrimaryBrush):
-                    PrimaryBrush = _accessor.CurrentEntity.PrimaryBrush;
-                    break;
-
-                case nameof(PatientDemographicEntity.SecondaryBrush):
-                    SecondaryBrush = _accessor.CurrentEntity.SecondaryBrush;
-                    break;
-
-                case nameof(PatientDemographicEntity.IsPatientIdVisible):
-                    IsPatientIdVisible = _accessor.CurrentEntity.IsPatientIdVisible;
-                    NotifyVisibilityProperties();
-                    break;
-
-                case nameof(PatientDemographicEntity.IsFullNameVisible):
-                    IsFullNameVisible = _accessor.CurrentEntity.IsFullNameVisible;
-                    NotifyVisibilityProperties();
-                    break;
-
-                case nameof(PatientDemographicEntity.IsDateOfBirthVisible):
-                    IsDateOfBirthVisible = _accessor.CurrentEntity.IsDateOfBirthVisible;
-                    NotifyVisibilityProperties();
-                    break;
-
-                case nameof(PatientDemographicEntity.IsAgeVisible):
-                    IsAgeVisible = _accessor.CurrentEntity.IsAgeVisible;
-                    NotifyVisibilityProperties();
-                    break;
-
-                case nameof(PatientDemographicEntity.IsSexVisible):
-                    IsSexVisible = _accessor.CurrentEntity.IsSexVisible;
-                    NotifyVisibilityProperties();
-                    break;
-
-                case nameof(PatientDemographicEntity.IsProcedureVisible):
-                    IsProcedureVisible = _accessor.CurrentEntity.IsProcedureVisible;
-                    NotifyVisibilityProperties();
-                    break;
-
-                case nameof(PatientDemographicEntity.IsPhysicianVisible):
-                    IsPhysicianVisible = _accessor.CurrentEntity.IsPhysicianVisible;
-                    NotifyVisibilityProperties();
-                    break;
-
-                case nameof(PatientDemographicEntity.IsAccessionNumberVisible):
-                    IsAccessionNumberVisible = _accessor.CurrentEntity.IsAccessionNumberVisible;
-                    NotifyVisibilityProperties();
-                    break;
-
-                case nameof(IPatientDemographicAccessor.CurrentEntity):
-                case null:
-                case "":
-                    SyncAllFromModel();
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Fully synchronizes the ViewModel state with the accessor entity.
-        /// </summary>
-        private void SyncAllFromModel()
-        {
-            var entity = _accessor.CurrentEntity;
-
-            Payload = entity.PatientDemographic;
-            NotifyDemographicAccessors();
-
-            PrimaryBrush = entity.PrimaryBrush;
-            SecondaryBrush = entity.SecondaryBrush;
-
-            IsPatientIdVisible = entity.IsPatientIdVisible;
-            IsFullNameVisible = entity.IsFullNameVisible;
-            IsDateOfBirthVisible = entity.IsDateOfBirthVisible;
-            IsAgeVisible = entity.IsAgeVisible;
-            IsSexVisible = entity.IsSexVisible;
-            IsProcedureVisible = entity.IsProcedureVisible;
-            IsPhysicianVisible = entity.IsPhysicianVisible;
-            IsAccessionNumberVisible = entity.IsAccessionNumberVisible;
-
-            NotifyVisibilityProperties();
-        }
-
-        /// <summary>
-        /// Notifies View bindings when the underlying demographic payload changes.
-        /// </summary>
-        private void NotifyDemographicAccessors()
-        {
-            System.Diagnostics.Debug.WriteLine(
-                $"Demographics notification: " +
-                $"VM={System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this)}, " +
-                $"FullName='{Payload.FullName}', " +
-                $"UIThread={System.Windows.Application.Current?.Dispatcher.CheckAccess()}");
-            OnPropertyChanged(nameof(PatientId));
-            OnPropertyChanged(nameof(FullName));
-            OnPropertyChanged(nameof(DateOfBirth));
-            OnPropertyChanged(nameof(Age));
-            OnPropertyChanged(nameof(Sex));
-            OnPropertyChanged(nameof(ScheduledProcedureDescription));
-            OnPropertyChanged(nameof(PerformedPhysician));
-            OnPropertyChanged(nameof(AccessionNumber));
-
-            OnPropertyChanged(nameof(FormattedAge));
-            OnPropertyChanged(nameof(SexBadge));
-            OnPropertyChanged(nameof(FormattedDateOfBirth));
-            OnPropertyChanged(nameof(ProcedureDisplay));
-            OnPropertyChanged(nameof(PhysicianDisplay));
-            OnPropertyChanged(nameof(AccessionDisplay));
-        }
-
-        /// <summary>
-        /// Raises notifications for visibility group aggregate properties.
-        /// </summary>
-        private void NotifyVisibilityProperties()
-        {
-            OnPropertyChanged(nameof(HasDemographicVisibility));
-            OnPropertyChanged(nameof(HasProcedureVisibility));
-            OnPropertyChanged(nameof(IsAnyPropertyVisible));
-
-            OnPropertyChanged(nameof(IsPatientIdVisible));
-            OnPropertyChanged(nameof(IsFullNameVisible));
-            OnPropertyChanged(nameof(IsDateOfBirthVisible)); 
-            OnPropertyChanged(nameof(IsAgeVisible)); 
-            OnPropertyChanged(nameof(IsSexVisible));
-            OnPropertyChanged(nameof(IsProcedureVisible));
-            OnPropertyChanged(nameof(IsPhysicianVisible));
-            OnPropertyChanged(nameof(IsAccessionNumberVisible));
-        }
-
-        #endregion
-
-        #region Public Mutation Delegation
-
-        /// <summary>
-        /// Dispatches a new immutable demographic payload via the thread-safe accessor service.
-        /// </summary>
-        public void UpdateDemographics(PatientDemographicPayload payload)
-        {
-            _accessor.UpdateDemographics(payload);
-        }
-
-        /// <summary>
-        /// Resets the demographic snapshot back to its canonical empty state.
-        /// </summary>
-        public void Reset()
-        {
-            _accessor.Reset();
-        }
-
-        #endregion
-
-        #region IDisposable
-
-        private void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    // Detach event listener from accessor to prevent dangling reference memory leaks
-                    _accessor.PropertyChanged -= OnAccessorPropertyChanged;
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
+        ArgumentNullException.ThrowIfNull(controller);
+        ArgumentNullException.ThrowIfNull(uiAccessor);
+
+        _controller = controller;
+        _uiAccessor = uiAccessor;
+        _timeProvider = timeProvider ?? TimeProvider.System;
+
+        // Subscribe to Domain Entity and UI Accessor property change notifications
+        _controller.PatientDemographicEntity.PropertyChanged += OnDemographicEntityPropertyChanged;
+        _uiAccessor.PropertyChanged += OnUiAccessorPropertyChanged;
     }
+
+    #region Models & Controller Exposure
+
+    public PatientDemographicEntity DemographicModel => _controller.PatientDemographicEntity;
+    public PatientUiEntity UiModel => _uiAccessor.CurrentUiEntity;
+    public PatientDemographicPayload? Payload => DemographicModel.PatientDemographic;
+    public bool HasPatient => DemographicModel.HasValue && Payload is not null;
+
+    public IRelayCommand<PatientDemographicPayload> SetDemographicsCommand => _controller.SetDemographicsCommand;
+    public IRelayCommand ResetCommand => _controller.ResetCommand;
+
+    #endregion
+
+    #region Raw Demographic Properties
+
+    public string PatientId => Payload?.PatientId ?? string.Empty;
+    public string FullName => Payload?.FullName ?? string.Empty;
+    public DateTime? DateOfBirth => Payload?.DateOfBirth;
+    public int? Age => Payload?.Age;
+    public BiologicalSex Sex => Payload?.Sex ?? BiologicalSex.Unknown;
+    public string ScheduledProcedureDescription => Payload?.ScheduledProcedureDescription ?? string.Empty;
+    public string PerformedPhysician => Payload?.PerformedPhysician ?? string.Empty;
+    public string AccessionNumber => Payload?.AccessionNumber ?? string.Empty;
+
+    public string SpecialNeeds => Payload?.SpecialNeeds ?? string.Empty;
+    public string MedicalAlert => Payload?.MedicalAlert ?? string.Empty;
+    public string PatientComment => Payload?.PatientComment ?? string.Empty;
+    public string ContrastAllergies => Payload?.ContrastAllergies ?? string.Empty;
+
+    #endregion
+
+    #region Theme & Brushes (from PatientUiEntity)
+
+    public Brush PrimaryBrush => UiModel.PrimaryBrush;
+    public Brush SecondaryBrush => UiModel.SecondaryBrush;
+
+    #endregion
+
+    #region Presentation & Calculated Properties
+
+    private DateOnly Today => DateOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
+
+    public string SexBadge => Sex switch
+    {
+        BiologicalSex.Male => "Male",
+        BiologicalSex.Female => "Female",
+        BiologicalSex.Other => "Other",
+        _ => "Unknown"
+    };
+
+    public string FormattedAge => FormatAge(Today);
+
+    public string FormattedDateOfBirth
+    {
+        get
+        {
+            if (DateOfBirth is not { } birthDate)
+            {
+                return MissingValue;
+            }
+
+            var calendar = PersianCulture.DateTimeFormat.Calendar;
+            if (birthDate < calendar.MinSupportedDateTime || birthDate > calendar.MaxSupportedDateTime)
+            {
+                return MissingValue;
+            }
+
+            return birthDate.ToString("d MMMM yyyy", PersianCulture);
+        }
+    }
+
+    public string ProcedureDisplay => DisplayOrPlaceholder(ScheduledProcedureDescription);
+    public string PhysicianDisplay => DisplayOrPlaceholder(PerformedPhysician);
+    public string AccessionDisplay => DisplayOrPlaceholder(AccessionNumber);
+    public string SpecialNeedsDisplay => DisplayOrPlaceholder(SpecialNeeds);
+    public string MedicalAlertDisplay => DisplayOrPlaceholder(MedicalAlert);
+    public string PatientCommentDisplay => DisplayOrPlaceholder(PatientComment);
+    public string ContrastAllergiesDisplay => DisplayOrPlaceholder(ContrastAllergies);
+
+    public bool HasSpecialNeeds => HasText(SpecialNeeds);
+    public bool HasMedicalAlert => HasText(MedicalAlert);
+    public bool HasPatientComment => HasText(PatientComment);
+    public bool HasContrastAllergies => HasText(ContrastAllergies);
+
+    public bool HasClinicalInformation =>
+        HasSpecialNeeds ||
+        HasMedicalAlert ||
+        HasPatientComment ||
+        HasContrastAllergies;
+
+    #endregion
+
+    #region Effective Visibility (Config Preference ∧ Data Availability)
+
+    public bool IsPatientIdVisible =>
+        HasPatient && UiModel.IsPatientIdVisible && HasText(PatientId);
+
+    public bool IsFullNameVisible =>
+        HasPatient && UiModel.IsFullNameVisible && HasText(FullName);
+
+    public bool IsDateOfBirthVisible =>
+        HasPatient && UiModel.IsDateOfBirthVisible && DateOfBirth.HasValue;
+
+    public bool IsAgeVisible =>
+        HasPatient && UiModel.IsAgeVisible && HasDisplayableAge(Today);
+
+    public bool IsSexVisible =>
+        HasPatient && UiModel.IsSexVisible && Sex is BiologicalSex.Male or BiologicalSex.Female or BiologicalSex.Other;
+
+    public bool IsProcedureVisible =>
+        HasPatient && UiModel.IsProcedureVisible && HasText(ScheduledProcedureDescription);
+
+    public bool IsPhysicianVisible =>
+        HasPatient && UiModel.IsPhysicianVisible && HasText(PerformedPhysician);
+
+    public bool IsAccessionNumberVisible =>
+        HasPatient && UiModel.IsAccessionNumberVisible && HasText(AccessionNumber);
+
+    public bool IsSpecialNeedsVisible =>
+        HasPatient && UiModel.IsSpecialNeedsVisible && HasSpecialNeeds;
+
+    public bool IsMedicalAlertVisible =>
+        HasPatient && UiModel.IsMedicalAlertVisible && HasMedicalAlert;
+
+    public bool IsPatientCommentVisible =>
+        HasPatient && UiModel.IsPatientCommentVisible && HasPatientComment;
+
+    public bool IsContrastAllergiesVisible =>
+        HasPatient && UiModel.IsContrastAllergiesVisible && HasContrastAllergies;
+
+    public bool HasDemographicVisibility =>
+        IsPatientIdVisible ||
+        IsFullNameVisible ||
+        IsDateOfBirthVisible ||
+        IsAgeVisible ||
+        IsSexVisible;
+
+    public bool HasProcedureVisibility =>
+        IsProcedureVisible ||
+        IsPhysicianVisible ||
+        IsAccessionNumberVisible;
+
+    public bool HasClinicalVisibility =>
+        IsSpecialNeedsVisible ||
+        IsMedicalAlertVisible ||
+        IsPatientCommentVisible ||
+        IsContrastAllergiesVisible;
+
+    public bool IsAnyPropertyVisible =>
+        HasDemographicVisibility ||
+        HasProcedureVisibility ||
+        HasClinicalVisibility;
+
+    #endregion
+
+    #region Age Calculation Logic
+
+    private bool HasDisplayableAge(DateOnly today)
+    {
+        if (DateOfBirth is { } birthDate)
+        {
+            return DateOnly.FromDateTime(birthDate) <= today;
+        }
+
+        return Age is >= 0;
+    }
+
+    private string FormatAge(DateOnly today)
+    {
+        if (DateOfBirth is not { } dateOfBirth)
+        {
+            return Age is >= 0 ? $"{Age.Value} سال" : MissingValue;
+        }
+
+        var birthDate = DateOnly.FromDateTime(dateOfBirth);
+        if (birthDate > today)
+        {
+            return MissingValue;
+        }
+
+        int years = today.Year - birthDate.Year;
+        if (birthDate.AddYears(years) > today)
+        {
+            years--;
+        }
+
+        if (years >= 1)
+        {
+            return $"{years} سال";
+        }
+
+        int months = ((today.Year - birthDate.Year) * 12) + today.Month - birthDate.Month;
+        if (birthDate.AddMonths(months) > today)
+        {
+            months--;
+        }
+
+        if (months >= 1)
+        {
+            return $"{months} ماه";
+        }
+
+        int days = today.DayNumber - birthDate.DayNumber;
+        return $"{days} روز";
+    }
+
+    public void RefreshDateDependentProperties()
+    {
+        ThrowIfDisposed();
+
+        OnPropertyChanged(nameof(FormattedAge));
+        OnPropertyChanged(nameof(IsAgeVisible));
+        OnPropertyChanged(nameof(HasDemographicVisibility));
+        OnPropertyChanged(nameof(IsAnyPropertyVisible));
+    }
+
+    #endregion
+
+    #region Event Handlers
+
+    private void OnDemographicEntityPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (_disposed) return;
+
+        NotifyProperties(DemographicPropertyNames);
+        NotifyProperties(VisibilityPropertyNames);
+
+        // Synchronize command guard status in case controller didn't trigger it directly
+        _controller.NotifyCommandGuards();
+    }
+
+    private void OnUiAccessorPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (_disposed) return;
+
+        switch (e.PropertyName)
+        {
+            case nameof(PatientUiEntity.PrimaryBrush):
+                OnPropertyChanged(nameof(PrimaryBrush));
+                break;
+
+            case nameof(PatientUiEntity.SecondaryBrush):
+                OnPropertyChanged(nameof(SecondaryBrush));
+                break;
+
+            case nameof(IPatientUiAccessor.CurrentUiEntity):
+                OnPropertyChanged(nameof(UiModel));
+                OnPropertyChanged(nameof(PrimaryBrush));
+                OnPropertyChanged(nameof(SecondaryBrush));
+                NotifyProperties(VisibilityPropertyNames);
+                break;
+
+            default:
+                // Any visibility configuration toggle change invalidates effective visibility
+                NotifyProperties(VisibilityPropertyNames);
+                break;
+        }
+    }
+
+    private void NotifyProperties(string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+        {
+            OnPropertyChanged(propertyName);
+        }
+    }
+
+    #endregion
+
+    #region Mutation Delegation
+
+    public void UpdateDemographics(PatientDemographicPayload payload)
+    {
+        ThrowIfDisposed();
+        _controller.SetDemographicsCommand.Execute(payload);
+    }
+
+    public void Reset()
+    {
+        ThrowIfDisposed();
+        _controller.ResetCommand.Execute(null);
+    }
+
+    #endregion
+
+    #region Helpers & Cleanup
+
+    private static bool HasText(string? value) => !string.IsNullOrWhiteSpace(value);
+
+    private static string DisplayOrPlaceholder(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? MissingValue : value;
+
+    private static CultureInfo CreatePersianCulture()
+    {
+        var culture = new CultureInfo("fa-IR");
+        culture.DateTimeFormat.Calendar = new PersianCalendar();
+        return CultureInfo.ReadOnly(culture);
+    }
+
+    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+
+        _disposed = true;
+        _controller.PatientDemographicEntity.PropertyChanged -= OnDemographicEntityPropertyChanged;
+        _uiAccessor.PropertyChanged -= OnUiAccessorPropertyChanged;
+    }
+
+    #endregion
 }

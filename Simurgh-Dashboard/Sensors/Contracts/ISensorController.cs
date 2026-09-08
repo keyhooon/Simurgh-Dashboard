@@ -20,7 +20,7 @@ using System;
 /// </summary>
 
 [RpcController("sensor")]
-public interface ISensorControllerService : IDisposable
+public interface ISensorController : IDisposable
 {
     /// <summary>
     /// Gets the command responsible for updating the operational state of a specific module.

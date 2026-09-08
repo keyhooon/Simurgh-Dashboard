@@ -1,59 +1,23 @@
-﻿namespace SimurghDashboard.Sensors.Services;
-
-using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SimurghDashboard.Sensors.Contracts;
 using SimurghDashboard.Sensors.Models;
-using SimurghDashboard.Sensors.Options;
 
-#region Command Parameter Payloads
-
-/// <summary>
-/// Parameter payload for updating operational state across a target sensor module.
-/// </summary>
-public readonly record struct SensorStateParams(
-    int SensorIndex,
-    ModuleState State,
-    DateTimeOffset? Timestamp = null);
-
-/// <summary>
-/// Parameter payload for ingesting channel-level real-time measurement telemetry.
-/// </summary>
-public readonly record struct SensorTelemetryParams(
-    int SensorIndex,
-    int ChannelIndex,
-    double Value,
-    DateTimeOffset? Timestamp = null);
-
-/// <summary>
-/// Parameter payload for re-applying or mutating module-level configuration.
-/// </summary>
-public readonly record struct SensorConfigParams(
-    int SensorIndex,
-    SensorOptions Options);
-
-/// <summary>
-/// Positional parameter targeting a specific sensor module.
-/// </summary>
-public readonly record struct SensorIndexParams(
-    int SensorIndex);
-
-#endregion
+namespace SimurghDashboard.Sensors.Services;
 
 /// <summary>
 /// Central domain controller orchestrating state transitions, live telemetry ingestion,
 /// and configuration updates across sensor entities exposed by <see cref="ISensorAccessor"/>.
 /// Subscribes to collection updates and property changes to maintain command validity.
 /// </summary>
-public sealed class SensorControllerService : ISensorControllerService, IDisposable
+public sealed class SensorController : ISensorController, IDisposable
 {
     private readonly ISensorAccessor _sensorAccessor;
     private readonly ConcurrentDictionary<int, PropertyChangedEventHandler> _propertySubscriptions = new();
 
-    public SensorControllerService(ISensorAccessor sensorAccessor)
+    public SensorController(ISensorAccessor sensorAccessor)
     {
         _sensorAccessor = sensorAccessor ?? throw new ArgumentNullException(nameof(sensorAccessor));
 

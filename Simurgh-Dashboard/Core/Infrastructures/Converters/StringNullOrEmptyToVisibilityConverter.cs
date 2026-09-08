@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
 
-namespace SimurghDashboard.Core.Infrastructures;
+namespace SimurghDashboard.Core.Infrastructures.Converters;
 
 /// <summary>
 /// Converts null or empty (or whitespace-only) strings to Visibility enumeration.
