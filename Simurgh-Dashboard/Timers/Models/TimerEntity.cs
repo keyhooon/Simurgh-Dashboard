@@ -1,8 +1,8 @@
-﻿using SimurghDashboard.Timers.Controls.Timers;
-using SimurghDashboard.Timers.Options;
+﻿using SimurghDashboard.Timers.Options;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
+using SimurghDashboard.Timers.Controls;
 
 namespace SimurghDashboard.Timers.Models;
 
@@ -38,10 +38,10 @@ public sealed class TimerEntity : INotifyPropertyChanged
     private DateTime? _startTime;
     private DateTime? _targetTime;
     private TimerDirection _direction = TimerDirection.CountUp;
-    private DigitalTimerAction _currentAction = DigitalTimerAction.None;
+    private TimerAction _currentAction = TimerAction.Reset;
     private TimeSpan _warningThreshold = DefaultWarningThreshold;
     private bool _showSeconds = true;
-    private DigitalTimerState _state = DigitalTimerState.NotRunning;
+    private TimerState _state = TimerState.Pausing;
     private TimeSpan _currentDuration = TimeSpan.Zero;
     private bool _isWarning = false;
     private Brush _digitBrush = DefaultDigitBrush;
@@ -80,24 +80,6 @@ public sealed class TimerEntity : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Start timestamp of the active timing session.
-    /// </summary>
-    public DateTime? StartTime
-    {
-        get => _startTime;
-        set => SetProperty(ref _startTime, value);
-    }
-
-    /// <summary>
-    /// Target deadline timestamp for countdown sequences.
-    /// </summary>
-    public DateTime? TargetTime
-    {
-        get => _targetTime;
-        set => SetProperty(ref _targetTime, value);
-    }
-
-    /// <summary>
     /// Direction mode of progression (CountUp vs CountDown).
     /// </summary>
     public TimerDirection Direction
@@ -109,7 +91,7 @@ public sealed class TimerEntity : INotifyPropertyChanged
     /// <summary>
     /// Direction mode of progression (CountUp vs CountDown).
     /// </summary>
-    public DigitalTimerAction CurrentAction
+    public TimerAction CurrentAction
     {
         get => _currentAction;
         set => SetProperty(ref _currentAction, value);
@@ -136,7 +118,7 @@ public sealed class TimerEntity : INotifyPropertyChanged
     /// <summary>
     /// Current operational state machine value.
     /// </summary>
-    public DigitalTimerState State
+    public TimerState State
     {
         get => _state;
         set => SetProperty(ref _state, value);
@@ -270,8 +252,6 @@ public sealed class TimerEntity : INotifyPropertyChanged
 
         Id = string.IsNullOrWhiteSpace(options.Id) ? Guid.NewGuid().ToString("N") : options.Id;
         Title = options.Title ?? string.Empty;
-        StartTime = options.StartTime;
-        TargetTime = options.TargetTime;
 
         // Gracefully handle direction parsing with a fallback to CountDown (as specified in TimerOptions default)
         if (Enum.TryParse<TimerDirection>(options.Direction, ignoreCase: true, out var parsedDirection))

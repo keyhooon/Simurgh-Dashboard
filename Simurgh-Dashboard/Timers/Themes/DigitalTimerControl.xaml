@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls1="clr-namespace:SimurghDashboard.Timers.Controls"
     xmlns:controls2="clr-namespace:SimurghDashboard.Core.Controls"
-    xmlns:timers1="clr-namespace:SimurghDashboard.Timers.Controls.Timers">
+    xmlns:models="clr-namespace:SimurghDashboard.Timers.Models">
 
     <!--  Merged theme resource dictionaries  -->
     <ResourceDictionary.MergedDictionaries>
@@ -111,7 +111,7 @@
                                             <TextBlock
                                                 x:Name="PART_Id"
                                                 FontFamily="{StaticResource FontFamilyDigit}"
-                                                FontSize="28"
+                                                FontSize="34"
                                                 FontWeight="Heavy"
                                                 Foreground="{TemplateBinding DigitBrush}"
                                                 Text="{TemplateBinding Id}"
@@ -127,8 +127,8 @@
                                             Orientation="Horizontal">
                                             <Path
                                                 x:Name="PART_DirectionIcon"
-                                                Width="28"
-                                                Height="28"
+                                                Width="44"
+                                                Height="44"
                                                 Margin="0,0,4,0"
                                                 VerticalAlignment="Center"
                                                 Data="{StaticResource IconTimerDown}"
@@ -136,8 +136,8 @@
                                                 Stretch="Uniform" />
                                             <Path
                                                 x:Name="PART_StateIcon"
-                                                Width="28"
-                                                Height="28"
+                                                Width="44"
+                                                Height="44"
                                                 VerticalAlignment="Center"
                                                 Data="{StaticResource IconClock}"
                                                 Fill="{TemplateBinding DigitBrush}"
@@ -218,7 +218,7 @@
                         </DataTrigger>
 
                         <!--  Operational State Triggers  -->
-                        <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.Running}">
+                        <Trigger Property="State" Value="{x:Static models:TimerState.Running}">
                             <Setter TargetName="PART_StateText" Property="Text" Value="در حال شمارش" />
                             <Setter TargetName="PART_StateText" Property="Foreground" Value="#4CAF50" />
                             <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#4CAF50" />
@@ -226,21 +226,14 @@
                             <Setter TargetName="PART_StateIcon" Property="Fill" Value="#4CAF50" />
                         </Trigger>
 
-                        <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.Pausing}">
-                            <Setter TargetName="PART_StateText" Property="Text" Value="توقف موقت" />
+                        <Trigger Property="State" Value="{x:Static models:TimerState.Pausing}">
+                            <Setter TargetName="PART_StateText" Property="Text" Value="توقف" />
                             <Setter TargetName="PART_StateText" Property="Foreground" Value="#FFC107" />
                             <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#FFC107" />
                             <Setter TargetName="PART_StateIcon" Property="Data" Value="{StaticResource IconTimerPause}" />
                             <Setter TargetName="PART_StateIcon" Property="Fill" Value="#FFC107" />
                         </Trigger>
 
-                        <Trigger Property="State" Value="{x:Static timers1:DigitalTimerState.NotRunning}">
-                            <Setter TargetName="PART_StateText" Property="Text" Value="پایان" />
-                            <Setter TargetName="PART_StateText" Property="Foreground" Value="#03A9F4" />
-                            <Setter TargetName="PART_StatusIndicator" Property="Fill" Value="#03A9F4" />
-                            <Setter TargetName="PART_StateIcon" Property="Data" Value="{StaticResource IconTimerComplete}" />
-                            <Setter TargetName="PART_StateIcon" Property="Fill" Value="#03A9F4" />
-                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

@@ -1,173 +1,199 @@
-﻿using System.Collections.Concurrent;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using SimurghDashboard.Timers.Contracts;
-using SimurghDashboard.Timers.Controls.Timers;
+using SimurghDashboard.Timers.Controls;
 using SimurghDashboard.Timers.Models;
 
-namespace SimurghDashboard.Timers.Services
+namespace SimurghDashboard.Timers.Services;
+
+/// <summary>
+/// Executes command-driven operations against timer entities.
+///
+/// The service is the authoritative state machine for timer actions.
+/// Timer entities store the current duration and state; no absolute
+/// timestamps or server-side timeline dictionaries are required.
+/// </summary>
+public sealed class TimerControllerService : ITimerControllerService
 {
-    /// <summary>
-    /// Service orchestrating and dispatching commands across timer entities managed within <see cref="ITimersAccessor"/>.
-    /// Maintains pause snapshots and configured durations per timer ID to handle timeline shifts and resets.
-    /// </summary>
-    public class TimerControllerService :ITimerControllerService
+    private readonly ITimersAccessor _timerStore;
+
+    public TimerControllerService(ITimersAccessor timerStore)
     {
-        private readonly ITimersAccessor _timerStore;
+        _timerStore = timerStore ??
+            throw new ArgumentNullException(nameof(timerStore));
 
-        // Thread-safe tracking of pause snapshots and base durations keyed by Timer Id
-        private readonly ConcurrentDictionary<int, DateTime> _pauseTimestamps = new();
-        private readonly ConcurrentDictionary<int, TimeSpan> _configuredDurations = new();
+        ActionCommand = new RelayCommand<TimerActionParams>(
+            ExecuteAction,
+            CanExecuteAction);
 
-        public TimerControllerService(ITimersAccessor timerStore)
+        ConfigurationCommand = new RelayCommand<TimerConfigurationParams>(
+            ExecuteConfiguration,
+            CanExecuteConfiguration);
+    }
+
+    #region Commands
+
+    public IRelayCommand<TimerActionParams> ActionCommand { get; }
+
+    public IRelayCommand<TimerConfigurationParams> ConfigurationCommand { get; }
+
+    #endregion
+
+    #region Command Guards
+
+    private bool CanExecuteAction(TimerActionParams parameters)
+    {
+        TimerEntity? entity = ResolveEntity(parameters.TimerId);
+
+        if (entity is null)
         {
-            _timerStore = timerStore ?? throw new ArgumentNullException(nameof(timerStore));
-
-            StartCommand = new RelayCommand<TimerConfigParams>(ExecuteStart, CanExecuteStart);
-            PauseCommand = new RelayCommand<TimerIndexParams>(ExecutePause, CanExecutePause);
-            ResumeCommand = new RelayCommand<TimerIndexParams>(ExecuteResume, CanExecuteResume);
-            ResetCommand = new RelayCommand<TimerIndexParams>(ExecuteReset, CanExecuteReset);
+            return false;
         }
 
-        #region Commands
-
-        public IRelayCommand<TimerConfigParams> StartCommand { get; }
-        public IRelayCommand<TimerIndexParams> PauseCommand { get; }
-        public IRelayCommand<TimerIndexParams> ResumeCommand { get; }
-        public IRelayCommand<TimerIndexParams> ResetCommand { get; }
-
-        #endregion
-
-        #region Command Guards
-
-        private bool CanExecuteStart(TimerConfigParams args)
+        return parameters.Action switch
         {
-            var entity = ResolveEntity(args.Id);
-            return entity != null;
+            TimerAction.Start =>
+                true,
+
+            TimerAction.Pause =>
+                true,
+
+            TimerAction.Reset =>
+                true,
+
+            _ => false
+        };
+    }
+
+    private bool CanExecuteConfiguration(
+        TimerConfigurationParams parameters)
+    {
+        return ResolveEntity(parameters.TimerId) is not null;
+    }
+
+    #endregion
+
+    #region Action Command
+
+    private void ExecuteAction(TimerActionParams parameters)
+    {
+        TimerEntity? entity = ResolveEntity(parameters.TimerId);
+
+        if (entity is null)
+        {
+            return;
         }
 
-        private bool CanExecutePause(TimerIndexParams args)
+        switch (parameters.Action)
         {
-            var entity = ResolveEntity(args.Id);
-            return entity is { State: DigitalTimerState.Running };
+            case TimerAction.Start:
+                ExecuteStart(entity, parameters.CurrentDuration + (DateTime.Now - parameters.TimeStamp));
+                break;
+
+            case TimerAction.Pause:
+                ExecutePause(entity, parameters.CurrentDuration);
+                break;
+
+            case TimerAction.Reset:
+                ExecuteReset(entity, parameters.CurrentDuration);
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(parameters.Action),
+                    parameters.Action,
+                    "Unsupported timer action.");
         }
 
-        private bool CanExecuteResume(TimerIndexParams args)
-        {
-            var entity = ResolveEntity(args.Id);
-            return entity is { State: DigitalTimerState.Pausing };
-        }
-
-        private bool CanExecuteReset(TimerIndexParams args)
-        {
-            var entity = ResolveEntity(args.Id);
-            return entity != null;
-        }
-
-        #endregion
-
-        #region Command Executions
-
-        /// <summary>
-        /// Atomically sets direction, duration boundaries, and starts running timeline.
-        /// </summary>
-        private void ExecuteStart(TimerConfigParams args)
-        {
-            var entity = ResolveEntity(args.Id);
-            if (entity == null) return;
-
-            var now = DateTime.UtcNow;
-
-            entity.Direction = args.Direction;
-
-            if (args.Direction == TimerDirection.CountDown)
-            {
-                entity.StartTime = now;
-                entity.TargetTime = now + args.Duration;
-            }
-            else // CountUp
-            {
-                entity.StartTime = now;
-                entity.TargetTime = args.Duration > TimeSpan.Zero ? now + args.Duration : null;
-            }
-
-            entity.CurrentAction = DigitalTimerAction.None;
-            NotifyCommandGuards();
-        }
-
-        /// <summary>
-        /// Freezes timing calculation and stores the snapshot timestamp.
-        /// </summary>
-        private void ExecutePause(TimerIndexParams args)
-        {
-            var entity = ResolveEntity(args.Id);
-            if (entity is not { State: DigitalTimerState.Running }) return;
-
-            entity.CurrentAction = DigitalTimerAction.Pause;
-            NotifyCommandGuards();
-        }
-
-        /// <summary>
-        /// Resumes running session and shifts StartTime/TargetTime forward by the paused duration.
-        /// </summary>
-        private void ExecuteResume(TimerIndexParams args)
-        {
-            var entity = ResolveEntity(args.Id);
-            if (entity is not { State: DigitalTimerState.Pausing }) return;
-
-            entity.CurrentAction = DigitalTimerAction.Resume;
-            NotifyCommandGuards();
-        }
-
-        /// <summary>
-        /// Resets the entity timeline back to initial configured boundaries in stopped state.
-        /// </summary>
-        private void ExecuteReset(TimerIndexParams args)
-        {
-            var entity = ResolveEntity(args.Id);
-            if (entity == null) return;
-
-            entity.CurrentAction = DigitalTimerAction.Reset;
-            NotifyCommandGuards();
-        }
-
-        #endregion
-
-        #region Helper Methods
-
-        /// <summary>
-        /// Resolves the entity from the underlying store using numeric index or string-mapped id.
-        /// </summary>
-        private TimerEntity? ResolveEntity(int id)
-        {
-            // Adapts int id to ITimerStore lookup mechanism
-            return _timerStore.FindById(id.ToString());
-        }
-
-        /// <summary>
-        /// Invalidates CanExecute conditions across commands.
-        /// </summary>
-        private void NotifyCommandGuards()
-        {
-            StartCommand.NotifyCanExecuteChanged();
-            PauseCommand.NotifyCanExecuteChanged();
-            ResumeCommand.NotifyCanExecuteChanged();
-            ResetCommand.NotifyCanExecuteChanged();
-        }
-
-        #endregion
+        NotifyCommandGuards();
     }
 
     /// <summary>
-    /// Parameter payload for atomically configuring timer progression direction and target duration.
+    /// Starts the timer from its current duration.
     /// </summary>
-    public readonly record struct TimerConfigParams(
-        int Id,
-        TimerDirection Direction,
-        TimeSpan Duration);
+    private static void ExecuteStart(TimerEntity entity, TimeSpan currentTime)
+    {
+        if (entity.State == TimerState.Running)
+        {
+            return;
+        }
+        entity.CurrentDuration = currentTime;
+        //entity.State = TimerState.Running;
+        entity.CurrentAction = TimerAction.Start;
+    }
 
     /// <summary>
-    /// Parameter payload targeting an entity by its identifier.
+    /// Pauses the timer and preserves its current duration.
     /// </summary>
-    public readonly record struct TimerIndexParams(
-        int Id);
+    private static void ExecutePause(TimerEntity entity, TimeSpan currentTime)
+    {
+        if (entity.State == TimerState.Pausing)
+        {
+            return;
+        }
+
+//        entity.State = TimerState.Pausing;
+        entity.CurrentAction = TimerAction.Pause;
+        entity.CurrentDuration = currentTime;
+    }
+
+    /// <summary>
+    /// Resets the timer using the current configured duration.
+    /// </summary>
+    private static void ExecuteReset(TimerEntity entity, TimeSpan currentTime)
+    {
+        //entity.State = TimerState.Running;
+        entity.CurrentDuration = currentTime;
+        entity.CurrentAction = TimerAction.Reset;
+
+        /*
+         * CurrentDuration is already the configured reset baseline.
+         * The client control also maintains this baseline locally.
+         *
+         * If the domain model has a separate configured-duration property,
+         * assign that value here before publishing the snapshot.
+         */
+    }
+
+    #endregion
+
+    #region Configuration Command
+
+    private void ExecuteConfiguration(
+        TimerConfigurationParams parameters)
+    {
+        TimerEntity? entity = ResolveEntity(parameters.TimerId);
+
+        if (entity is null)
+        {
+            return;
+        }
+
+        entity.CurrentDuration = Normalize(parameters.NewDuration);
+
+        NotifyCommandGuards();
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private TimerEntity? ResolveEntity(string id)
+    {
+        return _timerStore.FindById(id.ToString());
+    }
+
+    private static TimeSpan Normalize(TimeSpan value)
+    {
+        return value < TimeSpan.Zero
+            ? TimeSpan.Zero
+            : value;
+    }
+
+    private void NotifyCommandGuards()
+    {
+        ActionCommand.NotifyCanExecuteChanged();
+        ConfigurationCommand.NotifyCanExecuteChanged();
+    }
+
+    #endregion
 }

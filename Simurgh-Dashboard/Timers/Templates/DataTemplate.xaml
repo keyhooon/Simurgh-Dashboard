@@ -12,18 +12,14 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             Action="{Binding CurrentAction, Mode=OneWay}"
+            CurrentDuration="{Binding CurrentDuration, Mode=TwoWay}"
             DigitBrush="{Binding DigitBrush, Mode=TwoWay}"
             Direction="{Binding Direction, Mode=TwoWay}"
             Id="{Binding Id, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-            IsWarning="{Binding IsWarning, Mode=OneWayToSource}"
             PlaceholderBrush="{Binding PlaceholderBrush, Mode=OneWay}"
             ShowSeconds="{Binding ShowSeconds, Mode=TwoWay}"
-            StartTime="{Binding StartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             StateChangedCommand="{Binding StateChangedCommand}"
-            TargetTime="{Binding TargetTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-            WarningBrush="{Binding WarningBrush, Mode=OneWay}"
-            WarningReachedCommand="{Binding WarningReachedCommand}"
-            WarningThreshold="{Binding WarningThreshold, Mode=TwoWay}" />
+            WarningBrush="{Binding WarningBrush, Mode=OneWay}" />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewmodels:TimersListViewModel}">

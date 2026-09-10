@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using SimurghDashboard.Core.Ipc;
+using SimurghDashboard.Timers.Models;
 using SimurghDashboard.Timers.Services;
 
 namespace SimurghDashboard.Timers.Contracts
@@ -12,23 +13,16 @@ namespace SimurghDashboard.Timers.Contracts
     public interface ITimerControllerService
     {
         /// <summary>
-        /// Command to atomically set direction, duration boundaries, and start the running timeline.
+        /// Route: "timer.action"
+        /// Applies an action (Start / Pause / Reset) to the target timer entity.
+        /// The action decision is resolved on the server based on the entity's current state.
         /// </summary>
-        IRelayCommand<TimerConfigParams> StartCommand { get; }
+        IRelayCommand<TimerActionParams> ActionCommand { get; }
 
         /// <summary>
-        /// Command to freeze timing calculation and store the snapshot timestamp.
+        /// Route: "timer.configuration"
+        /// Applies a duration change to the target timer entity.
         /// </summary>
-        IRelayCommand<TimerIndexParams> PauseCommand { get; }
-
-        /// <summary>
-        /// Command to resume a running session and shift StartTime/TargetTime forward by the paused duration.
-        /// </summary>
-        IRelayCommand<TimerIndexParams> ResumeCommand { get; }
-
-        /// <summary>
-        /// Command to reset the entity timeline back to initial configured boundaries in a stopped state.
-        /// </summary>
-        IRelayCommand<TimerIndexParams> ResetCommand { get; }
+        IRelayCommand<TimerConfigurationParams> ConfigurationCommand { get; }
     }
 }

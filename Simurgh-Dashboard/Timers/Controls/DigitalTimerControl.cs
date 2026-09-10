@@ -1,28 +1,38 @@
-﻿using System.Globalization;
+﻿using SimurghDashboard.Timers.Models;
+using System;
+using System.Diagnostics;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using SimurghDashboard.Timers.Controls.Timers;
 
 namespace SimurghDashboard.Timers.Controls;
 
-/// <summary>
-/// Self-evaluating Digital Timer control. Automatically handles state from StartTime and TargetTime.
-/// Implements live target pushing on pause, pause duration accumulation, 
-/// dynamic span preservation on reset, synchronized placeholder text generation, and direct command execution.
-/// All telemetry properties are registered as standard DependencyProperties to fully support outward MVVM bindings.
-/// </summary>
+public sealed class DigitalTimerStateChangedEventArgs(TimerState state) : EventArgs
+{
+    public TimerState State { get; } = state;
+}
+
 public sealed class DigitalTimerControl : Control
 {
     private readonly DispatcherTimer _timer;
-    private DateTime? _pauseStartTime;
-    private bool _hasFiredWarning;
+
+    // The baseline value of the current measurement segment.
+    private TimeSpan _segmentValue = TimeSpan.Zero;
+
+    // The last effective CurrentDuration value supplied externally.
+    private TimeSpan _resetValue = TimeSpan.Zero;
+
+    // A nullable timestamp avoids treating a valid timestamp as a sentinel.
+    private long? _segmentStartTimestamp;
+
+    // Internal updates must never overwrite the reset baseline.
+    private bool _isUpdatingCurrentDurationInternally;
 
     static DigitalTimerControl()
     {
-        // Bind control to default style definitions in Generic.xaml
         DefaultStyleKeyProperty.OverrideMetadata(
             typeof(DigitalTimerControl),
             new FrameworkPropertyMetadata(typeof(DigitalTimerControl)));
@@ -30,13 +40,15 @@ public sealed class DigitalTimerControl : Control
 
     public DigitalTimerControl()
     {
-        // 250ms cadence ensures responsive sub-second rendering without high CPU overhead
-        _timer = new DispatcherTimer(DispatcherPriority.Render)
+        _timer = new DispatcherTimer(
+            DispatcherPriority.Render,
+            Dispatcher)
         {
-            Interval = TimeSpan.FromMilliseconds(250)
+            Interval = TimeSpan.FromMilliseconds(100)
         };
 
         _timer.Tick += OnTimerTick;
+
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -45,396 +57,401 @@ public sealed class DigitalTimerControl : Control
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        EvaluateAutoState();
-        UpdateTimer();
-
-        if (State == DigitalTimerState.Running && !_timer.IsEnabled)
-        {
-            _timer.Start();
-        }
+        RefreshTimer();
+        SynchronizeRefreshTimer();
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        if (_timer.IsEnabled)
+        // Stop UI refreshes without changing the logical timer state.
+        // A running timer continues measuring elapsed time while unloaded.
+        _timer.Stop();
+    }
+
+    private void OnTimerTick(object? sender, EventArgs e)
+    {
+        RefreshTimer();
+    }
+
+    private void SynchronizeRefreshTimer()
+    {
+        if (IsLoaded && State == TimerState.Running)
+        {
+            _timer.Start();
+        }
+        else
         {
             _timer.Stop();
         }
     }
 
-    private void OnTimerTick(object? sender, EventArgs e)
-    {
-        UpdateTimer();
-    }
-
     #endregion
 
-    #region Auto-State Evaluation & Timer Core Engine
+    #region Timer Engine
 
-    private void EvaluateAutoState()
+    private static TimeSpan Normalize(TimeSpan value)
     {
-        // Maintain explicit user pause action
-        if (State == DigitalTimerState.Pausing)
-        {
-            return;
-        }
-
-        var now = DateTime.Now;
-
-        // Automatically determine if timer is running based on StartTime and TargetTime bounds
-        if (StartTime.HasValue && TargetTime.HasValue && TargetTime.Value > StartTime.Value)
-        {
-            if (now >= StartTime.Value && now < TargetTime.Value)
-            {
-                SetStateInternal(DigitalTimerState.Running);
-                return;
-            }
-        }
-
-        SetStateInternal(DigitalTimerState.NotRunning);
+        return value < TimeSpan.Zero
+            ? TimeSpan.Zero
+            : value;
     }
 
-    private void UpdateTimer()
+    private static TimeSpan GetElapsedSince(long timestamp)
     {
-        var now = DateTime.Now;
+        long elapsedTimestamp = Stopwatch.GetTimestamp() - timestamp;
 
-        // When not configured or outside active range
-        if (!StartTime.HasValue || !TargetTime.HasValue)
+        if (elapsedTimestamp <= 0)
         {
-            CurrentDuration = TimeSpan.Zero;
-            ApplyTimeAndPlaceholder(TimeSpan.Zero);
-            IsWarning = false;
-            return;
+            return TimeSpan.Zero;
         }
 
-        var start = StartTime.Value;
-        var target = TargetTime.Value;
-        var totalTargetSpan = target - start;
+        double elapsedTicks =
+            elapsedTimestamp *
+            ((double)TimeSpan.TicksPerSecond / Stopwatch.Frequency);
 
-        if (State == DigitalTimerState.Pausing)
+        if (elapsedTicks >= long.MaxValue)
         {
-            // Keep display static at frozen duration
-            ApplyTimeAndPlaceholder(CurrentDuration);
-            return;
+            return TimeSpan.MaxValue;
         }
 
-        if (State == DigitalTimerState.NotRunning)
-        {
-            // Display full duration window or zero depending on direction before run
-            var initialDuration = Direction == TimerDirection.CountDown ? totalTargetSpan : TimeSpan.Zero;
-            if (initialDuration < TimeSpan.Zero) initialDuration = TimeSpan.Zero;
-
-            CurrentDuration = initialDuration;
-            ApplyTimeAndPlaceholder(initialDuration);
-            IsWarning = false;
-            return;
-        }
-
-        if (State == DigitalTimerState.Running)
-        {
-            TimeSpan remaining = target - now;
-            TimeSpan elapsed = now - start;
-
-            if (Direction == TimerDirection.CountDown)
-            {
-                if (remaining <= TimeSpan.Zero)
-                {
-                    CurrentDuration = TimeSpan.Zero;
-                    ApplyTimeAndPlaceholder(TimeSpan.Zero);
-                    SetStateInternal(DigitalTimerState.NotRunning);
-                    return;
-                }
-
-                CurrentDuration = remaining;
-                ApplyTimeAndPlaceholder(remaining);
-
-                // Warning zone assessment for CountDown
-                bool inWarningZone = remaining <= WarningThreshold;
-                if (inWarningZone && !IsWarning)
-                {
-                    IsWarning = true;
-                    if (!_hasFiredWarning)
-                    {
-                        _hasFiredWarning = true;
-                        ExecuteCommandOrNotify(WarningReachedCommand, WarningReached);
-                    }
-                }
-                else if (!inWarningZone && IsWarning)
-                {
-                    IsWarning = false;
-                }
-            }
-            else // CountUp
-            {
-                if (totalTargetSpan > TimeSpan.Zero && elapsed >= totalTargetSpan)
-                {
-                    CurrentDuration = totalTargetSpan;
-                    ApplyTimeAndPlaceholder(totalTargetSpan);
-                    SetStateInternal(DigitalTimerState.NotRunning);
-                    return;
-                }
-
-                CurrentDuration = elapsed;
-                ApplyTimeAndPlaceholder(elapsed);
-
-                // Warning zone assessment for CountUp approaching TargetTime
-                if (totalTargetSpan > TimeSpan.Zero)
-                {
-                    TimeSpan distanceToTarget = totalTargetSpan - elapsed;
-                    bool inWarningZone = distanceToTarget <= WarningThreshold && distanceToTarget > TimeSpan.Zero;
-
-                    if (inWarningZone && !IsWarning)
-                    {
-                        IsWarning = true;
-                        if (!_hasFiredWarning)
-                        {
-                            _hasFiredWarning = true;
-                            ExecuteCommandOrNotify(WarningReachedCommand, WarningReached);
-                        }
-                    }
-                    else if (!inWarningZone && IsWarning)
-                    {
-                        IsWarning = false;
-                    }
-                }
-            }
-        }
+        return TimeSpan.FromTicks((long)elapsedTicks);
     }
 
-    private void SetStateInternal(DigitalTimerState newState)
+    private TimeSpan CalculateCurrentDuration()
     {
-        if (State == newState) return;
+        return CalculateCurrentDuration(Direction);
+    }
 
-        State = newState;
+    private TimeSpan CalculateCurrentDuration(TimerDirection direction)
+    {
+        TimeSpan elapsed = _segmentStartTimestamp is long timestamp
+            ? GetElapsedSince(timestamp)
+            : TimeSpan.Zero;
 
-        if (newState == DigitalTimerState.Running)
+        if (direction == TimerDirection.CountDown)
         {
-            if (!_timer.IsEnabled) _timer.Start();
+            return elapsed >= _segmentValue
+                ? TimeSpan.Zero
+                : _segmentValue - elapsed;
+        }
+
+        // Saturate instead of overflowing at TimeSpan.MaxValue.
+        long availableTicks =
+            TimeSpan.MaxValue.Ticks - _segmentValue.Ticks;
+
+        return elapsed.Ticks >= availableTicks
+            ? TimeSpan.MaxValue
+            : TimeSpan.FromTicks(_segmentValue.Ticks + elapsed.Ticks);
+    }
+
+    private void Rebase(TimeSpan value, bool running)
+    {
+        _segmentValue = Normalize(value);
+
+        _segmentStartTimestamp = running
+            ? Stopwatch.GetTimestamp()
+            : null;
+    }
+
+    private void RefreshTimer()
+    {
+        VerifyAccess();
+
+        if (State != TimerState.Running)
+        {
+            UpdateTimeText(CurrentDuration);
+            return;
+        }
+
+        TimeSpan value = CalculateCurrentDuration();
+
+        if (Direction == TimerDirection.CountDown &&
+            value == TimeSpan.Zero)
+        {
+            // Freeze measurement before publishing the terminal value.
+            Rebase(TimeSpan.Zero, running: false);
+
+            SetCurrentDurationInternally(TimeSpan.Zero);
+
+            // Binding callbacks may have synchronously changed the timer.
+            if (State == TimerState.Running &&
+                Direction == TimerDirection.CountDown &&
+                CurrentDuration == TimeSpan.Zero)
+            {
+                SetState(TimerState.Pausing);
+            }
         }
         else
         {
-            if (_timer.IsEnabled) _timer.Stop();
+            SetCurrentDurationInternally(value);
+        }
+
+        UpdateTimeText(CurrentDuration);
+    }
+
+
+    private void SetCurrentDurationInternally(TimeSpan value)
+    {
+        bool previousFlag = _isUpdatingCurrentDurationInternally;
+        _isUpdatingCurrentDurationInternally = true;
+
+        try
+        {
+            // Preserve an existing binding on CurrentDuration.
+            SetCurrentValue(
+                CurrentDurationProperty,
+                Normalize(value));
+        }
+        finally
+        {
+            _isUpdatingCurrentDurationInternally = previousFlag;
         }
     }
 
     #endregion
 
-    #region User Interactions (Pause, Resume, Reset)
+    #region Actions
 
-    /// <summary>
-    /// Pauses the running timer and captures the pause starting timestamp.
-    /// </summary>
+    public void ExecuteAction(TimerAction action)
+    {
+        VerifyAccess();
+
+        switch (action)
+        {
+            case TimerAction.Start:
+                Start();
+                break;
+
+            case TimerAction.Pause:
+                Pause();
+                break;
+
+            case TimerAction.Reset:
+                Reset();
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(action),
+                    action,
+                    "Unsupported timer action.");
+        }
+    }
+
+    public void Start()
+    {
+        VerifyAccess();
+
+        if (State == TimerState.Running)
+        {
+            RefreshTimer();
+            return;
+        }
+
+        // A countdown cannot run without a positive duration.
+        if (Direction == TimerDirection.CountDown &&
+            CurrentDuration <= TimeSpan.Zero)
+        {
+            Rebase(TimeSpan.Zero, running: false);
+            SetCurrentDurationInternally(TimeSpan.Zero);
+
+            UpdateTimeText(CurrentDuration);
+            SynchronizeRefreshTimer();
+            return;
+        }
+
+        // The state callback initializes the measurement segment.
+        SetState(TimerState.Running);
+    }
+
     public void Pause()
     {
-        if (State != DigitalTimerState.Running) return;
+        VerifyAccess();
 
-        _pauseStartTime = DateTime.Now;
-        SetStateInternal(DigitalTimerState.Pausing);
-    }
-
-    /// <summary>
-    /// Resumes timer by shifting TargetTime by elapsed pause duration.
-    /// </summary>
-    public void Resume()
-    {
-        if (State != DigitalTimerState.Pausing) return;
-
-        if (_pauseStartTime.HasValue && TargetTime.HasValue)
+        if (State == TimerState.Pausing)
         {
-            // Push back target timestamp by exact paused elapsed time
-            var pausedDuration = DateTime.Now - _pauseStartTime.Value;
-            TargetTime = TargetTime.Value + pausedDuration;
-            _pauseStartTime = null;
+            _timer.Stop();
+            UpdateTimeText(CurrentDuration);
+            return;
         }
 
-        SetStateInternal(DigitalTimerState.Running);
-        UpdateTimer();
+        // The state callback captures elapsed time and freezes the segment.
+        SetState(TimerState.Pausing);
     }
 
-    /// <summary>
-    /// Resets the timer: StartTime becomes Now, and TargetTime is pushed forward preserving the original delta.
-    /// </summary>
     public void Reset()
     {
-        _pauseStartTime = null;
-        _hasFiredWarning = false;
-        IsWarning = false;
+        VerifyAccess();
 
-        var now = DateTime.Now;
+        _timer.Stop();
 
-        if (StartTime.HasValue && TargetTime.HasValue)
-        {
-            TimeSpan originalDelta = TargetTime.Value - StartTime.Value;
-            StartTime = now;
-            TargetTime = now + originalDelta;
-        }
-        else
-        {
-            StartTime = now;
-            TargetTime = now + TimeSpan.FromMinutes(5);
-        }
+        // Replace the measurement segment before transitioning to Pausing.
+        // This prevents the state callback from restoring the old elapsed value.
+        Rebase(_resetValue, running: false);
 
-        SetStateInternal(DigitalTimerState.Running);
-        UpdateTimer();
+        SetCurrentDurationInternally(_resetValue);
+
+        SetState(TimerState.Pausing);
+
+        UpdateTimeText(CurrentDuration);
+        SynchronizeRefreshTimer();
     }
 
     #endregion
 
-    #region Formatting & Allocation-Free Digits
+    #region CurrentDuration
 
-    private void ApplyTimeAndPlaceholder(TimeSpan span)
+    public TimeSpan CurrentDuration
     {
-        if (span < TimeSpan.Zero)
-        {
-            span = TimeSpan.Zero;
-        }
-
-        var totalHours = (long)span.TotalHours;
-        string formattedTime;
-        string formattedPlaceholder;
-
-        if (totalHours > 0)
-        {
-            if (ShowSeconds)
-            {
-                formattedTime = string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}", totalHours, span.Minutes, span.Seconds);
-                formattedPlaceholder = "88:88:88";
-            }
-            else
-            {
-                formattedTime = string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}", totalHours, span.Minutes);
-                formattedPlaceholder = "88:88";
-            }
-        }
-        else
-        {
-            if (ShowSeconds)
-            {
-                formattedTime = string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}", span.Minutes, span.Seconds);
-                formattedPlaceholder = "88:88";
-            }
-            else
-            {
-                formattedTime = string.Format(CultureInfo.InvariantCulture, "{0:D2}m", span.Minutes);
-                formattedPlaceholder = "88m";
-            }
-        }
-
-        TimeText = ToLatinDigits(formattedTime);
-        PlaceholderText = formattedPlaceholder;
+        get => (TimeSpan)GetValue(CurrentDurationProperty);
+        set => SetValue(CurrentDurationProperty, value);
     }
 
-    private static string ToLatinDigits(string value)
+    public static readonly DependencyProperty CurrentDurationProperty =
+        DependencyProperty.Register(
+            nameof(CurrentDuration),
+            typeof(TimeSpan),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(
+                TimeSpan.Zero,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                OnCurrentDurationChanged,
+                CoerceCurrentDuration));
+
+    private static object CoerceCurrentDuration(
+        DependencyObject dependencyObject,
+        object baseValue)
     {
-        // Zero-allocation buffer modification using string.Create
-        return string.Create(
-            value.Length,
+        return Normalize((TimeSpan)baseValue);
+    }
+
+    private static void OnCurrentDurationChanged(
+        DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs e)
+    {
+        var control = (DigitalTimerControl)dependencyObject;
+
+        if (control._isUpdatingCurrentDurationInternally)
+        {
+            return;
+        }
+
+        var value = (TimeSpan)e.NewValue;
+
+        // Only external effective-value changes update the reset baseline.
+        control._resetValue = value;
+
+        control.Rebase(
             value,
-            static (destination, source) =>
-            {
-                for (var index = 0; index < source.Length; index++)
-                {
-                    destination[index] = source[index] switch
-                    {
-                        '\u06F0' => '0',
-                        '\u06F1' => '1',
-                        '\u06F2' => '2',
-                        '\u06F3' => '3',
-                        '\u06F4' => '4',
-                        '\u06F5' => '5',
-                        '\u06F6' => '6',
-                        '\u06F7' => '7',
-                        '\u06F8' => '8',
-                        '\u06F9' => '9',
-                        _ => source[index]
-                    };
-                }
-            });
+            running: control.State == TimerState.Running);
+
+        control.RefreshTimer();
+        control.SynchronizeRefreshTimer();
     }
 
-    private void ExecuteCommandOrNotify(ICommand? command, EventHandler? eventHandler)
+    #endregion
+
+    #region State
+
+    private static readonly DependencyPropertyKey StatePropertyKey =
+        DependencyProperty.RegisterReadOnly(
+            nameof(State),
+            typeof(TimerState),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(
+                TimerState.Pausing,
+                OnStateChanged),
+            IsValidState);
+
+    public static readonly DependencyProperty StateProperty =
+        StatePropertyKey.DependencyProperty;
+
+    public TimerState State =>
+        (TimerState)GetValue(StateProperty);
+
+    private static bool IsValidState(object value)
     {
-        if (command != null && command.CanExecute(this))
+        return value is TimerState state &&
+               (state == TimerState.Pausing ||
+                state == TimerState.Running);
+    }
+
+    private void SetState(TimerState state)
+    {
+        VerifyAccess();
+
+        if (State == state)
         {
-            command.Execute(this);
+            return;
         }
 
-        eventHandler?.Invoke(this, EventArgs.Empty);
+        // Only this control owns the key required to change State.
+        SetValue(StatePropertyKey, state);
+    }
+
+    private static void OnStateChanged(
+        DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs e)
+    {
+        var control = (DigitalTimerControl)dependencyObject;
+        var newState = (TimerState)e.NewValue;
+
+        if (newState == TimerState.Running)
+        {
+            // Start measuring from the current effective duration.
+            control.Rebase(
+                control.CurrentDuration,
+                running: true);
+        }
+        else
+        {
+            // Capture the exact value before stopping measurement.
+            TimeSpan value = control.CalculateCurrentDuration();
+
+            control.Rebase(value, running: false);
+            control.SetCurrentDurationInternally(value);
+        }
+
+        control.UpdateTimeText(control.CurrentDuration);
+        control.SynchronizeRefreshTimer();
+
+        // Avoid publishing a stale state after synchronous callbacks.
+        if (control.State != newState)
+        {
+            return;
+        }
+
+        control.NotifyStateChanged(newState);
+
+        if (control.State == newState &&
+            newState == TimerState.Running)
+        {
+            control.RefreshTimer();
+        }
+    }
+
+    private void NotifyStateChanged(TimerState state)
+    {
+        StateChanged?.Invoke(
+            this,
+            new DigitalTimerStateChangedEventArgs(state));
+
+        if (State != state)
+        {
+            return;
+        }
+
+        ICommand? command = StateChangedCommand;
+
+        if (command?.CanExecute(state) == true)
+        {
+            command.Execute(state);
+        }
     }
 
     #endregion
 
-    #region Dependency Properties - Identification & Metadata
-
-
-
-
-
-    public string Id
-    {
-        get => (string)GetValue(IdProperty);
-        set => SetValue(IdProperty, value);
-    }
-
-    public static readonly DependencyProperty IdProperty =
-        DependencyProperty.Register(
-            nameof(Id),
-            typeof(string),
-            typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(
-                string.Empty,
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
-
-    public string Title
-    {
-        get => (string)GetValue(TitleProperty);
-        set => SetValue(TitleProperty, value);
-    }
-
-    public static readonly DependencyProperty TitleProperty =
-        DependencyProperty.Register(
-            nameof(Title),
-            typeof(string),
-            typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(
-                string.Empty,
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
-
-    #endregion
-
-    #region Dependency Properties - Core Timing & Direction
-
-    public DateTime? StartTime
-    {
-        get => (DateTime?)GetValue(StartTimeProperty);
-        set => SetValue(StartTimeProperty, value);
-    }
-
-    public static readonly DependencyProperty StartTimeProperty =
-        DependencyProperty.Register(
-            nameof(StartTime),
-            typeof(DateTime?),
-            typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(
-                null,
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                OnTimingConfigurationChanged));
-
-    public DateTime? TargetTime
-    {
-        get => (DateTime?)GetValue(TargetTimeProperty);
-        set => SetValue(TargetTimeProperty, value);
-    }
-
-    public static readonly DependencyProperty TargetTimeProperty =
-        DependencyProperty.Register(
-            nameof(TargetTime),
-            typeof(DateTime?),
-            typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(
-                null,
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                OnTimingConfigurationChanged));
+    #region Direction
 
     public TimerDirection Direction
     {
@@ -449,21 +466,73 @@ public sealed class DigitalTimerControl : Control
             typeof(DigitalTimerControl),
             new FrameworkPropertyMetadata(
                 TimerDirection.CountDown,
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                OnTimingConfigurationChanged));
+                OnDirectionChanged),
+            IsValidDirection);
 
-    public TimeSpan WarningThreshold
+    private static bool IsValidDirection(object value)
     {
-        get => (TimeSpan)GetValue(WarningThresholdProperty);
-        set => SetValue(WarningThresholdProperty, value);
+        return value is TimerDirection direction &&
+               direction is TimerDirection.CountUp or TimerDirection.CountDown;
     }
 
-    public static readonly DependencyProperty WarningThresholdProperty =
+    private static void OnDirectionChanged(
+        DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs e)
+    {
+        var control = (DigitalTimerControl)dependencyObject;
+        var oldDirection = (TimerDirection)e.OldValue;
+
+        bool running = control.State == TimerState.Running;
+
+        // Capture elapsed time using the old direction before rebasing.
+        TimeSpan value = running
+            ? control.CalculateCurrentDuration(oldDirection)
+            : control.CurrentDuration;
+
+        control.Rebase(value, running);
+        control.SetCurrentDurationInternally(value);
+
+        control.RefreshTimer();
+        control.SynchronizeRefreshTimer();
+    }
+
+    #endregion
+
+    #region Action
+
+    public TimerAction Action
+    {
+        get => (TimerAction)GetValue(ActionProperty);
+        set => SetValue(ActionProperty, value);
+    }
+
+    public static readonly DependencyProperty ActionProperty =
         DependencyProperty.Register(
-            nameof(WarningThreshold),
-            typeof(TimeSpan),
+            nameof(Action),
+            typeof(TimerAction),
             typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(TimeSpan.FromMinutes(1), OnTimingConfigurationChanged));
+            new FrameworkPropertyMetadata(
+                TimerAction.Pause,
+                OnActionChanged),
+            IsValidAction);
+
+    private static bool IsValidAction(object value)
+    {
+        return value is TimerAction and (TimerAction.Start or TimerAction.Pause or TimerAction.Reset);
+    }
+
+    private static void OnActionChanged(
+        DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs e)
+    {
+        var control = (DigitalTimerControl)dependencyObject;
+
+        control.ExecuteAction((TimerAction)e.NewValue);
+    }
+
+    #endregion
+
+    #region Display
 
     public bool ShowSeconds
     {
@@ -478,133 +547,142 @@ public sealed class DigitalTimerControl : Control
             typeof(DigitalTimerControl),
             new FrameworkPropertyMetadata(
                 true,
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                OnTimingConfigurationChanged));
+                OnDisplayConfigurationChanged));
 
-    private static void OnTimingConfigurationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is DigitalTimerControl { IsLoaded: true } control)
-        {
-            control.EvaluateAutoState();
-            control.UpdateTimer();
-        }
-    }
-
-    #endregion
-
-    #region Standard Dependency Properties - States & Output Telemetry
-
-    public DigitalTimerState State
-    {
-        get => (DigitalTimerState)GetValue(StateProperty);
-        set => SetValue(StateProperty, value);
-    }
-
-    public static readonly DependencyProperty StateProperty =
-        DependencyProperty.Register(
-            nameof(State),
-            typeof(DigitalTimerState),
-            typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(
-                DigitalTimerState.NotRunning,
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                OnStateChangedCallback));
-
-    public bool IsStateVisible
-    {
-        get => (bool)GetValue(IsStateVisibleProperty);
-        set => SetValue(IsStateVisibleProperty, value);
-    }
-
-    public static readonly DependencyProperty IsStateVisibleProperty =
-        DependencyProperty.Register(
-            nameof(IsStateVisible),
-            typeof(bool),
-            typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(
-                false,
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                OnStateChangedCallback));
-
-
-    public string TimeText
-    {
-        get => (string)GetValue(TimeTextProperty);
-        set => SetValue(TimeTextProperty, value);
-    }
-
-    public static readonly DependencyProperty TimeTextProperty =
-        DependencyProperty.Register(
+    private static readonly DependencyPropertyKey TimeTextPropertyKey =
+        DependencyProperty.RegisterReadOnly(
             nameof(TimeText),
             typeof(string),
             typeof(DigitalTimerControl),
             new FrameworkPropertyMetadata(
-                defaultValue: "00:00",
-                flags: FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+                "00:00",
+                FrameworkPropertyMetadataOptions.AffectsRender));
 
-    public string PlaceholderText
-    {
-        get => (string)GetValue(PlaceholderTextProperty);
-        set => SetValue(PlaceholderTextProperty, value);
-    }
+    public static readonly DependencyProperty TimeTextProperty =
+        TimeTextPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty PlaceholderTextProperty =
-        DependencyProperty.Register(
+    public string TimeText => (string)GetValue(TimeTextProperty);
+
+    private static readonly DependencyPropertyKey PlaceholderTextPropertyKey =
+        DependencyProperty.RegisterReadOnly(
             nameof(PlaceholderText),
             typeof(string),
             typeof(DigitalTimerControl),
             new FrameworkPropertyMetadata(
-                defaultValue: "88:88",
-                flags: FrameworkPropertyMetadataOptions.AffectsRender));
+                "88:88",
+                FrameworkPropertyMetadataOptions.AffectsRender));
 
-    public bool IsWarning
+    public static readonly DependencyProperty PlaceholderTextProperty =
+        PlaceholderTextPropertyKey.DependencyProperty;
+
+    public string PlaceholderText =>
+        (string)GetValue(PlaceholderTextProperty);
+
+    private static void OnDisplayConfigurationChanged(
+        DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs e)
     {
-        get => (bool)GetValue(IsWarningProperty);
-        set => SetValue(IsWarningProperty, value);
+        var control = (DigitalTimerControl)dependencyObject;
+
+        control.RefreshTimer();
     }
 
-    public static readonly DependencyProperty IsWarningProperty =
-        DependencyProperty.Register(
-            nameof(IsWarning),
-            typeof(bool),
-            typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(
-                defaultValue: false,
-                flags: FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
-
-    public TimeSpan CurrentDuration
+    private void UpdateTimeText(TimeSpan value)
     {
-        get => (TimeSpan)GetValue(CurrentDurationProperty);
-        set => SetValue(CurrentDurationProperty, value);
-    }
+        value = Normalize(value);
 
-    public static readonly DependencyProperty CurrentDurationProperty =
-        DependencyProperty.Register(
-            nameof(CurrentDuration),
-            typeof(TimeSpan),
-            typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(
-                defaultValue: TimeSpan.Zero,
-                flags: FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+        // Integer arithmetic truncates hidden fractional seconds.
+        long totalSeconds = value.Ticks / TimeSpan.TicksPerSecond;
+        long totalMinutes = totalSeconds / 60;
+        long totalHours = totalMinutes / 60;
 
-    private static void OnStateChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is DigitalTimerControl control)
+        int minutes = (int)(totalMinutes % 60);
+        int seconds = (int)(totalSeconds % 60);
+
+        string minutesText = minutes.ToString(
+            "D2",
+            CultureInfo.InvariantCulture);
+
+        string secondsText = seconds.ToString(
+            "D2",
+            CultureInfo.InvariantCulture);
+
+        string text;
+        string placeholder;
+
+        if (totalHours > 0)
         {
-            var newState = (DigitalTimerState)e.NewValue;
+            // Total hours do not wrap after 24 hours.
+            string hoursText = totalHours.ToString(
+                "D2",
+                CultureInfo.InvariantCulture);
 
-            if (control.StateChangedCommand?.CanExecute(newState) == true)
-            {
-                control.StateChangedCommand.Execute(newState);
-            }
+            string hoursPlaceholder = new string('8', hoursText.Length);
 
-            control.StateChanged?.Invoke(control, newState);
+            text = ShowSeconds
+                ? $"{hoursText}:{minutesText}:{secondsText}"
+                : $"{hoursText}:{minutesText}";
+
+            placeholder = ShowSeconds
+                ? $"{hoursPlaceholder}:88:88"
+                : $"{hoursPlaceholder}:88";
+        }
+        else
+        {
+            // Minutes are always visible; hours are completely omitted.
+            text = ShowSeconds
+                ? $"{minutesText}:{secondsText}"
+                : minutesText;
+
+            placeholder = ShowSeconds
+                ? "88:88"
+                : "88";
+        }
+
+        if (TimeText != text)
+        {
+            SetValue(TimeTextPropertyKey, text);
+        }
+
+        if (PlaceholderText != placeholder)
+        {
+            SetValue(PlaceholderTextPropertyKey, placeholder);
         }
     }
 
     #endregion
 
-    #region Commands & Notification Events for ViewModel
+    #region Identity
+
+    public string Id
+    {
+        get => (string)GetValue(IdProperty);
+        set => SetValue(IdProperty, value);
+    }
+
+    public static readonly DependencyProperty IdProperty =
+        DependencyProperty.Register(
+            nameof(Id),
+            typeof(string),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(string.Empty));
+
+    public string Title
+    {
+        get => (string)GetValue(TitleProperty);
+        set => SetValue(TitleProperty, value);
+    }
+
+    public static readonly DependencyProperty TitleProperty =
+        DependencyProperty.Register(
+            nameof(Title),
+            typeof(string),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(string.Empty));
+
+    #endregion
+
+    #region Commands and Events
 
     public ICommand? StateChangedCommand
     {
@@ -619,25 +697,11 @@ public sealed class DigitalTimerControl : Control
             typeof(DigitalTimerControl),
             new PropertyMetadata(null));
 
-    public ICommand? WarningReachedCommand
-    {
-        get => (ICommand?)GetValue(WarningReachedCommandProperty);
-        set => SetValue(WarningReachedCommandProperty, value);
-    }
-
-    public static readonly DependencyProperty WarningReachedCommandProperty =
-        DependencyProperty.Register(
-            nameof(WarningReachedCommand),
-            typeof(ICommand),
-            typeof(DigitalTimerControl),
-            new PropertyMetadata(null));
-
-    public event EventHandler<DigitalTimerState>? StateChanged;
-    public event EventHandler? WarningReached;
+    public event EventHandler<DigitalTimerStateChangedEventArgs>? StateChanged;
 
     #endregion
 
-    #region Appearance Dependency Properties
+    #region Appearance
 
     public Brush DigitBrush
     {
@@ -650,7 +714,24 @@ public sealed class DigitalTimerControl : Control
             nameof(DigitBrush),
             typeof(Brush),
             typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(CreateDefaultBrush(0xFF, 0x00, 0xE5, 0xFF))); // Electric Cyan
+            new FrameworkPropertyMetadata(
+                CreateBrush(0xFF, 0x00, 0xE5, 0xFF),
+                FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public bool IsStateVisible
+    {
+        get => (bool)GetValue(IsStateVisibleProperty);
+        set => SetValue(IsStateVisibleProperty, value);
+    }
+
+    public static readonly DependencyProperty IsStateVisibleProperty =
+        DependencyProperty.Register(
+            nameof(IsStateVisible),
+            typeof(bool),
+            typeof(DigitalTimerControl),
+            new FrameworkPropertyMetadata(
+                false,
+                FrameworkPropertyMetadataOptions.AffectsRender));
 
     public Brush PlaceholderBrush
     {
@@ -663,7 +744,9 @@ public sealed class DigitalTimerControl : Control
             nameof(PlaceholderBrush),
             typeof(Brush),
             typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(CreateDefaultBrush(0x33, 0x00, 0xE5, 0xFF)));
+            new FrameworkPropertyMetadata(
+                CreateBrush(0x33, 0x00, 0xE5, 0xFF),
+                FrameworkPropertyMetadataOptions.AffectsRender));
 
     public Brush WarningBrush
     {
@@ -676,68 +759,29 @@ public sealed class DigitalTimerControl : Control
             nameof(WarningBrush),
             typeof(Brush),
             typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(CreateDefaultBrush(0xFF, 0xFF, 0x17, 0x44))); // High-visibility Amber/Red
+            new FrameworkPropertyMetadata(
+                CreateBrush(0xFF, 0xFF, 0x17, 0x44),
+                FrameworkPropertyMetadataOptions.AffectsRender));
 
-    private static SolidColorBrush CreateDefaultBrush(byte alpha, byte red, byte green, byte blue)
+    private static SolidColorBrush CreateBrush(
+        byte alpha,
+        byte red,
+        byte green,
+        byte blue)
     {
-        // Freeze brush instance to make it immutable and thread-safe for UI rendering
-        var brush = new SolidColorBrush(Color.FromArgb(alpha, red, green, blue));
+        var brush = new SolidColorBrush(
+            Color.FromArgb(alpha, red, green, blue));
+
         brush.Freeze();
+
         return brush;
     }
 
     #endregion
+}
 
-    #region ViewModel Action Dependency Property
-
-    public DigitalTimerAction Action
-    {
-        get => (DigitalTimerAction)GetValue(ActionProperty);
-        set => SetValue(ActionProperty, value);
-    }
-
-    public static readonly DependencyProperty ActionProperty =
-        DependencyProperty.Register(
-            nameof(Action),
-            typeof(DigitalTimerAction),
-            typeof(DigitalTimerControl),
-            new FrameworkPropertyMetadata(
-                DigitalTimerAction.None,
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                OnActionChanged));
-
-    private static void OnActionChanged(
-        DependencyObject d,
-        DependencyPropertyChangedEventArgs e)
-    {
-        if (d is not DigitalTimerControl control)
-        {
-            return;
-        }
-
-        var action = (DigitalTimerAction)e.NewValue;
-
-        switch (action)
-        {
-            case DigitalTimerAction.Pause:
-                control.Pause();
-                break;
-
-            case DigitalTimerAction.Resume:
-                control.Resume();
-                break;
-
-            case DigitalTimerAction.Reset:
-                control.Reset();
-                break;
-        }
-
-        // Reset the trigger value so the same action can be sent again
-        if (action != DigitalTimerAction.None)
-        {
-            control.SetCurrentValue(ActionProperty, DigitalTimerAction.None);
-        }
-    }
-
-    #endregion
+public enum TimerDirection
+{
+    CountDown,
+    CountUp
 }
