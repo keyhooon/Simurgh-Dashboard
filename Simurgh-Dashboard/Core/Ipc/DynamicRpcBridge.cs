@@ -148,12 +148,9 @@ public sealed class DynamicRpcBridge
         }
 
         // Execute asynchronous or synchronous command on WPF Dispatcher thread
-        if (commandObj is IRelayCommand relayCommand)
+        if (commandObj is IAsyncRelayCommand asyncRelay)
         {
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                commandObj.Execute(parameter);
-            });
+            await Application.Current.Dispatcher.InvokeAsync(() => asyncRelay.ExecuteAsync(parameter));
         }
         else
         {
