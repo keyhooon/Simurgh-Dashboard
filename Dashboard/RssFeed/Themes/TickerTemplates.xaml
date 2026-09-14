@@ -1,0 +1,164 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+    xmlns:models1="clr-namespace:Simurgh.Dashboard.RssFeed.Models">
+
+    <!--  ==========================================  -->
+    <!--  1. FROZEN RESOURCES (Zero CPU/Memory Overhead)  -->
+    <!--  ==========================================  -->
+
+    <SolidColorBrush
+        x:Key="Ticker.Foreground"
+        po:Freeze="True"
+        Color="#EFEFEF" />
+    <SolidColorBrush
+        x:Key="Ticker.MutedForeground"
+        po:Freeze="True"
+        Color="#AAAAAA" />
+    <SolidColorBrush
+        x:Key="Ticker.BadgeBackground"
+        po:Freeze="True"
+        Color="#007ACC" />
+    <SolidColorBrush
+        x:Key="Ticker.SeparatorFill"
+        po:Freeze="True"
+        Color="#666666" />
+
+    <!--  Notification Brushes  -->
+    <SolidColorBrush
+        x:Key="Notif.Bg.Info"
+        po:Freeze="True"
+        Color="#1E1E1E" />
+    <SolidColorBrush
+        x:Key="Notif.Border.Info"
+        po:Freeze="True"
+        Color="#007ACC" />
+
+    <SolidColorBrush
+        x:Key="Notif.Bg.Warning"
+        po:Freeze="True"
+        Color="#2D1D05" />
+    <SolidColorBrush
+        x:Key="Notif.Border.Warning"
+        po:Freeze="True"
+        Color="#F39C12" />
+
+    <SolidColorBrush
+        x:Key="Notif.Bg.Critical"
+        po:Freeze="True"
+        Color="#330A0A" />
+    <SolidColorBrush
+        x:Key="Notif.Border.Critical"
+        po:Freeze="True"
+        Color="#E51400" />
+
+    <SolidColorBrush
+        x:Key="Notif.Bg.Success"
+        po:Freeze="True"
+        Color="#0A2211" />
+    <SolidColorBrush
+        x:Key="Notif.Border.Success"
+        po:Freeze="True"
+        Color="#27AE60" />
+
+    <!--  ==========================================  -->
+    <!--  2. SEPARATOR TEMPLATE  -->
+    <!--  ==========================================  -->
+
+    <DataTemplate x:Key="MarqueeSeparatorTemplate">
+        <!--  Simple geometry, no layout recalculations needed  -->
+        <Ellipse
+            Width="6"
+            Height="6"
+            Margin="0,0,0,0"
+            Fill="{StaticResource Ticker.SeparatorFill}"
+            IsHitTestVisible="False" />
+    </DataTemplate>
+
+    <!--  ==========================================  -->
+    <!--  3. RSS ITEM TEMPLATE  -->
+    <!--  ==========================================  -->
+
+    <DataTemplate x:Key="MarqueeRssItemTemplate" DataType="{x:Type models1:RssItemModel}">
+        <!--  Flat layout: StackPanel is highly optimized for horizontal stacking  -->
+        <StackPanel Orientation="Horizontal">
+            <!--  Title Text  -->
+
+
+            <!--  Source Badge  -->
+            <Border
+                Margin="10,0,10,0"
+                Padding="8,2"
+                Background="{StaticResource Ticker.BadgeBackground}"
+                CornerRadius="4">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    FontWeight="SemiBold"
+                    Foreground="White"
+                    Text="{Binding Source, Mode=OneTime}" />
+            </Border>
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="16"
+                Foreground="{StaticResource Ticker.Foreground}"
+                Text="{Binding Title, Mode=OneTime}" />
+
+        </StackPanel>
+    </DataTemplate>
+
+    <!--  ==========================================  -->
+    <!--  4. NOTIFICATION ITEM TEMPLATE  -->
+    <!--  ==========================================  -->
+
+    <DataTemplate DataType="{x:Type models1:NotificationItemModel}">
+        <Border
+            x:Name="RootBorder"
+            Padding="12,6"
+            Background="{StaticResource Notif.Bg.Info}"
+            BorderBrush="{StaticResource Notif.Border.Info}"
+            BorderThickness="1"
+            CornerRadius="6"
+            IsHitTestVisible="False">
+
+            <StackPanel IsHitTestVisible="False" Orientation="Horizontal">
+                <TextBlock
+                    x:Name="IconText"
+                    Margin="0,0,8,0"
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    Text="ℹ️" />
+
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="16"
+                    Foreground="{StaticResource Ticker.Foreground}"
+                    Text="{Binding Message, Mode=OneTime}"
+                    TextOptions.TextFormattingMode="Display" />
+            </StackPanel>
+        </Border>
+
+        <!--  Triggers evaluate very fast on spawn and don't re-evaluate during scrolling  -->
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Severity, Mode=OneTime}" Value="Warning">
+                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Notif.Bg.Warning}" />
+                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource Notif.Border.Warning}" />
+                <Setter TargetName="IconText" Property="Text" Value="⚠️" />
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding Severity, Mode=OneTime}" Value="Critical">
+                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Notif.Bg.Critical}" />
+                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource Notif.Border.Critical}" />
+                <Setter TargetName="IconText" Property="Text" Value="🔴" />
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding Severity, Mode=OneTime}" Value="Success">
+                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource Notif.Bg.Success}" />
+                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource Notif.Border.Success}" />
+                <Setter TargetName="IconText" Property="Text" Value="✅" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+</ResourceDictionary>

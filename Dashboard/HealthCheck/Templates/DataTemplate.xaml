@@ -1,0 +1,216 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:viewModels="clr-namespace:Simurgh.Dashboard.HealthCheck.ViewModels">
+
+    <!--  DataTemplate for WatchdogStatusIndicatorViewModel  -->
+    <DataTemplate DataType="{x:Type viewModels:WatchdogStatusIndicatorViewModel}">
+        <Grid
+            Margin="4"
+            Background="Transparent"
+            ToolTipService.InitialShowDelay="150">
+
+            <!--  Tooltip with detailed monitoring info  -->
+            <Grid.ToolTip>
+                <ToolTip
+                    Background="#202226"
+                    BorderBrush="#3F424A"
+                    BorderThickness="1"
+                    Foreground="#EDEDED">
+                    <StackPanel Margin="4" >
+                        <TextBlock FontWeight="SemiBold" Text="Watchdog Agent Status" />
+                        <StackPanel Orientation="Horizontal" >
+                            <TextBlock Foreground="#A0A0A0" Text="State:" />
+                            <TextBlock
+                                FontWeight="Medium"
+                                Foreground="{Binding IsConnected, Converter={x:Null}}"
+                                Text="{Binding IsConnected, Converter={x:Null}}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="Disconnected" />
+                                        <Setter Property="Foreground" Value="#E57373" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                <Setter Property="Text" Value="Connected (Active)" />
+                                                <Setter Property="Foreground" Value="#81C784" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Foreground="#A0A0A0" Text="Last Report:" />
+                            <TextBlock Foreground="#D0D0D0" Text="{Binding LastHeartbeat, StringFormat='{}{0:HH:mm:ss}'}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ToolTip>
+            </Grid.ToolTip>
+
+            <!--  Indicator Bulb Container  -->
+            <Grid Width="16" Height="16">
+                <!--  Base Outer Rim (Neumorphic recessed border)  -->
+                <Ellipse
+                    Fill="#16171A"
+                    Stroke="#2C2E33"
+                    StrokeThickness="1.5" />
+
+                <!--  Glow/Pulse Layer (Only visible when connected)  -->
+                <Ellipse
+                    x:Name="GlowRing"
+                    Width="12"
+                    Height="12"
+                    Fill="#00E676"
+                    Opacity="0.3">
+                    <Ellipse.Effect>
+                        <BlurEffect KernelType="Gaussian" Radius="8" />
+                    </Ellipse.Effect>
+                </Ellipse>
+
+                <!--  Center Core LED  -->
+                <Ellipse
+                    x:Name="LedBulb"
+                    Width="8"
+                    Height="8"
+                    Fill="#454950"
+                    RenderTransformOrigin="0.5,0.5">
+                    <Ellipse.RenderTransform>
+                        <ScaleTransform x:Name="LedScale" ScaleX="1.0" ScaleY="1.0" />
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+            </Grid>
+        </Grid>
+
+        <!--  Triggers for Connection & Pulse Animation  -->
+        <DataTemplate.Triggers>
+            <!--  1. Connected State: Color turns Green & Glow appears  -->
+            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                <Setter TargetName="LedBulb" Property="Fill" Value="#00E676" />
+                <Setter TargetName="GlowRing" Property="Opacity" Value="0.6" />
+                <Setter TargetName="GlowRing" Property="Fill" Value="#00E676" />
+            </DataTrigger>
+
+            <!--  2. Disconnected State: Dim & Low Glow  -->
+            <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                <Setter TargetName="LedBulb" Property="Fill" Value="#D32F2F" />
+                <Setter TargetName="GlowRing" Property="Opacity" Value="0.1" />
+                <Setter TargetName="GlowRing" Property="Fill" Value="#FF5252" />
+            </DataTrigger>
+
+            <!--  3. Heartbeat Pulse Blink: Triggered on PulseTrigger change  -->
+            <DataTrigger Binding="{Binding PulseTrigger, NotifyOnTargetUpdated=True}" Value="{x:Null}">
+                <!--  Empty binding value fallback  -->
+            </DataTrigger>
+
+            <EventTrigger RoutedEvent="Binding.TargetUpdated">
+                <!--  If you bind TargetUpdated on Pulse, it animates smoothly  -->
+            </EventTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <!--  Alternative clean implementation using Storyboard trigger on PulseTrigger  -->
+    <Style x:Key="WatchdogPulseIndicatorStyle" TargetType="ContentControl">
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="{x:Type viewModels:WatchdogStatusIndicatorViewModel}">
+                    <Grid
+                        Width="20"
+                        Height="20"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                        <!--  Subtle Background ring  -->
+                        <Ellipse
+                            Width="14"
+                            Height="14"
+                            Stroke="#30353D"
+                            StrokeThickness="1" />
+
+                        <!--  Glow Effect  -->
+                        <Ellipse
+                            x:Name="PulseGlow"
+                            Width="10"
+                            Height="10"
+                            Fill="#00E676"
+                            Opacity="0"
+                            RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.RenderTransform>
+                                <ScaleTransform x:Name="GlowScale" ScaleX="1.0" ScaleY="1.0" />
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Effect>
+                                <BlurEffect Radius="6" />
+                            </Ellipse.Effect>
+                        </Ellipse>
+
+                        <!--  LED Core  -->
+                        <Ellipse
+                            x:Name="LedCore"
+                            Width="8"
+                            Height="8"
+                            Fill="#5A5D66"
+                            RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.RenderTransform>
+                                <ScaleTransform x:Name="CoreScale" ScaleX="1.0" ScaleY="1.0" />
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+                    </Grid>
+
+                    <DataTemplate.Triggers>
+                        <!--  Connected Appearance  -->
+                        <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                            <Setter TargetName="LedCore" Property="Fill" Value="#00C853" />
+                            <Setter TargetName="PulseGlow" Property="Opacity" Value="0.3" />
+                        </DataTrigger>
+
+                        <!--  Disconnected Appearance  -->
+                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                            <Setter TargetName="LedCore" Property="Fill" Value="#757575" />
+                            <Setter TargetName="PulseGlow" Property="Opacity" Value="0" />
+                        </DataTrigger>
+
+                        <!--  Pulse / Blink on Heartbeat Sent  -->
+                        <DataTrigger Binding="{Binding PulseTrigger, NotifyOnTargetUpdated=True}" Value="{x:Null}" />
+                        <EventTrigger RoutedEvent="Binding.TargetUpdated">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <!--  Glow expands and flashes  -->
+                                    <DoubleAnimation
+                                        Storyboard.TargetName="PulseGlow"
+                                        Storyboard.TargetProperty="Opacity"
+                                        From="1.0"
+                                        To="0.3"
+                                        Duration="0:0:0.45" />
+                                    <DoubleAnimation
+                                        Storyboard.TargetName="GlowScale"
+                                        Storyboard.TargetProperty="ScaleX"
+                                        From="2.2"
+                                        To="1.0"
+                                        Duration="0:0:0.45" />
+                                    <DoubleAnimation
+                                        Storyboard.TargetName="GlowScale"
+                                        Storyboard.TargetProperty="ScaleY"
+                                        From="2.2"
+                                        To="1.0"
+                                        Duration="0:0:0.45" />
+
+                                    <!--  Core bright flash  -->
+                                    <DoubleAnimation
+                                        Storyboard.TargetName="CoreScale"
+                                        Storyboard.TargetProperty="ScaleX"
+                                        From="1.3"
+                                        To="1.0"
+                                        Duration="0:0:0.3" />
+                                    <DoubleAnimation
+                                        Storyboard.TargetName="CoreScale"
+                                        Storyboard.TargetProperty="ScaleY"
+                                        From="1.3"
+                                        To="1.0"
+                                        Duration="0:0:0.3" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

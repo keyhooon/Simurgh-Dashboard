@@ -1,0 +1,155 @@
+﻿<Window
+    x:Class="Simurgh.Dashboard.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:behaviors="clr-namespace:Simurgh.Dashboard.Core.Infrastructures.Behaviors"
+    xmlns:controls="clr-namespace:Simurgh.Dashboard.Core.Controls"
+    xmlns:dashboard="clr-namespace:Simurgh.Dashboard"
+    Title="{Binding OperationStatus, StringFormat='Simurgh Medical Dashboard - {0}'}"
+    d:DataContext="{d:DesignInstance Type=dashboard:MainViewModel}"
+    Background="#FF88898F"
+    ShowInTaskbar="False"
+    WindowStartupLocation="Manual"
+    mc:Ignorable="d">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/SimurghDashboard;component/Watchdog/Templates/WatchdogIndicatorTemplate.xaml" />
+
+                <ResourceDictionary Source="/SimurghDashboard;component/Clock/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/SimurghDashboard;component/RssFeed/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/SimurghDashboard;component/Timers/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/SimurghDashboard;component/Sensors/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/SimurghDashboard;component/Patient/Templates/DataTemplate.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <!--
+        ================================================================================
+        HARDWARE DISPLAY MANAGEMENT (MVVM DATA BOUND)
+        ================================================================================
+        The KioskDisplayBehavior interfaces directly with low-level Win32/WDDM APIs.
+        All timing, display connector type, rotation, and lifecycle behavior
+        are fully decoupled and driven dynamically via MainViewModel.
+    -->
+    <b:Interaction.Behaviors>
+        <behaviors:KioskDisplayBehavior
+            ExplicitDeviceName="{Binding ExplicitDeviceName, Mode=OneWay}"
+            GpuSyncDelayMs="{Binding GpuSyncDelayMs, Mode=OneWay}"
+            RevertOnClose="{Binding RevertOnClose, Mode=OneWay}"
+            TargetOrientation="{Binding TargetOrientation, Mode=OneWay}"
+            TargetTechnology="{Binding TargetTechnology, Mode=OneWay}" />
+    </b:Interaction.Behaviors>
+
+    <!--
+        ================================================================================
+        MAIN KIOSK LAYOUT (Golden Ratio Medical Grid)
+        ================================================================================
+        A multi-column proportional grid ensuring responsive scaling across high-DPI
+        and standard medical grade panels.
+    -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!--  Left main content area (Timers)  -->
+            <ColumnDefinition Width="2*" />
+            <!--  Center gutter  -->
+            <ColumnDefinition Width="1*" />
+
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <!--  Top Header (Clock/Weather/OR Metadata)  -->
+            <RowDefinition Height="Auto" />
+            <!--  Middle Body (Operational Timers and Real-time Sensors)  -->
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <!--  Bottom Footer (Medical News RSS Ticker)  -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--
+            ============================================================================
+            1. DIGITAL CLOCK WIDGET (Top Center)
+            ============================================================================
+            Hosts the real-time clock, date, and environmental telemetry.
+        -->
+        <controls:WidgetFrame
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="15"
+            FrameVariant="RoundedSunkenLow">
+            <ContentControl
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Content="{Binding DigitalClockViewModel}" />
+        </controls:WidgetFrame>
+
+        <!--
+            ============================================================================
+            2. SURGICAL TIMERS LIST (Middle Left)
+            ============================================================================
+            Renders Anesthesia, Tourniquet, and surgical procedure stopwatches.
+        -->
+        <controls:WidgetFrame
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="15"
+            HorizontalAlignment="Stretch"
+            FrameVariant="RoundedSunkenLow">
+            <ContentControl
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Content="{Binding PatientDemographicViewModel}" />
+        </controls:WidgetFrame>
+        <controls:WidgetFrame
+            Grid.Row="1"
+            Grid.Column="0"
+            Margin="15"
+            HorizontalAlignment="Stretch"
+            FrameVariant="RoundedSunkenLow">
+            <ContentControl
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Content="{Binding DigitalTimersListViewModel}" />
+        </controls:WidgetFrame>
+        <!--
+            ============================================================================
+            3. DIGITAL SENSORS TELEMETRY LIST (Middle Right)
+            ============================================================================
+            Ingests and displays environmental, medical gas, and OR hardware parameters.
+        -->
+        <controls:WidgetFrame
+            Grid.Row="2"
+            Grid.ColumnSpan="2"
+            Margin="15"
+            VerticalAlignment="Stretch"
+            FrameVariant="RoundedSunkenLow">
+            <ContentControl
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Content="{Binding DigitalSensorsListViewModel}" />
+        </controls:WidgetFrame>
+
+        <!--
+            ============================================================================
+            4. RSS TICKER WIDGET (Bottom Full Width)
+            ============================================================================
+            Spans all 5 columns for marquee broadcasts and medical RSS alerts.
+        -->
+        <controls:WidgetFrame
+            Grid.Row="4"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="15"
+            FrameVariant="RoundedSunkenLow">
+            <ContentControl Content="{Binding TickerViewModel}" />
+        </controls:WidgetFrame>
+
+    </Grid>
+</Window>

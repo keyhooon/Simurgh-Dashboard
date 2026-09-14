@@ -1,0 +1,7 @@
+﻿namespace Simurgh.Dashboard.Timers.Models;
+
+public enum TimerState
+{
+    Pausing = 0,
+    Running = 1
+}

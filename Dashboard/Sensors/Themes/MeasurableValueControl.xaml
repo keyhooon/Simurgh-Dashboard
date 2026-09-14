@@ -1,0 +1,108 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls1="clr-namespace:Simurgh.Dashboard.Sensors.Controls"
+    xmlns:converters="clr-namespace:Simurgh.Dashboard.Core.Infrastructures.Converters">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/SimurghDashboard;component/Core/Themes/Fonts.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <Style TargetType="{x:Type controls1:MeasurableValueControl}">
+        <Setter Property="Margin" Value="3" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="DigitBrush" Value="#00E676" />
+        <Setter Property="PlaceholderBrush" Value="#18FFFFFF" />
+        <Setter Property="UnitBrush" Value="#707070" />
+        <Setter Property="PlaceholderText" Value="88.8" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls1:MeasurableValueControl}">
+                    <Grid Margin="{TemplateBinding Margin}">
+                        <Grid.ColumnDefinitions>
+                            <!--  ستون ۰: ارقام ۷-سگمنت  -->
+                            <ColumnDefinition Width="Auto" />
+                            <!--  ستون ۰: ارقام ۷-سگمنت  -->
+                            <ColumnDefinition Width="Auto" />
+                            <!--  ستون ۱: آیکون و واحد اندازه‌گیری  -->
+                            <ColumnDefinition Width="40" />
+                            <!--  ستون ۲: هدر سمت راست  -->
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!--  SECTION 1: SENSOR ICON  -->
+                        <Path
+                            Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Grid.Column="0"
+                            Width="40"
+                            Height="40"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Data="{TemplateBinding IconData}"
+                            Fill="{TemplateBinding DigitBrush}"
+                            Stretch="Uniform" />
+
+                        <!--  SECTION 2: OPTIONAL TEXT LABEL (زیر ارقام)  -->
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="5,0,10,0"
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource FontFamilyApp}"
+                            FontSize="14"
+                            FontWeight="Medium"
+                            Foreground="{TemplateBinding UnitBrush}"
+                            Text="{TemplateBinding Label}"
+                            Visibility="{TemplateBinding Label,
+                                                         Converter={converters:StringNullOrEmptyToVisibilityConverter}}" />
+
+                        <!--  SECTION 3: 7-SEGMENT DIGIT OVERLAY  -->
+                        <Grid
+                            Grid.RowSpan="2"
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                            <!--  Background Placeholder Matrix  -->
+                            <TextBlock
+                                FontFamily="{StaticResource FontFamilyDigit}"
+                                FontSize="48"
+                                FontWeight="ExtraBold"
+                                Foreground="{TemplateBinding PlaceholderBrush}"
+                                Text="{TemplateBinding PlaceholderText}" />
+
+                            <!--  Active Telemetry Value  -->
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontFamily="{StaticResource FontFamilyDigit}"
+                                FontSize="48"
+                                FontWeight="ExtraBold"
+                                Foreground="{TemplateBinding DigitBrush}"
+                                Text="{TemplateBinding ValueText}" />
+                        </Grid>
+
+                        <!--  SECTION 4: PHYSICAL UNIT READOUT  -->
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Margin="2,0,0,0"
+                            VerticalAlignment="Bottom"
+                            FontFamily="{StaticResource FontFamilyApp}"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{TemplateBinding UnitBrush}"
+                            Text="{TemplateBinding Unit}" />
+
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
