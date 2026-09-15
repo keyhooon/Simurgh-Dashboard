@@ -23,6 +23,7 @@ public sealed class TimerEntity : INotifyPropertyChanged
 
     static TimerEntity()
     {
+        // Permanently freeze static default singletons for cross-thread access and rendering pipeline performance
         if (DefaultDigitBrush.CanFreeze) DefaultDigitBrush.Freeze();
         if (DefaultPlaceholderBrush.CanFreeze) DefaultPlaceholderBrush.Freeze();
         if (DefaultWarningBrush.CanFreeze) DefaultWarningBrush.Freeze();
@@ -88,6 +89,33 @@ public sealed class TimerEntity : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Direction mode of progression (CountUp vs CountDown).
+    /// </summary>
+    public TimerAction CurrentAction
+    {
+        get => _currentAction;
+        set => SetProperty(ref _currentAction, value);
+    }
+
+    /// <summary>
+    /// Delta threshold for triggering alert states.
+    /// </summary>
+    public TimeSpan WarningThreshold
+    {
+        get => _warningThreshold;
+        set => SetProperty(ref _warningThreshold, value);
+    }
+
+    /// <summary>
+    /// Determines whether seconds are rendered in the visual layout.
+    /// </summary>
+    public bool ShowSeconds
+    {
+        get => _showSeconds;
+        set => SetProperty(ref _showSeconds, value);
+    }
+
+    /// <summary>
     /// Current operational state machine value.
     /// </summary>
     public TimerState State
@@ -149,7 +177,7 @@ public sealed class TimerEntity : INotifyPropertyChanged
         set
         {
             var frozen = FreezeOrFallback(value, DefaultWarningBrush);
-            SetProperty(ref _placeholderBrush, frozen);
+            SetProperty(ref _warningBrush, frozen);
         }
     }
 
@@ -172,6 +200,7 @@ public sealed class TimerEntity : INotifyPropertyChanged
     {
         ApplyConfiguration(options);
     }
+
 
     /// <summary>
     /// Full parameterized constructor for domain instantiation.
@@ -205,6 +234,7 @@ public sealed class TimerEntity : INotifyPropertyChanged
 
     #endregion
 
+
     #region Configuration Synchronization
 
     /// <summary>
@@ -223,6 +253,7 @@ public sealed class TimerEntity : INotifyPropertyChanged
         Id = string.IsNullOrWhiteSpace(options.Id) ? Guid.NewGuid().ToString("N") : options.Id;
         Title = options.Title ?? string.Empty;
 
+        // Gracefully handle direction parsing with a fallback to CountDown (as specified in TimerOptions default)
         if (Enum.TryParse<TimerDirection>(options.Direction, ignoreCase: true, out var parsedDirection))
         {
             Direction = parsedDirection;
@@ -237,6 +268,7 @@ public sealed class TimerEntity : INotifyPropertyChanged
             ShowSeconds = options.ShowSeconds.Value;
         }
 
+        // Parse and apply brushes safely. The property setters automatically handle FreezeOrFallback.
         DigitBrush = TryParseBrush(options.DigitBrush, DigitBrush);
         PlaceholderBrush = TryParseBrush(options.PlaceholderBrush, PlaceholderBrush);
         WarningBrush = TryParseBrush(options.WarningBrush, WarningBrush);
@@ -279,6 +311,7 @@ public sealed class TimerEntity : INotifyPropertyChanged
 
     #region Helper Methods
 
+
     /// <summary>
     /// Attempts to parse a hex string into a SolidColorBrush. Returns fallback if parsing fails.
     /// </summary>
@@ -298,13 +331,16 @@ public sealed class TimerEntity : INotifyPropertyChanged
         }
         catch (FormatException)
         {
+            // Swallow invalid hex formats and retain the existing brush state to prevent application crashes
         }
         catch (NotSupportedException)
         {
+            // Swallow unsupported conversions
         }
 
         return currentFallback;
     }
+
 
     /// <summary>
     /// Ensures brushes are frozen and safe across rendering and background worker threads.
