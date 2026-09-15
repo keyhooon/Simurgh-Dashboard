@@ -7,9 +7,6 @@ namespace Simurgh.Dashboard;
 /// </summary>
 public sealed class KioskDisplayOptions
 {
-    /// <summary>
-    /// The section name for KioskDisplay options in the configuration file.
-    /// </summary>
     public const string SectionName = "KioskDisplay";
 
     /// <summary>
