@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -16,18 +16,24 @@ public sealed class SensorEntity : IReadOnlyList<MeasurableValueEntity>, INotify
 {
     private readonly ObservableCollection<MeasurableValueEntity> _measurableValues = [];
 
+    /// <summary>
+    /// Occurs when a property value changes.
+    /// </summary>
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>
+    /// Occurs when the collection changes.
+    /// </summary>
     public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
-    #region 1. Positional Identity
     /// <summary>
-    /// Zero-based immutable module index matching hardware slot / array offset.
+    /// Gets the zero-based index of the sensor.
     /// </summary>
     public int Index { get; }
-    #endregion
 
-    #region 2. Configuration State
-    private string _title = string.Empty;
+    /// <summary>
+    /// Gets the title of the sensor.
+    /// </summary>
     public string Title
     {
         get => _title;
@@ -35,41 +41,33 @@ public sealed class SensorEntity : IReadOnlyList<MeasurableValueEntity>, INotify
     }
 
     /// <summary>
-    /// Explicit read-only exposure of child collection for standard sub-property bindings.
+    /// Gets the read-only list of measurable value entities.
     /// </summary>
     public IReadOnlyList<MeasurableValueEntity> MeasurableValues => this;
-    #endregion
 
-    #region 3. Real-Time Telemetry / Operational State
-    private ModuleState _state = ModuleState.Offline;
-    public ModuleState State
-    {
-        get => _state;
-        private set => SetField(ref _state, value);
-    }
-
-    private DateTimeOffset _lastSeenUtc;
-    public DateTimeOffset LastSeenUtc
-    {
-        get => _lastSeenUtc;
-        private set => SetField(ref _lastSeenUtc, value);
-    }
-    #endregion
-
-    #region IReadOnlyList<MeasurableValueEntity> Delegation
+    /// <summary>
+    /// Gets the number of measurable value entities.
+    /// </summary>
     public int Count => _measurableValues.Count;
-    public MeasurableValueEntity this[int index] => _measurableValues[index];
-    public IEnumerator<MeasurableValueEntity> GetEnumerator() => _measurableValues.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    #endregion
 
+    /// <summary>
+    /// Gets the measurable value entity at the specified index.
+    /// </summary>
+    /// <param name="index">The index of the measurable value entity.</param>
+    /// <returns>The measurable value entity.</returns>
+    public MeasurableValueEntity this[int index] => _measurableValues[index];
+
+    /// <summary>
+    /// Initializes a new instance of the SensorEntity class.
+    /// </summary>
+    /// <param name="index">The zero-based index of the sensor.</param>
+    /// <param name="initialOptions">The initial configuration options for the sensor.</param>
     public SensorEntity(int index, SensorOptions? initialOptions = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
         Index = index;
         _lastSeenUtc = DateTimeOffset.UtcNow;
 
-        // Bridge internal collection events directly to SensorEntity consumers
         ((INotifyCollectionChanged)_measurableValues).CollectionChanged += (_, args) =>
         {
             CollectionChanged?.Invoke(this, args);
@@ -77,7 +75,6 @@ public sealed class SensorEntity : IReadOnlyList<MeasurableValueEntity>, INotify
 
         ((INotifyPropertyChanged)_measurableValues).PropertyChanged += (_, args) =>
         {
-            // Propagate Count and indexer changes to external listeners
             PropertyChanged?.Invoke(this, args);
         };
 
@@ -88,8 +85,10 @@ public sealed class SensorEntity : IReadOnlyList<MeasurableValueEntity>, INotify
     }
 
     /// <summary>
-    /// Performs in-place positional delta update of title and child measurement channels.
+    /// Applies configuration options to the sensor entity.
     /// </summary>
+    /// <param name="options">The configuration options.</param>
+    /// <returns>True if the configuration was applied; otherwise, false.</returns>
     public bool ApplyConfiguration(SensorOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -98,7 +97,6 @@ public sealed class SensorEntity : IReadOnlyList<MeasurableValueEntity>, INotify
 
         var configuredCount = options.MeasurableValues.Count;
 
-        // 1. In-place update existing channels or append newly added channels
         for (var i = 0; i < configuredCount; i++)
         {
             var channelOptions = options.MeasurableValues[i];
@@ -113,7 +111,6 @@ public sealed class SensorEntity : IReadOnlyList<MeasurableValueEntity>, INotify
             }
         }
 
-        // 2. Truncate excess channel entities if configuration size shrank
         while (_measurableValues.Count > configuredCount)
         {
             _measurableValues.RemoveAt(_measurableValues.Count - 1);
@@ -122,6 +119,11 @@ public sealed class SensorEntity : IReadOnlyList<MeasurableValueEntity>, INotify
         return true;
     }
 
+    /// <summary>
+    /// Updates the state of the sensor.
+    /// </summary>
+    /// <param name="newState">The new state of the sensor.</param>
+    /// <param name="timestamp">The timestamp of the state update.</param>
     public void UpdateState(ModuleState newState, DateTimeOffset? timestamp = null)
     {
         State = newState;
@@ -129,8 +131,12 @@ public sealed class SensorEntity : IReadOnlyList<MeasurableValueEntity>, INotify
     }
 
     /// <summary>
-    /// Ingests live telemetry into a child channel using zero-based positional channel indexing.
+    /// Ingests channel telemetry into the sensor entity.
     /// </summary>
+    /// <param name="channelIndex">The zero-based index of the channel.</param>
+    /// <param name="value">The telemetry value.</param>
+    /// <param name="timestamp">The timestamp of the telemetry.</param>
+    /// <returns>True if the telemetry was ingested; otherwise, false.</returns>
     public bool IngestChannelTelemetry(int channelIndex, double value, DateTimeOffset? timestamp = null)
     {
         if (channelIndex < 0 || channelIndex >= _measurableValues.Count)
