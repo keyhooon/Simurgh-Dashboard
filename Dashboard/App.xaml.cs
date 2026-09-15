@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
@@ -164,17 +164,11 @@ namespace Simurgh.Dashboard
             services.AddSensorSubsystem(configuration);
             services.AddWatchdogAgent(configuration);
 
-
-
-
             // -------------------------------------------------------------------------
             // VIEWMODELS (Stateful Singletons for Kiosk Lifecycle)
             // -------------------------------------------------------------------------
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<DigitalClockViewModel>();
-
-            
-            
         }
 
         /// <summary>
