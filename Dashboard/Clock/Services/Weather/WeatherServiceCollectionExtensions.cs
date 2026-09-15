@@ -31,7 +31,7 @@ public static class WeatherServiceCollectionExtensions
 
         services.AddHttpClient("WeatherClient", client =>
                                                 {
-                                                    client.DefaultRequestHeaders.UserAgent.ParseAdd("SimurghDashboard-SurgicalKiosk/1.0");
+                                                    client.DefaultRequestHeaders.UserAgent.ParseAdd("Dashboard-SurgicalKiosk/1.0");
                                                     client.DefaultRequestHeaders.Accept.Add(
                                                         new MediaTypeWithQualityHeaderValue("text/plain"));
                                                     // Keep-Alive — reduces TCP handshake overhead on repeated polling.

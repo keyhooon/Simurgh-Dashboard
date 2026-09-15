@@ -1,5 +1,5 @@
 ﻿// ============================================================================
-// File: SimurghDashboard.Infrastructures.Native.CCDTypes.cs
+// File: Dashboard.Infrastructures.Native.CCDTypes.cs
 // Purpose: Fully expanded Windows CCD (Connecting and Configuring Displays) 
 //          API Structures and Enumerations for generalized use.
 // ============================================================================

@@ -11,7 +11,7 @@ using Simurgh.Dashboard.Timers.ViewModels;
 namespace Simurgh.Dashboard;
 
 /// <summary>
-/// The root ViewModel for the SimurghDashboard application.
+/// The root ViewModel for the Dashboard application.
 /// Acts as the primary composition root, aggregating all sub-system ViewModels
 /// (Clock, Sensors, Timers, Ticker) and orchestrating global UI states
 /// such as emergency alerts, OR (Operating Room) metadata, and hardware flashes.

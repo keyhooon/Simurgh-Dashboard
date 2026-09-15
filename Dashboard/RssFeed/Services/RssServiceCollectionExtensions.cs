@@ -38,7 +38,7 @@ public static class RssServiceCollectionExtensions
                                         {
                                             // Optional: Set default headers, e.g., a custom User-Agent,
                                             // as some RSS providers block requests without one.
-                                            client.DefaultRequestHeaders.Add("User-Agent", "SimurghDashboard/1.0");
+                                            client.DefaultRequestHeaders.Add("User-Agent", "Dashboard/1.0");
                                             client.Timeout = TimeSpan.FromSeconds(15);
                                         })
            .ConfigurePrimaryHttpMessageHandler(BuildPooledHandler)
