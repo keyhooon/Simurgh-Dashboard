@@ -3,11 +3,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:behaviors="clr-namespace:Simurgh.Dashboard.Core.Infrastructures.Behaviors"
     xmlns:controls="clr-namespace:Simurgh.Dashboard.Core.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dashboard="clr-namespace:Simurgh.Dashboard"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding OperationStatus, StringFormat='Simurgh Medical Dashboard - {0}'}"
     d:DataContext="{d:DesignInstance Type=dashboard:MainViewModel}"
     Background="#FF88898F"
@@ -18,7 +18,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Dashboard;component/Watchdog/Templates/WatchdogIndicatorTemplate.xaml" />
+                <ResourceDictionary Source="/Dashboard;component/HealthCheck/Templates/DataTemplate.xaml" />
 
                 <ResourceDictionary Source="/Dashboard;component/Clock/Templates/DataTemplate.xaml" />
                 <ResourceDictionary Source="/Dashboard;component/RssFeed/Templates/DataTemplate.xaml" />

@@ -14,10 +14,14 @@ public sealed class TimerControllerService(ITimersAccessor timerStore) : ITimerC
         if (entity is null)
             throw new InvalidOperationException($"Timer {parameters.TimerId} not found.");
 
+        var timeElapsed = DateTime.Now - parameters.TimeStamp;
+        var adjustedDuration = parameters.IsCountDown
+            ? parameters.CurrentDuration - timeElapsed  // Down-counting: تفریق
+            : parameters.CurrentDuration + timeElapsed; // Up-counting: جمع
         switch (parameters.Action)
         {
             case TimerAction.Start:
-                ExecuteStart(entity, parameters.CurrentDuration + (DateTime.Now - parameters.TimeStamp));
+                ExecuteStart(entity, adjustedDuration);
                 break;
             case TimerAction.Pause:
                 ExecutePause(entity, parameters.CurrentDuration);

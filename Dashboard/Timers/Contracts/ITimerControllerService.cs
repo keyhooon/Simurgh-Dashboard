@@ -16,12 +16,12 @@ namespace Simurgh.Dashboard.Timers.Contracts
         /// Applies an action (Start / Pause / Reset) to the target timer entity.
         /// The action decision is resolved on the server based on the entity's current state.
         /// </summary>
-        [JsonRpcMethod("executetimeraction")] void ExecuteTimerAction(TimerActionParams parameters);
+        [JsonRpcMethod("action")] void ExecuteTimerAction(TimerActionParams parameters);
 
         /// <summary>
         /// Route: "timer.configuration"
         /// Applies a duration change to the target timer entity.
         /// </summary>
-        [JsonRpcMethod("updatetimerconfiguration")] void UpdateTimerConfiguration(TimerConfigurationParams parameters);
+        [JsonRpcMethod("configuration")] void UpdateTimerConfiguration(TimerConfigurationParams parameters);
     }
 }

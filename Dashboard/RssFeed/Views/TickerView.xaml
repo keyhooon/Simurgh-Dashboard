@@ -38,7 +38,7 @@
             ItemPadding="18,0,18,0"
             ItemRolledOverCommand="{Binding ItemFinishedCommand}"
             ItemSpacing="70"
-            ItemsSource="{Binding TickerStore }"
+            ItemsSource="{Binding TickerStore}"
             ScrollSpeed="70"
             SeparatorBrush="#33FFFFFF"
             SeparatorHeightRatio="0.42"

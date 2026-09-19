@@ -2,8 +2,8 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:viewmodels1="clr-namespace:Simurgh.Dashboard.Clock.ViewModels"
-    xmlns:controls="clr-namespace:Simurgh.Dashboard.Clock.Controls">
+    xmlns:controls="clr-namespace:Simurgh.Dashboard.Clock.Controls"
+    xmlns:viewmodels1="clr-namespace:Simurgh.Dashboard.Clock.ViewModels">
 
     <!--
         Implicit DataTemplates (No x:Key):

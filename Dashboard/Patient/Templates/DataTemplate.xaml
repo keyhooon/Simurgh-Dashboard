@@ -1,10 +1,10 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:vm="clr-namespace:Simurgh.Dashboard.Patient.ViewModels"
-    xmlns:controls="clr-namespace:Simurgh.Dashboard.Core.Controls"
     xmlns:behaviors="clr-namespace:Simurgh.Dashboard.Core.Infrastructures.Behaviors"
-    xmlns:converters="clr-namespace:Simurgh.Dashboard.Core.Infrastructures.Converters">
+    xmlns:controls="clr-namespace:Simurgh.Dashboard.Core.Controls"
+    xmlns:converters="clr-namespace:Simurgh.Dashboard.Core.Infrastructures.Converters"
+    xmlns:vm="clr-namespace:Simurgh.Dashboard.Patient.ViewModels">
 
     <!--  Merged Theme Resource Dictionaries  -->
     <ResourceDictionary.MergedDictionaries>

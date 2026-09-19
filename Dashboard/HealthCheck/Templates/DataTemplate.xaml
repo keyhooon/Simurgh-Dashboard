@@ -17,9 +17,9 @@
                     BorderBrush="#3F424A"
                     BorderThickness="1"
                     Foreground="#EDEDED">
-                    <StackPanel Margin="4" >
+                    <StackPanel Margin="4">
                         <TextBlock FontWeight="SemiBold" Text="Watchdog Agent Status" />
-                        <StackPanel Orientation="Horizontal" >
+                        <StackPanel Orientation="Horizontal">
                             <TextBlock Foreground="#A0A0A0" Text="State:" />
                             <TextBlock
                                 FontWeight="Medium"

@@ -19,34 +19,41 @@ public sealed class SimurghIpcServerHostedService(
 
         while (!stoppingToken.IsCancellationRequested)
         {
+            NamedPipeServerStream? serverStream = null;
             try
             {
-                var serverStream = new NamedPipeServerStream(
+                serverStream = new NamedPipeServerStream(
                     pipeName: pipeName,
                     direction: PipeDirection.InOut,
                     maxNumberOfServerInstances: NamedPipeServerStream.MaxAllowedServerInstances,
                     transmissionMode: PipeTransmissionMode.Byte,
                     options: PipeOptions.Asynchronous);
 
-                await serverStream.WaitForConnectionAsync(stoppingToken);
-                _ = ProcessClientAsync(serverStream, stoppingToken);
+                await serverStream.WaitForConnectionAsync(stoppingToken).ConfigureAwait(false);
+
+                // سپردن کلاینت به Task جداگانه بدون متوقف کردن لوپ لیسنر
+                _ = ProcessClientSessionAsync(serverStream, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
+                serverStream?.Dispose();
                 break;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in IPC listener loop.");
-                await Task.Delay(500, stoppingToken);
+                logger.LogError(ex, "Error accepting IPC client on pipe {PipeName}", pipeName);
+                serverStream?.Dispose();
+                await Task.Delay(200, stoppingToken).ConfigureAwait(false);
             }
         }
     }
 
-    private async Task ProcessClientAsync(NamedPipeServerStream pipeStream, CancellationToken cancellationToken)
+    private async Task ProcessClientSessionAsync(NamedPipeServerStream pipeStream, CancellationToken hostStoppingToken)
     {
-        using (pipeStream)
+        // استفاده از using برای مدیریت عمر استریم
+        await using (pipeStream.ConfigureAwait(false))
         {
+            JsonRpc? rpc = null;
             try
             {
                 var formatter = new SystemTextJsonFormatter();
@@ -54,33 +61,52 @@ public sealed class SimurghIpcServerHostedService(
                 formatter.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
 
                 var handler = new HeaderDelimitedMessageHandler(pipeStream, pipeStream, formatter);
-                using var rpc = new JsonRpc(handler);
+                rpc = new JsonRpc(handler);
 
-                foreach (var reg in registry.Registrations)
+                // دفاع در برابر null بودن registry
+                if (registry?.Registrations != null)
                 {
-                    var serviceInstance = serviceProvider.GetRequiredService(reg.InterfaceType);
-                    var proxiedInstance = DispatcherProxy.Create(reg.InterfaceType, serviceInstance);
-
-                    var options = new JsonRpcTargetOptions
+                    foreach (var reg in registry.Registrations)
                     {
-                        MethodNameTransform = methodName => string.IsNullOrEmpty(reg.RoutePrefix)
-                            ? methodName.ToLowerInvariant()
-                            : $"{reg.RoutePrefix}.{methodName}".ToLowerInvariant()
-                    };
+                        // اطمینان از اینکه InterfaceType نال نیست
+                        if (reg?.InterfaceType == null) continue;
 
-                    rpc.AddLocalRpcTarget(reg.InterfaceType, proxiedInstance, options);
+                        var serviceInstance = serviceProvider.GetService(reg.InterfaceType);
+
+                        if (serviceInstance == null)
+                        {
+                            logger.LogWarning("Service {Interface} not registered in DI container.", reg.InterfaceType.Name);
+                            continue;
+                        }
+
+                        var options = new JsonRpcTargetOptions
+                        {
+                            MethodNameTransform = methodName => string.IsNullOrEmpty(reg.RoutePrefix)
+                                ? methodName.ToLowerInvariant()
+                                : $"{reg.RoutePrefix}.{methodName}".ToLowerInvariant()
+                        };
+
+                        rpc.AddLocalRpcTarget(reg.InterfaceType, serviceInstance, options);
+                    }
                 }
 
                 rpc.StartListening();
 
-                using (cancellationToken.Register(() => pipeStream.Dispose()))
-                {
-                    await rpc.Completion;
-                }
+                // استفاده از لینک توکن برای مدیریت توقف
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(hostStoppingToken);
+                using var regDispose = cts.Token.Register(() => rpc.Dispose());
+
+                await rpc.Completion.ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex is not ObjectDisposedException)
+            catch (OperationCanceledException) { /* مورد انتظار هنگام خروج */ }
+            catch (Exception ex)
             {
-                logger.LogError(ex, "Error in IPC client session.");
+                logger.LogError(ex, "Error in IPC client session on pipe {PipeName}", pipeName);
+            }
+            finally
+            {
+                // rpc? اینجا امن است اما مطمئن می‌شویم قبل از Dispose چک شود
+                rpc?.Dispose();
             }
         }
     }

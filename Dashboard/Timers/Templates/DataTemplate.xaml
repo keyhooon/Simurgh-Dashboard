@@ -2,8 +2,8 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:viewmodels="clr-namespace:Simurgh.Dashboard.Timers.ViewModels"
-    xmlns:controls="clr-namespace:Simurgh.Dashboard.Timers.Controls">
+    xmlns:controls="clr-namespace:Simurgh.Dashboard.Timers.Controls"
+    xmlns:viewmodels="clr-namespace:Simurgh.Dashboard.Timers.ViewModels">
 
     <DataTemplate DataType="{x:Type viewmodels:TimerViewModel}">
         <controls:DigitalTimerControl

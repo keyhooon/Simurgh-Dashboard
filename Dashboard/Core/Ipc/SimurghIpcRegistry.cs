@@ -8,7 +8,7 @@ public class SimurghIpcRegistry
     public void Register(Type interfaceType, string routePrefix)
     {
         var prefix = routePrefix.Trim().TrimEnd('.');
-        if (!_registrations.Any(r => r.InterfaceType == interfaceType))
+        if (_registrations.All(r => r.InterfaceType != interfaceType))
         {
             _registrations.Add(new RpcControllerRegistration(interfaceType, prefix));
         }

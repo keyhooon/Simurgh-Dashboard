@@ -9,7 +9,7 @@ public static class SimurghIpcExtensions
     public static IServiceCollection AddSimurghIpcServer(
         this IServiceCollection services,
         Action<IpcControllerBuilder> configure,
-        string pipeName = "Dashboard_IPC")
+        string pipeName = "Dashboard_IPC1")
     {
         // اطمینان از سینگلتون بودن رجیستری در تمام طول چرخه DI
         var registryDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(SimurghIpcRegistry));

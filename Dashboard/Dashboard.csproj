@@ -149,4 +149,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="HealthCheck\Options\" />
+  </ItemGroup>
+
 </Project>

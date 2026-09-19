@@ -11,6 +11,7 @@ using Simurgh.Dashboard.Clock.Options;
 using Simurgh.Dashboard.Clock.Services.Weather;
 using Simurgh.Dashboard.Clock.ViewModels;
 using Simurgh.Dashboard.Core.Ipc;
+using Simurgh.Dashboard.HealthCheck.Services;
 using Simurgh.Dashboard.HealthCheck.ViewModels;
 using Simurgh.Dashboard.Patient.Services;
 using Simurgh.Dashboard.RssFeed.Services;
@@ -162,7 +163,8 @@ namespace Simurgh.Dashboard
             services.AddTimerWorkerServices(configuration);
             services.AddPatientDemographics(configuration);
             services.AddSensorSubsystem(configuration);
-            services.AddWatchdogAgent(configuration);
+
+services.AddSimurghWpfWatchdog(configuration);
 
 
 
@@ -173,8 +175,8 @@ namespace Simurgh.Dashboard
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<DigitalClockViewModel>();
 
-            
-            
+
+
         }
 
         /// <summary>
