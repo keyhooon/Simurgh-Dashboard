@@ -127,8 +127,8 @@
                                             Orientation="Horizontal">
                                             <Path
                                                 x:Name="PART_DirectionIcon"
-                                                Width="44"
-                                                Height="44"
+                                                Width="40"
+                                                Height="40"
                                                 Margin="0,0,4,0"
                                                 VerticalAlignment="Center"
                                                 Data="{StaticResource IconTimerDown}"
@@ -136,8 +136,8 @@
                                                 Stretch="Uniform" />
                                             <Path
                                                 x:Name="PART_StateIcon"
-                                                Width="44"
-                                                Height="44"
+                                                Width="40"
+                                                Height="40"
                                                 VerticalAlignment="Center"
                                                 Data="{StaticResource IconClock}"
                                                 Fill="{TemplateBinding DigitBrush}"

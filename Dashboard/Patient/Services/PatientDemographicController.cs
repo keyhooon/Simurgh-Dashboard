@@ -25,7 +25,8 @@ public sealed class PatientDemographicController : IPatientDemographicController
         // Guard: Prevent overwriting if already populated (matching original CanExecute logic)
         if (PatientDemographicEntity.HasValue)
         {
-            throw new InvalidOperationException("Patient demographics is already set. Reset before setting new values.");
+            PatientDemographicEntity.Reset();
+            //throw new InvalidOperationException("Patient demographics is already set. Reset before setting new values.");
         }
 
         PatientDemographicEntity.UpdateDemographics(payload);

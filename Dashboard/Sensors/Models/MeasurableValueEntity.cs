@@ -297,6 +297,7 @@ public sealed class MeasurableValueEntity : INotifyPropertyChanged
         LowCriticalThreshold = options.LowCriticalThreshold;
         HighCriticalThreshold = options.HighCriticalThreshold;
 
+        
         DigitBrush = ParseBrushOrDefault(options.DigitColorHex, DefaultDigitBrush);
         PlaceholderBrush = ParseBrushOrDefault(options.PlaceholderColorHex, DefaultPlaceholderBrush);
 

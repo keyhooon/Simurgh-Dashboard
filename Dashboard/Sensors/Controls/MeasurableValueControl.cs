@@ -124,7 +124,7 @@ public class MeasurableValueControl : Control
             nameof(PlaceholderBrush),
             typeof(Brush),
             typeof(MeasurableValueControl),
-            new PropertyMetadata(new SolidColorBrush(Color.FromArgb(0x18, 0xFF, 0xFF, 0xFF))));
+            new PropertyMetadata(new SolidColorBrush(Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF))));
 
     public Brush PlaceholderBrush
     {

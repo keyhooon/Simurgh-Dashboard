@@ -89,7 +89,7 @@ public sealed partial class MeasurableValueViewModel : ObservableObject, IDispos
     private Brush _digitBrush = Brushes.Tomato;
 
     [ObservableProperty]
-    private Brush _placeholderBrush = Brushes.DarkSlateGray;
+    private Brush _placeholderBrush = Brushes.DarkBlue;
 
     [ObservableProperty]
     private double _realValue;

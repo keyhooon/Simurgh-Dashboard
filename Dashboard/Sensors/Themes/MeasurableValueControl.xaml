@@ -71,6 +71,7 @@
                             VerticalAlignment="Center">
                             <!--  Background Placeholder Matrix  -->
                             <TextBlock
+                                HorizontalAlignment="Right"
                                 FontFamily="{StaticResource FontFamilyDigit}"
                                 FontSize="48"
                                 FontWeight="ExtraBold"

@@ -86,11 +86,11 @@
 
                                 <TextBlock
                                     Grid.Row="0"
-                                    Margin="0"
+                                    Margin="-4"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     FontFamily="{StaticResource FontFamilyApp}"
-                                    FontSize="24"
+                                    FontSize="28"
                                     FontWeight="ExtraBold"
                                     Foreground="{TemplateBinding Foreground}"
                                     Text="{TemplateBinding HeaderText}"

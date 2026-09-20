@@ -27,12 +27,12 @@
         -->
 
         <controls:DrawingMarqueeControl
-            Height="42"
-            Margin="15"
+            Height="80"
+            Margin="0"
             DefaultItemBackground="#CC000001"
             Direction="LeftToRight"
             FontFamily="b titr"
-            FontSize="20"
+            FontSize="40"
             FontWeight="SemiBold"
             Foreground="#FFF3F7FA"
             ItemPadding="18,0,18,0"

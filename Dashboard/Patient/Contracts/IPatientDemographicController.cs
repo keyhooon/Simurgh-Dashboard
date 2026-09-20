@@ -3,12 +3,8 @@ using Simurgh.Dashboard.Core.Ipc;
 using Simurgh.Dashboard.Patient.Models;
 using StreamJsonRpc;
 
-namespace Simurgh.Dashboard.Patient.Contracts
-{
-    /// <summary>
-    /// Service orchestrating and dispatching demographic mutations across <see cref="IPatientDemographicAccessor"/>.
-    /// </summary>
-}
+namespace Simurgh.Dashboard.Patient.Contracts;
+
 public interface IPatientDemographicController
 {
     PatientDemographicEntity PatientDemographicEntity { get; }
