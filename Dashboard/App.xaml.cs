@@ -12,7 +12,6 @@ using Simurgh.Dashboard.Clock.Services.Weather;
 using Simurgh.Dashboard.Clock.ViewModels;
 using Simurgh.Dashboard.Core.Ipc;
 using Simurgh.Dashboard.HealthCheck.Services;
-using Simurgh.Dashboard.HealthCheck.ViewModels;
 using Simurgh.Dashboard.Patient.Services;
 using Simurgh.Dashboard.RssFeed.Services;
 using Simurgh.Dashboard.RssFeed.ViewModels;

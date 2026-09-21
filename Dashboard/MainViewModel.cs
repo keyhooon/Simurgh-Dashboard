@@ -2,11 +2,11 @@
 using Microsoft.Extensions.Options;
 using Simurgh.Dashboard.Clock.ViewModels;
 using Simurgh.Dashboard.Core.Infrastructures.Native;
-using Simurgh.Dashboard.HealthCheck.ViewModels;
 using Simurgh.Dashboard.Patient.ViewModels;
 using Simurgh.Dashboard.RssFeed.ViewModels;
 using Simurgh.Dashboard.Sensors.ViewModels;
 using Simurgh.Dashboard.Timers.ViewModels;
+using Simurgh.Dashboard.Watchdog.ViewModels;
 
 namespace Simurgh.Dashboard;
 
