@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library>
+    <book>
+        <title>Example Book</title>
+        <author>John Doe</author>
+        <year>2023</year>
+        <isbn>1234567890</isbn>
+    </book>
+    <book>
+        <title>Another Book</title>
+        <author>Jane Smith</author>
+        <year>2022</year>
+        <isbn>0987654321</isbn>
+    </book>
+</library>
