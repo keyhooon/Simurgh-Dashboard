@@ -1,4 +1,9 @@
+using System;
+using System.IO;
 using System.Reflection;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
@@ -24,11 +29,18 @@ using Simurgh.Watchdog.Agent;
 namespace Simurgh.Dashboard
 {
     /// <summary>
-    /// Core application class responsible for bootstrapping the Simurgh-Dashboard kiosk.
+    /// Core application class responsible for bootstrapping the Simurgh Dashboard kiosk.
     /// Manages the Microsoft.Extensions.Hosting lifecycle, DI pipeline, and global fault tolerance.
     /// </summary>
     public partial class App : Application
     {
+        // Global named mutex to enforce a single running instance across sessions.
+        private const string SingleInstanceMutexName = @"Global\Simurgh.Dashboard";
+
+        // Must remain alive for the entire process lifetime to prevent duplicate instances.
+        private Mutex? _singleInstanceMutex;
+        private bool _ownsSingleInstanceMutex;
+
         // Static NLog logger initialized before DI/IHost pipeline for early boot diagnostics.
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
@@ -41,14 +53,23 @@ namespace Simurgh.Dashboard
         public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
         /// <summary>
-        /// Boots the generic host, starts hosted background workers (Weather, Ticker, etc.),
-        /// and initializes the main kiosk shell.
+        /// Boots the generic host, starts hosted background workers, and renders the main kiosk shell.
         /// </summary>
         protected override async void OnStartup(StartupEventArgs e)
         {
             // Establish global UI dispatcher protection immediately.
-            this.DispatcherUnhandledException += App_DispatcherUnhandledException;
-            
+            DispatcherUnhandledException += App_DispatcherUnhandledException;
+
+            // -------------------------------------------------------------------------
+            // SINGLE INSTANCE GUARD (MUTEX)
+            // -------------------------------------------------------------------------
+            if (!TryAcquireSingleInstanceMutex(SingleInstanceMutexName))
+            {
+                _logger.Warn("Simurgh Dashboard is already running. Fast terminating secondary instance.");
+                Shutdown(0);
+                return;
+            }
+
             _logger.Info("Simurgh Dashboard starting up (IHost bootstrapping)...");
 
             try
@@ -80,7 +101,7 @@ namespace Simurgh.Dashboard
 
                 _logger.Info("IHost successfully built. Starting hosted background services...");
 
-                // StartAsync automatically resolves and executes ExecuteAsync on all IHostedService/BackgroundService instances.
+                // StartAsync automatically resolves and executes ExecuteAsync on all IHostedService instances.
                 await _host.StartAsync();
 
                 _logger.Info("All hosted services started. Rendering MainWindow...");
@@ -133,7 +154,8 @@ namespace Simurgh.Dashboard
                 .ValidateOnStart();
 
             services.AddOptions<WatchdogAgentOptions>()
-                .BindConfiguration(WatchdogAgentOptions.SectionName).PostConfigure(options =>
+                .BindConfiguration(WatchdogAgentOptions.SectionName)
+                .PostConfigure(options =>
                 {
                     var entryAssembly = Assembly.GetEntryAssembly()?.GetName().Name;
                     var fallbackName = !string.IsNullOrWhiteSpace(entryAssembly)
@@ -163,19 +185,13 @@ namespace Simurgh.Dashboard
             services.AddPatientDemographics(configuration);
             services.AddSensorSubsystem(configuration);
 
-services.AddSimurghWpfWatchdog(configuration);
-
-
-
+            services.AddSimurghWpfWatchdog(configuration);
 
             // -------------------------------------------------------------------------
             // VIEWMODELS (Stateful Singletons for Kiosk Lifecycle)
             // -------------------------------------------------------------------------
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<DigitalClockViewModel>();
-
-
-
         }
 
         /// <summary>
@@ -188,7 +204,8 @@ services.AddSimurghWpfWatchdog(configuration);
         }
 
         /// <summary>
-        /// Performs graceful shutdown of the host, cancels workers, and flushes log buffers.
+        /// Performs graceful shutdown of the host, cancels workers, flushes log buffers,
+        /// and releases the single-instance mutex.
         /// </summary>
         protected override async void OnExit(ExitEventArgs e)
         {
@@ -209,11 +226,114 @@ services.AddSimurghWpfWatchdog(configuration);
                 finally
                 {
                     _host.Dispose();
+                    _host = null;
                 }
             }
 
+            ReleaseSingleInstanceMutex();
+
             LogManager.Shutdown();
             base.OnExit(e);
+        }
+
+        /// <summary>
+        /// Attempts to acquire a named system-wide mutex to enforce single-instance behavior.
+        /// Returns false if another instance is already running.
+        /// </summary>
+        private bool TryAcquireSingleInstanceMutex(string mutexName)
+        {
+            try
+            {
+                _singleInstanceMutex = CreateOrOpenMutexWithWorldAcl(mutexName, out var createdNew);
+
+                bool hasHandle;
+                try
+                {
+                    // Zero-timeout wait: non-blocking acquisition attempt.
+                    hasHandle = _singleInstanceMutex.WaitOne(0, false);
+                }
+                catch (AbandonedMutexException)
+                {
+                    // Prior instance terminated unexpectedly without releasing the mutex.
+                    _logger.Warn("Abandoned mutex detected. Previous instance might have crashed. Continuing execution.");
+                    hasHandle = true;
+                }
+
+                _ownsSingleInstanceMutex = hasHandle;
+
+                if (!_ownsSingleInstanceMutex)
+                {
+                    return false;
+                }
+
+                _logger.Info("Single-instance mutex successfully acquired (CreatedNew: {0}, Name: {1}).", createdNew, mutexName);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to create or acquire single-instance mutex: {0}", mutexName);
+                // Fail-safe default: allow the app to run if mutex subsystem throws an OS error
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Releases the acquired mutex handle safely and disposes resources.
+        /// </summary>
+        private void ReleaseSingleInstanceMutex()
+        {
+            try
+            {
+                if (_singleInstanceMutex != null && _ownsSingleInstanceMutex)
+                {
+                    _singleInstanceMutex.ReleaseMutex();
+                }
+            }
+            catch (ApplicationException)
+            {
+                // Current thread did not hold the lock; safe to ignore during shutdown.
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn(ex, "Unexpected error occurred while releasing single-instance mutex.");
+            }
+            finally
+            {
+                _ownsSingleInstanceMutex = false;
+                _singleInstanceMutex?.Dispose();
+                _singleInstanceMutex = null;
+            }
+        }
+
+        /// <summary>
+        /// Creates or opens a named mutex configured with permissive ACL (Everyone + Current User FullControl).
+        /// Compatible with both standard and Windows Kiosk/Service session switches.
+        /// </summary>
+        private static Mutex CreateOrOpenMutexWithWorldAcl(string name, out bool createdNew)
+        {
+            var security = new MutexSecurity();
+
+            // Grant full control to Everyone (World SID).
+            security.AddAccessRule(new MutexAccessRule(
+                new SecurityIdentifier(WellKnownSidType.WorldSid, null),
+                MutexRights.FullControl,
+                AccessControlType.Allow));
+
+            // Explicitly ensure the current user identity has full control.
+            var currentUser = WindowsIdentity.GetCurrent().User;
+            if (currentUser != null)
+            {
+                security.AddAccessRule(new MutexAccessRule(
+                    currentUser,
+                    MutexRights.FullControl,
+                    AccessControlType.Allow));
+            }
+
+            return MutexAcl.Create(
+                initiallyOwned: false,
+                name: name,
+                createdNew: out createdNew,
+                mutexSecurity: security);
         }
     }
 }

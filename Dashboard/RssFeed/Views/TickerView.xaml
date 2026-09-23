@@ -40,7 +40,7 @@
             ItemSpacing="70"
             ItemsSource="{Binding TickerStore}"
             ScrollSpeed="70"
-            SeparatorBrush="#33FFFFFF"
+            SeparatorBrush="#FFFFFFFF"
             SeparatorHeightRatio="0.42"
             SeparatorWidth="10" />
     </Grid>

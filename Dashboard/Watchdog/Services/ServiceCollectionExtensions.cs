@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Simurgh.Dashboard.Watchdog.Services;
 using Simurgh.Dashboard.Watchdog.ViewModels;
 using Simurgh.Watchdog.Agent;
 using Simurgh.Watchdog.Contracts.Interfaces;

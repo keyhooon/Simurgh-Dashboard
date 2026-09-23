@@ -1,14 +1,14 @@
 ﻿// Path: Simurgh.Dashboard/HealthCheck/Services/WpfAgentManagementHandler.cs
 
+using System.Diagnostics;
+using System.Windows.Threading;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NLog;
 using Simurgh.Watchdog.Agent;
-using System.Diagnostics;
-using System.Windows.Threading;
 using Simurgh.Watchdog.Contracts.Models;
-namespace Simurgh.Dashboard.HealthCheck.Services;
+
+namespace Simurgh.Dashboard.Watchdog.Services;
 
 /// <summary>
 /// Production-ready, zero-lock, self-contained Agent Management Handler tailored for WPF applications.

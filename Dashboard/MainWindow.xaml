@@ -18,8 +18,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Dashboard;component/HealthCheck/Templates/DataTemplate.xaml" />
-
+                <ResourceDictionary Source="/Dashboard;component/Watchdog/Templates/DataTemplate.xaml" />
                 <ResourceDictionary Source="/Dashboard;component/Clock/Templates/DataTemplate.xaml" />
                 <ResourceDictionary Source="/Dashboard;component/RssFeed/Templates/DataTemplate.xaml" />
                 <ResourceDictionary Source="/Dashboard;component/Timers/Templates/DataTemplate.xaml" />
