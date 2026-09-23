@@ -89,6 +89,15 @@
                 Content="{Binding DigitalClockViewModel}" />
         </controls:WidgetFrame>
 
+        <ContentControl
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="55"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
+            Content="{Binding WatchdogStatusIndicatorViewModel}" />
+
         <!--
             ============================================================================
             2. SURGICAL TIMERS LIST (Middle Left)

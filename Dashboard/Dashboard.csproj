@@ -1,159 +1,204 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
-    <RootNamespace>Simurgh.$(MSBuildProjectName)</RootNamespace>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-  </PropertyGroup>
+	<PropertyGroup>
+		<!-- Target platform, runtime framework, and WPF enablement -->
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net9.0-windows</TargetFramework>
+		<RootNamespace>Simurgh.$(MSBuildProjectName)</RootNamespace>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<StartupObject>Simurgh.Dashboard.App</StartupObject>
+		<UseWPF>true</UseWPF>
 
-  <ItemGroup>
-    <Compile Remove="Sensors\Views\**" />
-    <Compile Remove="Timers\Repositories\**" />
-    <Compile Remove="Timers\Views\**" />
-    <EmbeddedResource Remove="Sensors\Views\**" />
-    <EmbeddedResource Remove="Timers\Repositories\**" />
-    <EmbeddedResource Remove="Timers\Views\**" />
-    <None Remove="Sensors\Views\**" />
-    <None Remove="Timers\Repositories\**" />
-    <None Remove="Timers\Views\**" />
-    <Page Remove="Sensors\Views\**" />
-    <Page Remove="Timers\Repositories\**" />
-    <Page Remove="Timers\Views\**" />
-  </ItemGroup>
+		<!-- Assembly metadata and versioning -->
+		<Version Condition="'$(Version)' == ''">1.0.0</Version>
+		<Authors>Keyhan Babazadeh</Authors>
+		<Company>Simurgh</Company>
+		<Description>Simurgh Dashboard Client Application</Description>
 
-  <ItemGroup>
-    <None Remove="Core\Fonts\dseg7-classic-latin-300-italic.ttf" />
-    <None Remove="Core\Fonts\dseg7-classic-latin-300-normal.ttf" />
-    <None Remove="Core\Fonts\dseg7-classic-latin-400-italic.ttf" />
-    <None Remove="Core\Fonts\dseg7-classic-latin-400-normal.ttf" />
-    <None Remove="Core\Fonts\dseg7-classic-latin-700-italic.ttf" />
-    <None Remove="Core\Fonts\dseg7-classic-latin-700-normal.ttf" />
-    <None Remove="Core\Fonts\Vazirmatn-Black.ttf" />
-    <None Remove="Core\Fonts\Vazirmatn-Bold.ttf" />
-    <None Remove="Core\Fonts\Vazirmatn-ExtraBold.ttf" />
-    <None Remove="Core\Fonts\Vazirmatn-ExtraLight.ttf" />
-    <None Remove="Core\Fonts\Vazirmatn-Light.ttf" />
-    <None Remove="Core\Fonts\Vazirmatn-Medium.ttf" />
-    <None Remove="Core\Fonts\Vazirmatn-Regular.ttf" />
-    <None Remove="Core\Fonts\Vazirmatn-SemiBold.ttf" />
-    <None Remove="Core\Fonts\Vazirmatn-Thin.ttf" />
-    <None Remove="Core\Fonts\weathericons-regular-webfont.ttf" />
-    <None Remove="Core\Images\Button_Pill_Raised.png" />
-    <None Remove="Core\Images\Button_Pill_Sunken.png" />
-    <None Remove="Core\Images\Frame_Nested_Inset.png" />
-    <None Remove="Core\Images\Panel_Circle_Raised.png" />
-    <None Remove="Core\Images\Panel_Circle_Sunken.png" />
-    <None Remove="Core\Images\Panel_Rounded_Raised.png" />
-    <None Remove="Core\Images\Panel_Rounded_Raised_Low.png" />
-    <None Remove="Core\Images\Panel_Rounded_Sunken.png" />
-    <None Remove="Core\Images\Panel_Rounded_Sunken_Low.png" />
-    <None Remove="Core\Images\Panel_Square_Sunken.png" />
-  </ItemGroup>
+		<!-- Velopack release orchestration variables -->
+		<VelopackId>Simurgh.Dashboard</VelopackId>
+		<!-- Target destination for delta updates, full packages, and releases -->
+		<VelopackReleaseDir Condition="'$(VelopackReleaseDir)' == ''">$(MSBuildThisFileDirectory)..\Releases</VelopackReleaseDir>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Page Remove="Themes\MarqueeItemsControl.xaml" />
-  </ItemGroup>
+	<!-- Excluded view and repository directories from compilation -->
+	<ItemGroup>
+		<Compile Remove="Sensors\Views\**" />
+		<Compile Remove="Timers\Repositories\**" />
+		<Compile Remove="Timers\Views\**" />
+		<EmbeddedResource Remove="Sensors\Views\**" />
+		<EmbeddedResource Remove="Timers\Repositories\**" />
+		<EmbeddedResource Remove="Timers\Views\**" />
+		<None Remove="Sensors\Views\**" />
+		<None Remove="Timers\Repositories\**" />
+		<None Remove="Timers\Views\**" />
+		<Page Remove="Sensors\Views\**" />
+		<Page Remove="Timers\Repositories\**" />
+		<Page Remove="Timers\Views\**" />
+		<ApplicationDefinition Remove="App.xaml" />
+		<Page Include="App.xaml" SubType="Designer" Generator="MSBuild:Compile" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Resource Include="Core\Fonts\dseg7-classic-latin-300-italic.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\dseg7-classic-latin-300-normal.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\dseg7-classic-latin-400-italic.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\dseg7-classic-latin-400-normal.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\dseg7-classic-latin-700-italic.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\dseg7-classic-latin-700-normal.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\Vazirmatn-Black.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\Vazirmatn-Bold.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\Vazirmatn-ExtraBold.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\Vazirmatn-ExtraLight.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\Vazirmatn-Light.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\Vazirmatn-Medium.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\Vazirmatn-Regular.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\Vazirmatn-SemiBold.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\Vazirmatn-Thin.ttf">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Fonts\weathericons-regular-webfont.ttf" />
-    <Resource Include="Core\Images\Panel_Rounded_Raised_Low.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Images\Panel_Rounded_Sunken_Low.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Images\Panel_Rounded_Raised.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Images\Panel_Rounded_Sunken.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Core\Images\Panel_Square_Sunken.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
+	<!-- Items removed from default None items before being declared as WPF Resources -->
+	<ItemGroup>
+		<None Remove="Core\Fonts\dseg7-classic-latin-300-italic.ttf" />
+		<None Remove="Core\Fonts\dseg7-classic-latin-300-normal.ttf" />
+		<None Remove="Core\Fonts\dseg7-classic-latin-400-italic.ttf" />
+		<None Remove="Core\Fonts\dseg7-classic-latin-400-normal.ttf" />
+		<None Remove="Core\Fonts\dseg7-classic-latin-700-italic.ttf" />
+		<None Remove="Core\Fonts\dseg7-classic-latin-700-normal.ttf" />
+		<None Remove="Core\Fonts\Vazirmatn-Black.ttf" />
+		<None Remove="Core\Fonts\Vazirmatn-Bold.ttf" />
+		<None Remove="Core\Fonts\Vazirmatn-ExtraBold.ttf" />
+		<None Remove="Core\Fonts\Vazirmatn-ExtraLight.ttf" />
+		<None Remove="Core\Fonts\Vazirmatn-Light.ttf" />
+		<None Remove="Core\Fonts\Vazirmatn-Medium.ttf" />
+		<None Remove="Core\Fonts\Vazirmatn-Regular.ttf" />
+		<None Remove="Core\Fonts\Vazirmatn-SemiBold.ttf" />
+		<None Remove="Core\Fonts\Vazirmatn-Thin.ttf" />
+		<None Remove="Core\Fonts\weathericons-regular-webfont.ttf" />
+		<None Remove="Core\Images\Button_Pill_Raised.png" />
+		<None Remove="Core\Images\Button_Pill_Sunken.png" />
+		<None Remove="Core\Images\Frame_Nested_Inset.png" />
+		<None Remove="Core\Images\Panel_Circle_Raised.png" />
+		<None Remove="Core\Images\Panel_Circle_Sunken.png" />
+		<None Remove="Core\Images\Panel_Rounded_Raised.png" />
+		<None Remove="Core\Images\Panel_Rounded_Raised_Low.png" />
+		<None Remove="Core\Images\Panel_Rounded_Sunken.png" />
+		<None Remove="Core\Images\Panel_Rounded_Sunken_Low.png" />
+		<None Remove="Core\Images\Panel_Square_Sunken.png" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.11" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.11" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.2.0" />
-    <PackageReference Include="StreamJsonRpc" Version="2.25.29" />
-    <PackageReference Include="System.ServiceModel.Syndication" Version="10.0.11" />
-  </ItemGroup>
+	<ItemGroup>
+		<Page Remove="Themes\MarqueeItemsControl.xaml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Watchdog.Agent">
-      <HintPath>..\..\..\Simurgh-Watchdog\Watchdog\Watchdog.Agent\bin\Debug\net9.0-windows\Watchdog.Agent.dll</HintPath>
-    </Reference>
-    <Reference Include="Watchdog.Contracts">
-      <HintPath>..\..\..\Simurgh-Watchdog\Watchdog\Watchdog.Agent\bin\Debug\net9.0-windows\Watchdog.Contracts.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+	<!-- Embedded UI Resources (Fonts and Skin Assets) -->
+	<ItemGroup>
+		<Resource Include="Core\Fonts\dseg7-classic-latin-300-italic.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\dseg7-classic-latin-300-normal.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\dseg7-classic-latin-400-italic.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\dseg7-classic-latin-400-normal.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\dseg7-classic-latin-700-italic.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\dseg7-classic-latin-700-normal.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\Vazirmatn-Black.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\Vazirmatn-Bold.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\Vazirmatn-ExtraBold.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\Vazirmatn-ExtraLight.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\Vazirmatn-Light.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\Vazirmatn-Medium.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\Vazirmatn-Regular.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\Vazirmatn-SemiBold.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\Vazirmatn-Thin.ttf">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Fonts\weathericons-regular-webfont.ttf" />
+		<Resource Include="Core\Images\Panel_Rounded_Raised_Low.png">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Images\Panel_Rounded_Sunken_Low.png">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Images\Panel_Rounded_Raised.png">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Images\Panel_Rounded_Sunken.png">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Core\Images\Panel_Square_Sunken.png">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Update="appsettings.json">
-      <Generator></Generator>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<!-- NuGet Package Dependencies -->
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.11" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.11" />
+		<PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="6.2.0" />
+		<PackageReference Include="StreamJsonRpc" Version="2.25.29" />
+		<PackageReference Include="System.ServiceModel.Syndication" Version="10.0.11" />
+		<!-- Velopack update manager and installer integration -->
+		<PackageReference Include="Velopack" Version="1.2.158" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Watchdog\Options\" />
-  </ItemGroup>
+	<!-- External Watchdog Assembly References -->
+	<ItemGroup>
+		<Reference Include="Watchdog.Agent">
+			<HintPath>..\..\..\Simurgh-Watchdog\Watchdog\Watchdog.Agent\bin\Debug\net9.0-windows\Watchdog.Agent.dll</HintPath>
+		</Reference>
+		<Reference Include="Watchdog.Contracts">
+			<HintPath>..\..\..\Simurgh-Watchdog\Watchdog\Watchdog.Agent\bin\Debug\net9.0-windows\Watchdog.Contracts.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<!-- Application Configuration Deployment -->
+	<ItemGroup>
+		<None Update="appsettings.json">
+			<Generator></Generator>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Watchdog\Options\" />
+	</ItemGroup>
+
+	<!-- Automated Velopack release packaging pipeline triggered post-publish in Release configuration -->
+	<Target Name="VelopackAutoPack" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
+		<PropertyGroup>
+			<!-- Primary WPF executable entrypoint -->
+			<EntryExeName>$(TargetName).exe</EntryExeName>
+		</PropertyGroup>
+
+		<Message Importance="High" Text="======================================================" />
+		<Message Importance="High" Text="[Velopack] Starting packaging for $(VelopackId) v$(Version)..." />
+		<Message Importance="High" Text="[Velopack] Source Directory: $(PublishDir)" />
+		<Message Importance="High" Text="[Velopack] Release Directory: $(VelopackReleaseDir)" />
+		<Message Importance="High" Text="======================================================" />
+
+		<!-- Ensure target release output directory exists prior to packaging -->
+		<MakeDir Directories="$(VelopackReleaseDir)" Condition="!Exists('$(VelopackReleaseDir)')" />
+
+		<!-- Execute Velopack CLI (vpk pack) to generate setup files and delta packages -->
+		<Exec Command="vpk pack -u $(VelopackId) -v $(Version) -p &quot;$(PublishDir.TrimEnd('\'))&quot; -e $(EntryExeName) -o &quot;$(VelopackReleaseDir.TrimEnd('\'))&quot;"
+			  WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+		<Message Importance="High" Text="[Velopack] Packaging completed successfully." />
+	</Target>
 
 </Project>

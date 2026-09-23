@@ -1,11 +1,3 @@
-using System;
-using System.IO;
-using System.Reflection;
-using System.Security.AccessControl;
-using System.Security.Principal;
-using System.Threading;
-using System.Windows;
-using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,6 +17,15 @@ using Simurgh.Dashboard.Timers.Contracts;
 using Simurgh.Dashboard.Timers.Services;
 using Simurgh.Dashboard.Timers.ViewModels;
 using Simurgh.Watchdog.Agent;
+using System;
+using System.IO;
+using System.Reflection;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Threading;
+using System.Windows;
+using System.Windows.Threading;
+using Velopack;
 
 namespace Simurgh.Dashboard
 {
@@ -51,6 +52,23 @@ namespace Simurgh.Dashboard
         /// Global service provider access point for legacy components or dynamic resolution.
         /// </summary>
         public static IServiceProvider ServiceProvider { get; private set; } = null!;
+
+
+        // =========================================================================
+        // ENTRY POINT
+        // =========================================================================
+        [STAThread]
+        public static void Main(string[] args)
+        {
+            // ۲. فراخوانی ضروری ول‌پک قبل از هر عملیات دیگر
+            VelopackApp.Build().Run();
+
+            // ۳. اجرای چرخه استاندارد WPF
+            var app = new App();
+            app.InitializeComponent();
+            app.Run();
+        }
+
 
         /// <summary>
         /// Boots the generic host, starts hosted background workers, and renders the main kiosk shell.
