@@ -8,9 +8,9 @@
 
     <!--  Merged Theme Resource Dictionaries  -->
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Dashboard;component/Core/Themes/Icons.xaml" />
-        <ResourceDictionary Source="/Dashboard;component/Core/Themes/Fonts.xaml" />
-        <ResourceDictionary Source="/Dashboard;component/Core/Themes/Images.xaml" />
+        <ResourceDictionary Source="/Simurgh.Dashboard;component/Core/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/Simurgh.Dashboard;component/Core/Themes/Fonts.xaml" />
+        <ResourceDictionary Source="/Simurgh.Dashboard;component/Core/Themes/Images.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <!--  Boolean to Visibility Converter  -->

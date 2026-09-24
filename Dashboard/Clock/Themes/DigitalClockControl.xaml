@@ -5,9 +5,9 @@
     xmlns:controls1="clr-namespace:Simurgh.Dashboard.Core.Controls">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Dashboard;component/Core/Themes/Icons.xaml" />
-        <ResourceDictionary Source="/Dashboard;component/Core/Themes/Fonts.xaml" />
-        <ResourceDictionary Source="/Dashboard;component/Core/Themes/Images.xaml" />
+        <ResourceDictionary Source="/Simurgh.Dashboard;component/Core/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/Simurgh.Dashboard;component/Core/Themes/Fonts.xaml" />
+        <ResourceDictionary Source="/Simurgh.Dashboard;component/Core/Themes/Images.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <Style TargetType="{x:Type controls:DigitalClockControl}">

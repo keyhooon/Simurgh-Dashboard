@@ -18,12 +18,12 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Dashboard;component/Watchdog/Templates/DataTemplate.xaml" />
-                <ResourceDictionary Source="/Dashboard;component/Clock/Templates/DataTemplate.xaml" />
-                <ResourceDictionary Source="/Dashboard;component/RssFeed/Templates/DataTemplate.xaml" />
-                <ResourceDictionary Source="/Dashboard;component/Timers/Templates/DataTemplate.xaml" />
-                <ResourceDictionary Source="/Dashboard;component/Sensors/Templates/DataTemplate.xaml" />
-                <ResourceDictionary Source="/Dashboard;component/Patient/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/Simurgh.Dashboard;component/Watchdog/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/Simurgh.Dashboard;component/Clock/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/Simurgh.Dashboard;component/RssFeed/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/Simurgh.Dashboard;component/Timers/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/Simurgh.Dashboard;component/Sensors/Templates/DataTemplate.xaml" />
+                <ResourceDictionary Source="/Simurgh.Dashboard;component/Patient/Templates/DataTemplate.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
