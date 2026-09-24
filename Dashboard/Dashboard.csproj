@@ -4,7 +4,6 @@
 		<!-- Target platform, runtime framework, and WPF enablement -->
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net9.0-windows</TargetFramework>
-		<RootNamespace>Simurgh.$(MSBuildProjectName)</RootNamespace>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<StartupObject>Simurgh.Dashboard.App</StartupObject>
@@ -20,6 +19,7 @@
 		<VelopackId>Simurgh.Dashboard</VelopackId>
 		<!-- Target destination for delta updates, full packages, and releases -->
 		<VelopackReleaseDir Condition="'$(VelopackReleaseDir)' == ''">$(MSBuildThisFileDirectory)..\Releases</VelopackReleaseDir>
+		<RootNamespace>Simurgh.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
 	</PropertyGroup>
 
 	<!-- Excluded view and repository directories from compilation -->
@@ -195,8 +195,7 @@
 		<MakeDir Directories="$(VelopackReleaseDir)" Condition="!Exists('$(VelopackReleaseDir)')" />
 
 		<!-- Execute Velopack CLI (vpk pack) to generate setup files and delta packages -->
-		<Exec Command="vpk pack -u $(VelopackId) -v $(Version) -p &quot;$(PublishDir.TrimEnd('\'))&quot; -e $(EntryExeName) -o &quot;$(VelopackReleaseDir.TrimEnd('\'))&quot;"
-			  WorkingDirectory="$(MSBuildProjectDirectory)" />
+		<Exec Command="vpk pack -u $(VelopackId) -v $(Version) -p &quot;$(PublishDir.TrimEnd('\'))&quot; -e $(EntryExeName) -o &quot;$(VelopackReleaseDir.TrimEnd('\'))&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
 
 		<Message Importance="High" Text="[Velopack] Packaging completed successfully." />
 	</Target>
