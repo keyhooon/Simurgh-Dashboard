@@ -60,10 +60,8 @@ namespace Simurgh.Dashboard
         [STAThread]
         public static void Main(string[] args)
         {
-            // ۲. فراخوانی ضروری ول‌پک قبل از هر عملیات دیگر
             VelopackApp.Build().Run();
 
-            // ۳. اجرای چرخه استاندارد WPF
             var app = new App();
             app.InitializeComponent();
             app.Run();

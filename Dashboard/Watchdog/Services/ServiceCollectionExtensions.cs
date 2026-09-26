@@ -1,6 +1,5 @@
 ﻿// Path: Simurgh.Dashboard/HealthCheck/Services/ServiceCollectionExtensions.cs
 
-using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -8,6 +7,8 @@ using Simurgh.Dashboard.Watchdog.Services;
 using Simurgh.Dashboard.Watchdog.ViewModels;
 using Simurgh.Watchdog.Agent;
 using Simurgh.Watchdog.Contracts.Interfaces;
+using System.Windows.Threading;
+using Watchdog.Agent.Host;
 
 namespace Simurgh.Dashboard.HealthCheck.Services;
 
@@ -33,7 +34,7 @@ public static class ServiceCollectionExtensions
         RegisterWpfPrerequisites(services);
 
         // Registers WatchdogAgentOptions, pipeline, proxies, update services, and WpfAgentManagementHandler
-        services.AddWatchdogAgent<WpfAgentManagementHandler>(configuration, sectionName);
+        services.AddSimurghWatchdogAgent<WpfAgentManagementHandler>(configuration, sectionName);
 
         RegisterDashboardComponents(services);
 
@@ -54,7 +55,7 @@ public static class ServiceCollectionExtensions
         RegisterWpfPrerequisites(services);
 
         // Registers WatchdogAgentOptions, pipeline, proxies, update services, and WpfAgentManagementHandler
-        services.AddWatchdogAgent<WpfAgentManagementHandler>(configureOptions);
+        services.AddSimurghWatchdogAgent<WpfAgentManagementHandler>(configureOptions);
 
         RegisterDashboardComponents(services);
 
@@ -76,9 +77,6 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static void RegisterDashboardComponents(IServiceCollection services)
     {
-        // Expose the concrete WPF handler directly so UI or UnhandledException traps can invoke ReportDegraded/ResetDegraded
-        services.TryAddSingleton(sp =>
-            (WpfAgentManagementHandler)sp.GetRequiredService<IAgentManagementInbound>());
 
         // Dashboard Status Indicator UI ViewModel
         services.TryAddSingleton<WatchdogStatusIndicatorViewModel>();

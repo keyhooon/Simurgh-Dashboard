@@ -158,14 +158,6 @@
 	</ItemGroup>
 
 	<!-- External Watchdog Assembly References -->
-	<ItemGroup>
-		<Reference Include="Watchdog.Agent">
-			<HintPath>..\..\..\Simurgh-Watchdog\Watchdog\Watchdog.Agent\bin\Debug\net9.0-windows\Watchdog.Agent.dll</HintPath>
-		</Reference>
-		<Reference Include="Watchdog.Contracts">
-			<HintPath>..\..\..\Simurgh-Watchdog\Watchdog\Watchdog.Agent\bin\Debug\net9.0-windows\Watchdog.Contracts.dll</HintPath>
-		</Reference>
-	</ItemGroup>
 
 	<!-- Application Configuration Deployment -->
 	<ItemGroup>
@@ -177,6 +169,18 @@
 
 	<ItemGroup>
 		<Folder Include="Watchdog\Options\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="Watchdog.Agent">
+	    <HintPath>..\..\..\Simurgh-Watchdog\Watchdog\Watchdog.Agent.Host\bin\Release\net9.0\Watchdog.Agent.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Watchdog.Agent.Host">
+	    <HintPath>..\..\..\Simurgh-Watchdog\Watchdog\Watchdog.Agent.Host\bin\Release\net9.0\Watchdog.Agent.Host.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Watchdog.Contracts">
+	    <HintPath>..\..\..\Simurgh-Watchdog\Watchdog\Watchdog.Agent.Host\bin\Release\net9.0\Watchdog.Contracts.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 
 	<!-- Automated Velopack release packaging pipeline triggered post-publish in Release configuration -->

@@ -1,30 +1,35 @@
 ﻿// Path: Simurgh.Dashboard/HealthCheck/Services/WpfAgentManagementHandler.cs
 
+using System;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Simurgh.Watchdog.Agent;
+using Simurgh.Watchdog.Contracts.Interfaces;
 using Simurgh.Watchdog.Contracts.Models;
 
 namespace Simurgh.Dashboard.Watchdog.Services;
 
 /// <summary>
-/// Production-ready, zero-lock, self-contained Agent Management Handler tailored for WPF applications.
-/// Directly bridges Watchdog IPC inbound management commands with WPF UI thread responsiveness and pulse telemetry.
+/// WPF-specific Agent Management Handler.
+/// Bridges Watchdog IPC inbound management commands with WPF UI thread responsiveness.
+/// No dependency on Microsoft.Extensions.* (Vanilla).
 /// </summary>
 public sealed class WpfAgentManagementHandler : AgentManagementHandler, IDisposable
 {
     private readonly Dispatcher _dispatcher;
-    private readonly ILogger<WpfAgentManagementHandler> _logger;
+    private readonly IAgentLogger? _logger;
+
     private readonly TimeSpan _hangThreshold;
     private readonly TimeSpan _uiPulseInterval = TimeSpan.FromSeconds(1);
     private readonly TimeSpan _startupTimeout = TimeSpan.FromSeconds(60);
 
-    // Atomic State Management (Lock-Free)
-    private readonly long _createdTimestamp;
-    private long _lastUiPulseTimestamp;
+    // Stopwatch ticks (monotonic)
+    private readonly long _createdTick;
+    private long _lastUiPulseTick;
+
     private int _isExplicitlyUnhealthy; // 0 = Healthy, 1 = Unhealthy
     private int _isDisposed;            // 0 = Active, 1 = Disposed
 
@@ -33,71 +38,63 @@ public sealed class WpfAgentManagementHandler : AgentManagementHandler, IDisposa
     public WpfAgentManagementHandler(
         Dispatcher dispatcher,
         IAgentUpdateService updateService,
-        IHostApplicationLifetime lifetime,
-        IOptions<WatchdogAgentOptions> options,
-        ILogger<WpfAgentManagementHandler> logger)
-        : base(updateService, lifetime, options, logger)
+        WatchdogAgentOptions options,
+        IAgentLogger? logger = null)
+        : base(updateService, options, logger)
     {
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _logger = logger;
-        ArgumentNullException.ThrowIfNull(options);
 
-        var agentOptions = options.Value;
+        if (options == null) throw new ArgumentNullException(nameof(options));
 
-        // Dynamic threshold calculation with safety grace margin (minimum 10 seconds against GC freezes)
-        var calculatedThreshold = agentOptions.ReportInterval + (agentOptions.RpcTimeout * 2) + TimeSpan.FromSeconds(2);
-        _hangThreshold = calculatedThreshold > TimeSpan.FromSeconds(10)
-            ? calculatedThreshold
+        // Dynamic threshold calculation with a safety minimum (10s) against GC pauses / spikes
+        var calculated = options.ReportInterval + TimeSpan.FromTicks(options.RpcTimeout.Ticks * 2) + TimeSpan.FromSeconds(2);
+        _hangThreshold = calculated > TimeSpan.FromSeconds(10)
+            ? calculated
             : TimeSpan.FromSeconds(10);
 
-        // Initially marked as NOT ready until the dispatcher finishes initial rendering/layout
+        // Mark as NOT ready until dispatcher indicates UI reached Loaded/idle point
         IsReady = false;
         StatusMessage = "WPF application startup in progress...";
 
-        _createdTimestamp = Stopwatch.GetTimestamp();
-        Interlocked.Exchange(ref _lastUiPulseTimestamp, _createdTimestamp);
+        _createdTick = Stopwatch.GetTimestamp();
+        Interlocked.Exchange(ref _lastUiPulseTick, _createdTick);
 
         InitializeUiTimer();
         RegisterAutomaticReadinessDetection();
     }
 
     /// <summary>
-    /// Explicitly reports application unhealthiness or degradation from UI or domain components.
+    /// Explicitly reports application unhealthiness/degradation.
     /// </summary>
     public void ReportDegraded(string reason)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("Reason cannot be null or empty.", nameof(reason));
 
         StatusMessage = reason;
         Interlocked.Exchange(ref _isExplicitlyUnhealthy, 1);
         IsHealthy = false;
 
-        _logger.LogWarning("WPF Application explicitly marked as UNHEALTHY: {Reason}", reason);
+        _logger?.LogWarn($"WPF application explicitly marked UNHEALTHY: {reason}");
     }
 
     /// <summary>
-    /// Resets explicit degradation, restoring healthy state if UI is responsive.
+    /// Clears explicit degradation flag. Health becomes dependent on UI responsiveness again.
     /// </summary>
     public void ResetDegraded()
     {
         Interlocked.Exchange(ref _isExplicitlyUnhealthy, 0);
         StatusMessage = "Healthy";
-        _logger.LogInformation("WPF Application degraded flag cleared.");
+        _logger?.LogInfo("WPF application degraded flag cleared.");
     }
 
-    /// <summary>
-    /// Evaluates real-time UI thread responsiveness before composing the Agent status DTO.
-    /// Guaranteed to never block the RPC pipeline thread.
-    /// </summary>
     public override Task<AgentStatusDto> GetStatusAsync(CancellationToken ct = default)
     {
         EvaluateCurrentHealth();
         return base.GetStatusAsync(ct);
     }
 
-    /// <summary>
-    /// Evaluates real-time UI thread responsiveness before responding to Watchdog ping probes.
-    /// </summary>
     public override Task<PingResponseDto> PingAsync(CancellationToken ct = default)
     {
         EvaluateCurrentHealth();
@@ -106,64 +103,70 @@ public sealed class WpfAgentManagementHandler : AgentManagementHandler, IDisposa
 
     /// <summary>
     /// Lock-free inspection of Dispatcher pulse timing and startup thresholds.
+    /// Never blocks the RPC thread.
     /// </summary>
     private void EvaluateCurrentHealth()
     {
-        // 1. If actively performing Velopack update or shutting down, preserve healthy flag to prevent Watchdog hard kills
+        // If updating or disposing, keep "healthy" to avoid Watchdog hard-kill during self-managed transitions
         if (IsUpdating || Volatile.Read(ref _isDisposed) == 1)
         {
             IsHealthy = true;
             return;
         }
 
-        // 2. Evaluate startup phase & check for startup timeout
+        // Startup readiness with timeout
         if (!IsReady)
         {
-            var startupElapsed = Stopwatch.GetElapsedTime(_createdTimestamp);
+            var startupElapsed = ElapsedSince(_createdTick);
             if (startupElapsed > _startupTimeout)
             {
-                var timeoutMsg = $"Application startup exceeded timeout of {_startupTimeout.TotalSeconds:0}s. Main UI thread failed to idle.";
-                _logger.LogError(timeoutMsg);
+                var timeoutMsg =
+                    $"Application startup exceeded timeout of {_startupTimeout.TotalSeconds:0}s. Main UI thread failed to reach Loaded/idle.";
 
                 IsReady = true;
                 IsHealthy = false;
                 StatusMessage = timeoutMsg;
+
+                _logger?.LogError(timeoutMsg);
             }
+
             return;
         }
 
-        // 3. Evaluate explicit degradation flag
+        // Explicit degradation overrides everything
         if (Volatile.Read(ref _isExplicitlyUnhealthy) == 1)
         {
             IsHealthy = false;
             return;
         }
 
-        // 4. Evaluate UI thread responsiveness (Dispatcher hang detection)
-        var lastPulse = Interlocked.Read(ref _lastUiPulseTimestamp);
-        var elapsedSinceLastPulse = Stopwatch.GetElapsedTime(lastPulse);
+        // Dispatcher hang detection (based on pulse)
+        var lastPulseTick = Interlocked.Read(ref _lastUiPulseTick);
+        var sincePulse = ElapsedSince(lastPulseTick);
 
-        if (elapsedSinceLastPulse > _hangThreshold)
+        if (sincePulse > _hangThreshold)
         {
-            var hangMsg = $"WPF UI thread unresponsive (frozen for {elapsedSinceLastPulse.TotalSeconds:0.0}s > threshold {_hangThreshold.TotalSeconds:0.0}s).";
-            _logger.LogError(hangMsg);
+            var hangMsg =
+                $"WPF UI thread unresponsive (frozen for {sincePulse.TotalSeconds:0.0}s > threshold {_hangThreshold.TotalSeconds:0.0}s).";
 
             IsHealthy = false;
             StatusMessage = hangMsg;
+
+            _logger?.LogError(hangMsg);
             return;
         }
 
-        // 5. All health validations passed
+        // OK
         IsHealthy = true;
-        if (StatusMessage?.StartsWith("WPF UI thread unresponsive") == true)
+
+        if (StatusMessage != null && StatusMessage.StartsWith("WPF UI thread unresponsive", StringComparison.Ordinal))
         {
             StatusMessage = "Healthy (UI thread recovered)";
         }
     }
 
     /// <summary>
-    /// Automatically detects when the Dispatcher finishes initial layout and rendering tasks.
-    /// Uses Loaded priority to guarantee the main window/UI controls are operational.
+    /// Dispatcher Loaded probe: declares Ready when UI has completed initial layout/rendering tasks.
     /// </summary>
     private void RegisterAutomaticReadinessDetection()
     {
@@ -173,7 +176,8 @@ public sealed class WpfAgentManagementHandler : AgentManagementHandler, IDisposa
 
             IsReady = true;
             StatusMessage = "WPF Application UI successfully loaded and idle.";
-            _logger.LogInformation("Dashboard marked as READY automatically via Dispatcher readiness probe.");
+
+            _logger?.LogInfo("Dashboard marked as READY automatically via Dispatcher readiness probe.");
         }, DispatcherPriority.Loaded);
     }
 
@@ -200,34 +204,66 @@ public sealed class WpfAgentManagementHandler : AgentManagementHandler, IDisposa
 
         _uiTimer.Tick += (_, _) =>
         {
-            Interlocked.Exchange(ref _lastUiPulseTimestamp, Stopwatch.GetTimestamp());
+            Interlocked.Exchange(ref _lastUiPulseTick, Stopwatch.GetTimestamp());
         };
 
         _uiTimer.Start();
 
-        _logger.LogInformation(
-            "WPF UI pulse monitoring active (Interval: {Interval}s, HangThreshold: {Threshold}s).",
-            _uiPulseInterval.TotalSeconds, _hangThreshold.TotalSeconds);
+        _logger?.LogInfo(
+            $"WPF UI pulse monitoring active (Interval: {_uiPulseInterval.TotalSeconds:0.#}s, HangThreshold: {_hangThreshold.TotalSeconds:0.#}s).");
+    }
+
+    /// <summary>
+    /// WPF-friendly shutdown: invoke Application.Shutdown on the UI dispatcher.
+    /// </summary>
+    protected override void RequestApplicationExit()
+    {
+        try
+        {
+            if (_dispatcher.HasShutdownStarted || _dispatcher.HasShutdownFinished)
+            {
+                // Fall back if dispatcher is gone
+                Environment.Exit(0);
+                return;
+            }
+
+            _dispatcher.BeginInvoke((Action)(() =>
+            {
+                try
+                {
+                    // If Application is not available (unit tests / unusual host), fall back
+                    if (Application.Current != null)
+                        Application.Current.Shutdown();
+                    else
+                        Environment.Exit(0);
+                }
+                catch
+                {
+                    Environment.Exit(0);
+                }
+            }), DispatcherPriority.Send);
+        }
+        catch
+        {
+            Environment.Exit(0);
+        }
     }
 
     public void Dispose()
     {
         if (Interlocked.Exchange(ref _isDisposed, 1) == 1) return;
 
-        if (_dispatcher.CheckAccess())
+        try
         {
-            StopTimer();
+            if (_dispatcher.CheckAccess())
+                StopTimer();
+            else
+                _dispatcher.BeginInvoke((Action)StopTimer, DispatcherPriority.Send);
         }
-        else
+        catch (Exception ex)
         {
-            try
-            {
-                _dispatcher.Invoke(StopTimer, DispatcherPriority.Send);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug(ex, "Failed to stop UI pulse timer during Dispose (Dispatcher likely shutting down).");
-            }
+            // Use IAgentLogger (Vanilla)
+            _logger?.LogWarn($"Failed to stop UI pulse timer during Dispose (Dispatcher likely shutting down): {ex.Message}");
         }
     }
 
@@ -238,5 +274,14 @@ public sealed class WpfAgentManagementHandler : AgentManagementHandler, IDisposa
             _uiTimer.Stop();
             _uiTimer = null;
         }
+    }
+
+    private static TimeSpan ElapsedSince(long startTick)
+    {
+        // Compatible with net48 (no Stopwatch.GetElapsedTime)
+        var now = Stopwatch.GetTimestamp();
+        var deltaTicks = now - startTick;
+        var seconds = (double)deltaTicks / Stopwatch.Frequency;
+        return TimeSpan.FromSeconds(seconds);
     }
 }
